@@ -135,7 +135,9 @@ if [[ $? -eq 0 ]]; then
     echo "CFG_PASSWORD: $CFG_PASSWORD"
 fi
 
+# *************************
 # Get modem configuraitons 
+# *************************
 
 # for Quectel EC25 Only for now
 MODEM_MODE_NO=$(atcom AT+QCFG=\"usbnet\" OK ERROR | sed -n '2p' | cut -d',' -f2)
@@ -163,5 +165,29 @@ fi
 
 echo "Modem Actual Mode: $MODEM_MODE"
 
+# Get modem APN
+MODEM_APN=$(atcom AT+CGDCONT? OK ERROR | sed -n '2p' | cut -d',' -f3 | tr -d '"')
+echo "Modem Actual APN: "$MODEM_APN
+
+# If required, Configure Modem
+echo $CFG_MODE | grep $MODEM_MODE >> /dev/null  # USB MODE
+if [[ $? -ne 0 ]]; then
+    atcom "AT+QCFG=\"usbnet\"=1" "OK" "ERR"
+    if [[ $? -eq 0 ]]; then
+        echo "Modem mode is configurated : ECM"
+    else
+        echo "Modem mode Conf. is failed!"
+    fi
+fi
+
+echo $CFG_APN | grep $MODEM_APN >> /dev/null  # APN
+if [[ $? -ne 0 ]]; then
+    atcom "AT+CGDCONT=1,\"IPV4V6\",\"$CFG_APN\"" "OK" "ERROR" 
+    if [[ $? -eq 0 ]]; then
+        echo "APN is configurated : $CFG_APN"
+    else
+        echo "APN Conf. is failed!"
+    fi
+fi
 
 
