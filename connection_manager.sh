@@ -142,15 +142,18 @@ fi
 # for Quectel EC25 Only for now
 MODEM_MODE_NO=$(atcom AT+QCFG=\"usbnet\" OK ERROR | sed -n '2p' | cut -d',' -f2)
 MODEM_MODE="UNKNOWN"
+CON_INTERFACE="wlan0"
 
 echo $MODEM_MODE_NO | grep 0 >> /dev/null
 if [[ $? -eq 0 ]]; then
     MODEM_MODE="RMNET"
+    CON_INTERFACE="wwan0"
 fi 
 
 echo $MODEM_MODE_NO | grep 1 >> /dev/null
 if [[ $? -eq 0 ]]; then
     MODEM_MODE="ECM"
+    CON_INTERFACE="usb0"
 fi 
 
 echo $MODEM_MODE_NO | grep 2 >> /dev/null
@@ -164,6 +167,7 @@ if [[ $? -eq 0 ]]; then
 fi 
 
 echo "Modem Actual Mode: $MODEM_MODE"
+echo "Internet Connection Interface: $CON_INTERFACE"
 
 # Get modem APN
 MODEM_APN=$(atcom AT+CGDCONT? OK ERROR | sed -n '2p' | cut -d',' -f3 | tr -d '"')
@@ -182,12 +186,91 @@ fi
 
 echo $CFG_APN | grep $MODEM_APN >> /dev/null  # APN
 if [[ $? -ne 0 ]]; then
-    atcom "AT+CGDCONT=1,\"IPV4V6\",\"$CFG_APN\"" "OK" "ERROR" 
+    atcom "AT+CGDCONT=1,\"IPV4V6\",\"$CFG_APN\"" "OK" "ERROR"
     if [[ $? -eq 0 ]]; then
         echo "APN is configurated : $CFG_APN"
     else
         echo "APN Conf. is failed!"
     fi
 fi
+
+
+# Configure metrics if it is  required
+cat $CMAN_PATH/setup.config | grep METRICS >> /dev/null
+
+if [[ $? -eq 0 ]]; then
+    METRIC_STRING=$(cat $CMAN_PATH/setup.config | grep METRICS | cut -d'=' -f2)
+    echo "Defined metrics are appliying..."
+    echo $METRIC_STRING
+    # Do sth here
+else
+    echo "Metrics are not defined in setup.config"
+    echo "Default configuration will be applied --> usb0,eth0,wlan0,wwan0"
+    # Do sth here
+fi
+
+# Check the internet connection
+SOLUTION_STEP=1
+
+while true; do
+    ping google.com -c 3 -I $CON_INTERFACE >> /dev/null
+
+    if [[ $? -eq 0 ]]; then
+        SOLUTION_STEP=1
+        printf "."
+    else
+        # STEP 1
+        if (( $SOLUTION_STEP == 1 )); then
+
+            echo "SOLUTION STEP --> 1"
+            printf "\nConnection down! Interface restarting...\n"
+            sudo ifconfig $CON_INTERFACE down && sudo ifconfig $CON_INTERFACE up
+
+            sleep 20
+            route -n | grep usb0 >> /dev/null
+        
+            if [[ $? -eq 0 ]]; then
+                echo "Interface is restarted."
+            fi
+  
+            SOLUTION_STEP=2
+            continue
+
+        elif (( $SOLUTION_STEP == 2 )); then
+            echo "SOLUTION STEP --> 2"
+            printf "Modem restarting...\n"
+
+            atcom AT+CFUN=1,1 OK ERR >> /dev/null
+            sleep 30    
+
+            for i in {1..60}; do
+                
+                route -n | grep usb0 >> /dev/null
+
+                if [[ $? -eq 0 ]]; then
+                    echo "Modem is restarted."
+                    break
+                fi
+
+                sleep 1
+                printf "*"
+            done
+
+            SOLUTION_STEP=3
+            continue
+
+        elif (( $SOLUTION_STEP == 3 )); then
+            
+            
+            echo "SOLUTION STEP --> 3"
+            SOLUTION_STEP=1
+            continue
+        fi       
+    fi
+
+    sleep 10
+done
+
+
 
 
