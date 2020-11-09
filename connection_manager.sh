@@ -213,12 +213,19 @@ fi
 SOLUTION_STEP=1
 
 while true; do
-    ping google.com -c 3 -I $CON_INTERFACE >> /dev/null
+    ping google.com -s 0 -c 3 -I $CON_INTERFACE >> /dev/null
 
     if [[ $? -eq 0 ]]; then
         SOLUTION_STEP=1
         printf "."
     else
+        # STEP DIAGNOSTIC
+        printf "\nDiagnostic:\n"
+        atcom AT+CGREG? OK ERROR | grep "+CGREG:"
+        atcom AT+QCFG=\"usbnet\" OK ERROR | grep "+QCFG:"
+        atcom AT+COPS? OK ERROR | grep "+COPS:"
+        atcom AT+CSQ OK ERR | grep "+CSQ:"
+
         # STEP 1
         if (( $SOLUTION_STEP == 1 )); then
 
