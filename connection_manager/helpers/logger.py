@@ -1,15 +1,16 @@
 import os
+import sys
 import logging
 import logging.handlers
 
 logger = None
 
-def initialize_logger():
+def initialize_logger(debug=False):
     global logger
     if logger:
         return logger
 
-    logging_file_path = os.path.expanduser("~")+"/.sixfab/connect"
+    logging_file_path = os.path.expanduser("~")+"/.sixfab/connect/"
     
     if not os.path.exists(logging_file_path):
         os.mkdir(logging_file_path)
@@ -23,6 +24,11 @@ def initialize_logger():
                                                             maxBytes=10*1024*1024,
                                                             backupCount=3
                                                             )
+    if debug is True:
+        stream_handler = logging.StreamHandler(sys.stdout)
+        stream_handler.setFormatter(formatter)
+        logger.addHandler(stream_handler)
+
     log_file_handler.setFormatter(formatter)
 
     logger.addHandler(log_file_handler)
