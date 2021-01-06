@@ -3,7 +3,7 @@ import os
 
 from helpers.logger import initialize_logger
 
-logger = initialize_logger()
+logger = initialize_logger(True)
 
 CM_PATH = os.path.expanduser("~") + "/connection_manager/"
 CONFIG_PATH = CM_PATH + "config.yaml"

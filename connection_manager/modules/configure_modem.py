@@ -1,17 +1,21 @@
 from helpers.logger import initialize_logger
 from helpers.serial import shell_command, send_at_com
+from helpers.config import read_config
 import time
 
-logger = initialize_logger(True)
+config = read_config()
+
+DEBUG = config["debug_mode"]
+APN = config["apn"]
+MODE = config["mode"]
+
+logger = initialize_logger(DEBUG)
 
 QUECTEL_ECM_MODE = "1"
 TELIT_ECM_MODE = "4"
 
 QUECTEL = 1
 TELIT = 2
-
-APN="super"
-MODE="ECM"
 
 DET_RETRY_COUNT = 10
 
