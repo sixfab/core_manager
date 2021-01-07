@@ -3,7 +3,9 @@ import subprocess
 
 def shell_command(command):
     try:
-        cp = subprocess.run([command], universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        com = command.split(" ")
+        #print(com)
+        cp = subprocess.run(com, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         return (cp.stdout, cp.stderr, cp.returncode)
     except Exception as e:
         print(e)
