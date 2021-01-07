@@ -26,10 +26,10 @@ while True:
 
     if check_internet() == 0:
         internet = True
-        print(".")
+        print(".", end="", flush=True)
     else:
         # double check
-        print("/")
+        print("/", end="", flush=True)
         if check_internet() == 0:
             internet = True
         else:

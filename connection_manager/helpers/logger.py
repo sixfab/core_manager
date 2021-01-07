@@ -18,7 +18,7 @@ def initialize_logger(debug=False):
     logger = logging.getLogger("connection_manager")
     logger.setLevel(logging.DEBUG)
 
-    formatter = logging.Formatter("%(asctime)s %(filename)-20s %(levelname)-8s %(message)s")
+    formatter = logging.Formatter("%(asctime)s --> %(filename)-20s %(levelname)-8s %(message)s")
     log_file_handler = logging.handlers.RotatingFileHandler(
                                                             filename=logging_file_path+"cm-log", 
                                                             maxBytes=10*1024*1024,

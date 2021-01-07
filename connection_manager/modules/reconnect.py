@@ -7,7 +7,6 @@ config = read_config()
 
 DEBUG = config["debug_mode"]
 APN = config["apn"]
-MODE = config["mode"]
 
 logger = initialize_logger(DEBUG)
 
@@ -62,16 +61,21 @@ def reconnect(modem):
 
         # Check modem is started!
         for i in range(120):
-            output = shell_command("route -n")
-            print(output[2])     
+            output = shell_command("route -n")   
             if output[0].find("usb0") != -1:
                 logger.info("Modem started.")
                 time.sleep(5)
-                return 0
+                break
             else:
                 time.sleep(1)
-                print("*")
-    
+                print("*", end="", flush=True)
+
+        if check_network() == 0:
+            initiate_ecm()
+            return 0
+        else:
+            logger.error("Error occured while initiating ecm!")
+
     elif modem == TELIT:
         logger.info("Telit doesn't supported yet!")
         return 1

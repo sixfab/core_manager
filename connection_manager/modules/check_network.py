@@ -7,7 +7,6 @@ config = read_config()
 
 DEBUG = config["debug_mode"]
 APN = config["apn"]
-MODE = config["mode"]
 
 logger = initialize_logger(DEBUG)
 

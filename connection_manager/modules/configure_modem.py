@@ -7,7 +7,6 @@ config = read_config()
 
 DEBUG = config["debug_mode"]
 APN = config["apn"]
-MODE = config["mode"]
 
 logger = initialize_logger(DEBUG)
 
@@ -97,7 +96,7 @@ def configure_modem():
                         break
                     else:
                         time.sleep(1)
-                        print("*")
+                        print("*", end="", flush=True)
                 
                 time.sleep(5)
 
@@ -128,7 +127,7 @@ def configure_modem():
                         break
                     else:
                         time.sleep(1)
-                        print("*")
+                        print("*", end="", flush=True)
                 
                 time.sleep(5)
     elif modem is -1:
