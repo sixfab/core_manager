@@ -7,6 +7,7 @@ logger = initialize_logger(True)
 
 CM_PATH = os.path.expanduser("~") + "/connection_manager/"
 CONFIG_PATH = CM_PATH + "config.yaml"
+SYSTEM_PATH = CM_PATH + "system.yaml"
 
 def read_config():    
     try:
@@ -17,3 +18,13 @@ def read_config():
         print(e)
         return {}
 
+
+def save_system_id(items):
+    try:
+        with open(SYSTEM_PATH, 'w') as sys_file:
+            yaml.dump(items, sys_file, default_flow_style=False)
+    except Exception as e:
+        print(e)
+        return 1
+    else:
+        return 0

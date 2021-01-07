@@ -1,0 +1,11 @@
+arc: 32bit
+ccid: '89883070000004436588'
+host_name: pi-yk-case-one
+imei: '867698041933220'
+kernel: 5.4.65-v7l+
+machine: armv7l
+modem_info: ' Quectel EG25 Revision: EG25GGBR07A08M2G  OK  '
+platform: Linux-5.4.65-v7l+-armv7l-with-debian-10.6
+sw_version: EG25GGBR07A08M2G
+system_name: Linux
+version: '#1341 SMP Tue Sep 15 13:13:32 BST 2020'

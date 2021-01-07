@@ -1,21 +1,25 @@
 #!/usr/bin/python3
 
 import time
+import platform 
+import usb.util
+import usb.core
 
 from helpers.serial import send_at_com
-from helpers.config import read_config
+from helpers.config import read_config, save_system_id
 from helpers.logger import initialize_logger
 
 from modules.configure_modem import configure_modem
 from modules.check_network import check_network
 from modules.reconnect import initiate_ecm, check_internet, reconnect
-
-import usb
+from modules.identify_setup import identify_setup
 
 logger = initialize_logger(True)
 
 logger.info("Connection Manager is started...")
+send_at_com("ATE0", "OK") # turn off modem input echo
 
+identify_setup()
 configure_modem()
 check_network()
 initiate_ecm(1)
