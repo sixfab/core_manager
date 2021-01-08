@@ -23,10 +23,10 @@ def save_system_id(items, clear=False):
     try:
         if clear == True:
             with open(SYSTEM_PATH, 'w') as sys_file:
-                yaml.dump(items, sys_file, default_flow_style=False, explicit_start=True)
+                yaml.dump(items, sys_file, default_flow_style=False)
         else:
             with open(SYSTEM_PATH, 'a') as sys_file:
-                yaml.dump(items, sys_file, default_flow_style=False, explicit_start=True)
+                yaml.dump(items, sys_file, default_flow_style=False)
     except Exception as e:
         print(e)
         return 1
