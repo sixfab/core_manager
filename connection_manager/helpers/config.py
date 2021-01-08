@@ -19,10 +19,14 @@ def read_config():
         return {}
 
 
-def save_system_id(items):
+def save_system_id(items, clear=False):
     try:
-        with open(SYSTEM_PATH, 'w') as sys_file:
-            yaml.dump(items, sys_file, default_flow_style=False)
+        if clear == True:
+            with open(SYSTEM_PATH, 'w') as sys_file:
+                yaml.dump(items, sys_file, default_flow_style=False, explicit_start=True)
+        else:
+            with open(SYSTEM_PATH, 'a') as sys_file:
+                yaml.dump(items, sys_file, default_flow_style=False, explicit_start=True)
     except Exception as e:
         print(e)
         return 1

@@ -1,6 +1,7 @@
 from helpers.logger import initialize_logger
 from helpers.serial import shell_command, send_at_com
 from helpers.config import read_config
+from helpers.exceptions import *
 import time
 
 config = read_config()
@@ -22,29 +23,33 @@ DET_RETRY_COUNT = 10
 def detect_modem():
     for i in range(DET_RETRY_COUNT):
         
-        output = shell_command("lsusb")[0]
-        
-        if (output.find("Quectel") != -1):
-            return 1
-        elif(output.find("Telit") != -1):
-            return 2
+        output = shell_command("lsusb")
 
+        if output[2] == 0:
+            if (output[0].find("Quectel") != -1):
+                return 1
+            elif(output[0].find("Telit") != -1):
+                return 2
+        else:
+            raise RuntimeError("RuntimeError: Shell command couldn't be succesfully run!")
+        
         time.sleep(1)
     
-    return -1
+    raise ModemNotFound("ModemNotFound: Modem couldn't be detected!")
 
 
 def configure_modem():
-    logger.info("Modem configuration is Started...")
+    logger.info("Modem configuration started...")
 
     modem = None
 
     try:
         modem = detect_modem()
     except Exception as e:
-        print(e)
-        logger.error("Modem detection failure...")
+        logger.error(str(e))
         modem = -1
+    else:
+        logger.info("Modem detected. Modem ID: " + str(modem))
 
     ### Modem configuration for ECM mode ##################################
     logger.info("Checking APN and Modem Mode...") 
@@ -132,8 +137,10 @@ def configure_modem():
                 time.sleep(5)
     elif modem is -1:
         logger.error("Modem couldn't be detected!")
+        raise ModemNotFound
     else:
         logger.error("Modem is unknown or unsupported!")
+        raise ModemNotSupported
     
     ### End of Modem configuration for ECM mode ############################
     

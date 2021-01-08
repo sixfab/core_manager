@@ -23,7 +23,8 @@ def initialize_logger(debug=False):
                                                             filename=logging_file_path+"cm-log", 
                                                             maxBytes=10*1024*1024,
                                                             backupCount=3
-                                                            )
+    )
+    
     if debug is True:
         stream_handler = logging.StreamHandler(sys.stdout)
         stream_handler.setFormatter(formatter)
