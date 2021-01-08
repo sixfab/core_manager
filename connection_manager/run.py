@@ -6,14 +6,13 @@ import usb.util
 import usb.core
 
 from helpers.serial import send_at_com
-from helpers.config import read_config, save_system_id
+from helpers.config import *
 from helpers.logger import initialize_logger
 from helpers.exceptions import *
 
-from modules.configure_modem import configure_modem
-from modules.check_network import check_network
+from modules.modem import configure_modem, check_network
 from modules.reconnect import initiate_ecm, check_internet, reconnect
-from modules.identify_setup import identify_setup
+from modules.identify import identify_setup
 
 logger = initialize_logger(True)
 

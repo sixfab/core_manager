@@ -1,9 +1,9 @@
 from helpers.logger import initialize_logger
 from helpers.serial import shell_command, send_at_com
-from helpers.config import read_config
+from helpers.config import *
 import time
 
-config = read_config()
+config = read_yaml_all(CONFIG_PATH)
 
 DEBUG = config["debug_mode"]
 APN = config["apn"]

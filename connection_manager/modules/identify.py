@@ -1,7 +1,7 @@
 
 import platform 
 from helpers.serial import send_at_com
-from helpers.config import read_config, save_system_id
+from helpers.config import *
 
 def identify_setup():
     # Modem identification
@@ -46,6 +46,6 @@ def identify_setup():
         }
     )
 
-    save_system_id(system_id, True)
+    write_yaml_all(SYSTEM_PATH, system_id)
 
     return system_id
