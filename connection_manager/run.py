@@ -17,22 +17,6 @@ from modules.identify import identify_setup
 logger = initialize_logger(True)
 
 logger.info("Connection Manager started.")
-send_at_com("ATE0", "OK") # turn off modem input echo
-
-# System and modem identification
-try:
-    ids = identify_setup()
-except Exception as e:
-    logger.error("System identification failed!")
-    logger.error(str(e))
-else:
-    print(ids)
-
-# Network check
-check_network()
-
-# Initiating of PDP Context for ECM
-initiate_ecm(1)
 
 # Endless loop
 while True:  

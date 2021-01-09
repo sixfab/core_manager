@@ -15,24 +15,15 @@ def update_yaml_with_key(file, key, value):
     pass
 
 def read_yaml_all(file):
-    try:
-        with open(file) as f:
-            data = yaml.load(f, Loader=yaml.FullLoader)
-            return data
-    except Exception as e:
-        logger.error(str(e))
-        return {}
+    with open(file) as f:
+        data = yaml.load(f, Loader=yaml.FullLoader)
+        return data
 
 def write_yaml_all(file, items, clear = True):
-    try:
-        if clear == True:
-            with open(file, 'w') as f:
-                yaml.dump(items, f, default_flow_style=False)
-        else:
-            with open(file, 'a') as f:
-                yaml.dump(items, f, default_flow_style=False)
-    except Exception as e:
-        logger.error(str(e))
-        return 1
+    if clear == True:
+        with open(file, 'w') as f:
+            yaml.dump(items, f, default_flow_style=False)
     else:
-        return 0
+        with open(file, 'a') as f:
+            yaml.dump(items, f, default_flow_style=False)
+

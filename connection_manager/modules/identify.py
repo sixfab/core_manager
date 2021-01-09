@@ -3,8 +3,12 @@ import platform
 from helpers.serial import send_at_com
 from helpers.config import *
 from helpers.queue import queue
+from helpers.exceptions import *
 
 def identify_setup():
+
+    send_at_com("ATE0", "OK") # turn off modem input echo
+
     # Modem identification
     # -----------------------------------------
     output = send_at_com("ATI", "OK")
@@ -28,10 +32,14 @@ def identify_setup():
 
     # OS identification
     # -----------------------------------------
-    architecture = str(platform.architecture()[0])
-    kernel_release = str(platform.release())
-    host_name = str(platform.node())
-    os_platform = str(platform.platform())
+    try:
+        architecture = str(platform.architecture()[0])
+        kernel_release = str(platform.release())
+        host_name = str(platform.node())
+        os_platform = str(platform.platform())
+    except Exception as e:
+        logger.error("Error occured while getting OS identification!")
+        raise RuntimeError("Error occured while getting OS identification!")
 
     system_id = {}
     system_id.update(
@@ -47,5 +55,15 @@ def identify_setup():
         }
     )
 
-    write_yaml_all(SYSTEM_PATH, system_id)
+    for key in system_id:
+        if system_id[key] == "":
+            logger.error("Modem identification failed!")
+            raise RuntimeError("Modem identification failed!")
+
+    try:
+        write_yaml_all(SYSTEM_PATH, system_id)
+    except Exception as e:
+        logger.error(e)
+        raise RuntimeError(e)
+    
     return system_id
