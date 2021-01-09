@@ -16,7 +16,7 @@ def update_yaml_with_key(file, key, value):
 
 def read_yaml_all(file):
     with open(file) as f:
-        data = yaml.load(f, Loader=yaml.FullLoader)
+        data = yaml.safe_load(f)
         return data
 
 def write_yaml_all(file, items, clear = True):

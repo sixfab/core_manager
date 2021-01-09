@@ -11,4 +11,9 @@ class ModemNotReachable(Exception):
 class NoInternet(Exception):
     """Raise when internet connection is gone"""   
 
+class SIMNotReady(Exception):
+    """Raise when the SIM Card not ready"""
+
+class NetworkRegFailed(Exception):
+    """Raise when the network registeration is failed"""
 

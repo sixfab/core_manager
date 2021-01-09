@@ -4,6 +4,7 @@ from helpers.serial import send_at_com
 from helpers.config import *
 from helpers.queue import queue
 from helpers.exceptions import *
+from modules.modem import detect_modem
 
 def identify_setup():
 
@@ -11,6 +12,12 @@ def identify_setup():
 
     # Modem identification
     # -----------------------------------------
+
+    try:
+        modem_vendor = detect_modem()
+    except Exception as e:
+        raise e
+
     output = send_at_com("ATI", "OK")
     modem_info = output[0].replace("\n", " ") if output[2] == 0 else ""
     # IMEI
@@ -49,6 +56,7 @@ def identify_setup():
             "kernel" : kernel_release,
             "host_name" : host_name,
             "modem_info" : modem_info,
+            "modem_vendor" : modem_vendor,
             "imei" : imei,
             "ccid" : ccid,
             "sw_version" : sw_ver,
