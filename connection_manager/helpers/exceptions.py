@@ -8,4 +8,7 @@ class ModemNotSupported(Exception):
 class ModemNotReachable(Exception):
     """Raise when an error occured on serial communication with modem"""
 
+class NoInternet(Exception):
+    """Raise when internet connection is gone"""
+
 

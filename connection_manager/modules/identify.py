@@ -2,6 +2,7 @@
 import platform 
 from helpers.serial import send_at_com
 from helpers.config import *
+from helpers.queue import queue
 
 def identify_setup():
     # Modem identification
@@ -47,5 +48,4 @@ def identify_setup():
     )
 
     write_yaml_all(SYSTEM_PATH, system_id)
-
     return system_id

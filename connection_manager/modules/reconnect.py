@@ -1,22 +1,26 @@
 from helpers.logger import initialize_logger
 from helpers.serial import shell_command, send_at_com
 from helpers.config import *
+from helpers.exceptions import *
+from modules.modem import check_network
 import time
+
+QUECTEL = 1
+TELIT = 2
+PING_TIMEOUT = 9
+INTERFACE = "usb0"
 
 config = read_yaml_all(CONFIG_PATH)
 
+modem = QUECTEL
 DEBUG = config["debug_mode"]
 APN = config["apn"]
 
 logger = initialize_logger(DEBUG)
 
-QUECTEL = 1
-TELIT = 2
+def initiate_ecm():
+    global modem
 
-PING_TIMEOUT = 9
-INTERFACE = "usb0"
-
-def initiate_ecm(modem):
     if modem == QUECTEL:
         logger.info("ECM Connection is initiating automatically...")
     elif modem == TELIT:
@@ -35,15 +39,17 @@ def initiate_ecm(modem):
 def check_internet():
 
     output = shell_command("ping -q -c 1 -s 0 -w "  + str(PING_TIMEOUT) + " -I " + INTERFACE + " 8.8.8.8")
-    # print(output)
+    #print(output)
 
     if output[2] == 0:
         return 0
     else:
-        return 1
+        raise NoInternet("no internet")
 
 
-def reconnect(modem):
+def reconnect():
+    global modem
+
     # 1 - Get modem diagnostics
     logger.info("Cellular connection is lost. Testing modem configurations...")
         

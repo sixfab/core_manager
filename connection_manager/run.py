@@ -28,16 +28,6 @@ except Exception as e:
 else:
     print(ids)
 
-# Modem configuration
-try:
-    configure_modem()
-except ModemNotSupported:
-    pass
-except ModemNotFound:
-    pass
-except Exception as e:
-    log.error(str(e))
-
 # Network check
 check_network()
 

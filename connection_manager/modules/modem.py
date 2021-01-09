@@ -137,11 +137,14 @@ def configure_modem():
     elif modem is -1:
         logger.error("Modem couldn't be detected!")
         raise ModemNotFound
+
     else:
         logger.error("Modem is unknown or unsupported!")
         raise ModemNotSupported
     
     ### End of Modem configuration for ECM mode ############################
+
+    
 
 def check_network():
 
