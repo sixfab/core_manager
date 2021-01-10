@@ -1,10 +1,10 @@
 
 import platform 
-from helpers.serial import send_at_com
+from helpers.serial import send_at_com, shell_command
 from helpers.config import *
 from helpers.queue import queue
 from helpers.exceptions import *
-from modules.modem import detect_modem
+from modules.modem import Modem
 
 def identify_setup():
 
@@ -13,10 +13,18 @@ def identify_setup():
     # Modem identification
     # -----------------------------------------
 
-    try:
-        modem_vendor = detect_modem()
-    except Exception as e:
-        raise e
+    modem_vendor = ""
+    output = shell_command("lsusb")
+    
+    if output[2] == 0:
+        if output[0].find("Quectel") != -1:
+            modem_vendor = "Quectel"
+        elif output[0].find("Telit") != -1:
+            modem_vendor = "Telit"
+        else:
+            raise ModemNotSupported("Modem is not supported!")
+    else:
+        raise ModemNotFound("Modem couldn't be detected!")
 
     output = send_at_com("ATI", "OK")
     modem_info = output[0].replace("\n", " ") if output[2] == 0 else ""

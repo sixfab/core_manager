@@ -5,13 +5,30 @@ from helpers.config import *
 from helpers.logger import initialize_logger
 from helpers.exceptions import *
 
-from modules.modem import configure_modem, check_network, initiate_ecm, check_internet, reconnect, diagnose
 from modules.identify import identify_setup
-
+from modules.modem import Modem
 from helpers.queue import queue
 
 # Start step
 queue.set_step(0,0,0,0,0,0)
+
+config = read_yaml_all(CONFIG_PATH)
+system_info = read_yaml_all(SYSTEM_PATH)
+
+DEBUG = config.get("debug_mode", False)
+APN = config.get("apn", "super")
+
+modem = Modem(
+    vendor = system_info.get("modem_vendor", "Quectel"),
+    model = "EC25",
+    imei = system_info.get("imei", ""),
+    ccid = system_info.get("ccid", ""),
+    sw_version = system_info.get("sw_version", ""),
+)
+
+# attrs = vars(modem_setup)
+# print('\n'.join("%s: %s" % item for item in attrs.items()))
+# exit()
 
 def _organizer():
     if queue.base == 0:
@@ -40,7 +57,7 @@ def _configure_modem():
     queue.set_step(sub=0, base=2, success=3, fail=2, interval=0.1, is_ok=False)
 
     try:
-        configure_modem()
+        modem.configure_modem()
     except ModemNotSupported:
         queue.is_ok = False
     except ModemNotFound:
@@ -55,7 +72,7 @@ def _check_network():
     queue.set_step(sub=0, base=3, success=4, fail=3, interval=0.1, is_ok=False)
 
     try:
-        check_network()
+        modem.check_network()
     except Exception as e:
         logger.error(str(e))
         queue.is_ok = False
@@ -66,7 +83,7 @@ def _initiate_ecm():
     queue.set_step(sub=0, base=4, success=5, fail=4, interval=0.1, is_ok=False)
 
     try:
-        initiate_ecm()
+        modem.initiate_ecm()
     except Exception as e:
         logger.error(str(e))
         queue.is_ok = False
@@ -77,7 +94,7 @@ def _check_internet():
     queue.set_step(sub=0, base=5, success=5, fail=6, interval=5, is_ok=False)
 
     try:
-        check_internet()
+        modem.check_internet()
     except Exception as e:
         logger.error(str(e))
         queue.is_ok = False
@@ -89,7 +106,7 @@ def _double_check_internet():
     queue.set_step(sub=0, base=6, success=5, fail=7, interval=5, is_ok=False)
 
     try:
-        check_internet()
+        modem.check_internet()
     except Exception as e:
         logger.error(str(e))
         queue.is_ok = False
@@ -101,7 +118,7 @@ def _diagnose():
     queue.set_step(sub=0, base=7, success=8, fail=7, interval=0.1, is_ok=False)
 
     try:
-        diagnose()
+        modem.diagnose()
     except Exception as e:
         logger.error(str(e))
         queue.is_ok = False
@@ -113,7 +130,7 @@ def _reconnect():
     queue.set_step(sub=0, base=8, success=3, fail=8, interval=0.1, is_ok=False)
 
     try:
-        reconnect()
+        modem.reconnect()
     except Exception as e:
         logger.error(str(e))
         queue.is_ok = False
