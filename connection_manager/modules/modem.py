@@ -7,9 +7,9 @@ import time
 config = read_yaml_all(CONFIG_PATH)
 system_info = read_yaml_all(SYSTEM_PATH)
 
-MODEM = system_info.get("modem_vendor", "modem_info")
-DEBUG = config["debug_mode"]
-APN = config["apn"]
+MODEM = system_info.get("modem_vendor", "Quectel")
+DEBUG = config.get("debug_mode", False)
+APN = config.get("apn", "super")
 
 logger = initialize_logger(DEBUG)
 
@@ -128,7 +128,7 @@ def configure_modem():
         raise ModemNotSupported("Modem is unknown or unsupported!")
     
 def check_network():
-
+    
     sim_ready = 0
     network_reg = 0
     network_ready = 0
@@ -149,7 +149,7 @@ def check_network():
     output = send_at_com("AT+CREG?", "OK")
     if (output[2] == 0):
         if(output[0].find("+CREG: 0,1") or output[0].find("+CREG: 0,5")):
-            logger.info("Network is registerated.")
+            logger.info("Network is registered.")
             network_reg = 1
         else:
             logger.error(output[0])
@@ -157,3 +157,7 @@ def check_network():
     else:
         logger.error(output[0])
         raise NetworkRegFailed(output[0])
+
+
+
+

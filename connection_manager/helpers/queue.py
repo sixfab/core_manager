@@ -7,8 +7,18 @@ class Queue(object):
     fail = 0
     interval = 0
     is_ok = False
+    retry = 0
 
-    def set_step(self, sub, base, success, fail, interval, is_ok):
+    def set_step(
+                self, 
+                sub, 
+                base, 
+                success, 
+                fail, 
+                interval = 0, 
+                is_ok = False, 
+                retry = 0
+                ):
         self.sub = sub
         self.base = base
         self.success = success
