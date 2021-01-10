@@ -17,3 +17,6 @@ class SIMNotReady(Exception):
 class NetworkRegFailed(Exception):
     """Raise when the network registeration is failed"""
 
+class PDPContextFailed(Exception):
+    """Raise when the network registeration is failed"""
+

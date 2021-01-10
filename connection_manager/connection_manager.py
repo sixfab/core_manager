@@ -5,8 +5,7 @@ from helpers.config import *
 from helpers.logger import initialize_logger
 from helpers.exceptions import *
 
-from modules.modem import configure_modem, check_network
-from modules.reconnect import initiate_ecm, check_internet, reconnect, diagnose
+from modules.modem import configure_modem, check_network, initiate_ecm, check_internet, reconnect, diagnose
 from modules.identify import identify_setup
 
 from helpers.queue import queue
