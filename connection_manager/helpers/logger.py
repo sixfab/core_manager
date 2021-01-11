@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 import os
 import sys
 import logging
@@ -10,17 +12,17 @@ def initialize_logger(debug=False):
     if logger:
         return logger
 
-    logging_file_path = os.path.expanduser("~")+"/.sixfab/connect/"
+    LOG_PATH = os.path.expanduser("~")+"/.sixfab/connect/logs/"
     
-    if not os.path.exists(logging_file_path):
-        os.mkdir(logging_file_path)
+    if not os.path.exists(LOG_PATH):
+        os.mkdir(LOG_PATH)
 
     logger = logging.getLogger("connection_manager")
     logger.setLevel(logging.DEBUG)
 
     formatter = logging.Formatter("%(asctime)s --> %(filename)-20s %(levelname)-8s %(message)s")
     log_file_handler = logging.handlers.RotatingFileHandler(
-                                                            filename=logging_file_path+"cm-log", 
+                                                            filename=LOG_PATH+"cm-log", 
                                                             maxBytes=10*1024*1024,
                                                             backupCount=3
     )

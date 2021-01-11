@@ -1,13 +1,16 @@
+#!/usr/bin/python3
+
 import time
 
-from helpers.serial import send_at_com
-from helpers.config import *
+from helpers.commander import send_at_com
+from helpers.yamlio import *
 from helpers.logger import initialize_logger
 from helpers.exceptions import *
+from helpers.queue import queue
 
 from modules.identify import identify_setup
 from modules.modem import Modem
-from helpers.queue import queue
+
 
 # Start step
 queue.set_step(0,0,0,0,0,0)

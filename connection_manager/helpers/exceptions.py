@@ -1,3 +1,4 @@
+#!/usr/bin/python3
 
 class ModemNotFound(Exception):
     """Raise when the modem couldn't be detected"""

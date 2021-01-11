@@ -1,17 +1,20 @@
+#!/usr/bin/python3
 
 import platform 
-from helpers.serial import send_at_com, shell_command
-from helpers.config import *
+from helpers.commander import send_at_com, shell_command
+from helpers.yamlio import *
 from helpers.queue import queue
 from helpers.exceptions import *
 from modules.modem import Modem
 
 def identify_setup():
 
+
     send_at_com("ATE0", "OK") # turn off modem input echo
 
     # Modem identification
     # -----------------------------------------
+    logger.info("System identifying...")
 
     modem_vendor = ""
     output = shell_command("lsusb")

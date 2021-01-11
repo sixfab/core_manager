@@ -1,8 +1,12 @@
-from helpers.logger import initialize_logger
-from helpers.serial import shell_command, send_at_com
-from helpers.config import *
-from helpers.exceptions import *
+#!/usr/bin/python3
+
 import time
+
+from helpers.logger import initialize_logger
+from helpers.commander import shell_command, send_at_com
+from helpers.yamlio import *
+from helpers.exceptions import *
+
 
 PING_TIMEOUT = 9
 
@@ -31,6 +35,20 @@ class Modem(object):
     pdp_activate_command = ""
     pdp_status_command = ""
 
+    diagnostic = {
+            "con_interface" : True,
+            "con_interface" : True,
+            "modem_reachable" : True,
+            "usb_driver" : True,
+            "modem_driver" : True,
+            "pdp_context" : True,
+            "network_reqister" : True,
+            "sim_ready" : True,
+            "modem_mode" : True,
+            "modem_apn" : True,
+            "kernel_ver" : "",
+            "modem_fw_ver" : "",
+        }
 
     def __init__(self, vendor, model, imei, ccid, sw_version):
         self.vendor = vendor
@@ -181,17 +199,21 @@ class Modem(object):
 
 
     def diagnose(self):
- 
-        con_interface = True
-        usb_interface = True
-        modem_reachable = True
-        usb_driver = True
-        modem_driver = True
-        pdp_context = True
-        network_reqister = True
-        sim_ready = True
-        modem_mode = True
-        modem_apn = True
+        
+        self.diagnostic = {
+            "con_interface" : True,
+            "con_interface" : True,
+            "modem_reachable" : True,
+            "usb_driver" : True,
+            "modem_driver" : True,
+            "pdp_context" : True,
+            "network_reqister" : True,
+            "sim_ready" : True,
+            "modem_mode" : True,
+            "modem_apn" : True,
+            "kernel_ver" : "",
+            "modem_fw_ver" : "",
+        }
 
         logger.info("Diagnostic is working...")
         
@@ -201,9 +223,9 @@ class Modem(object):
         output = shell_command("route -n")
         if output[2] == 0:
             if output[0].find(self.interface_name) != -1:
-                con_interface = True
+                self.diagnostic["con_interface"] = True
             else: 
-                con_interface = False
+                self.diagnostic["con_interface"] = False
         else:
             raise RuntimeError("Error occured processing shell command!")
         
@@ -213,9 +235,9 @@ class Modem(object):
         output = shell_command("lsusb")
         if output[2] == 0:
             if output[0].find(self.vendor) != -1:
-                usb_interface = True
+                self.diagnostic["usb_interface"] = True
             else: 
-                usb_interface = False
+                self.diagnostic["usb_interface"] = False
         else:
             raise RuntimeError("Error occured processing shell command!")
 
@@ -224,33 +246,81 @@ class Modem(object):
         
         output = send_at_com("AT", "OK")
         if output[2] == 0:
-            modem_reachable = True
+            self.diagnostic["modem_reachable"] = True
         else:
-            modem_reachable = False
+            self.diagnostic["modem_reachable"] = False
 
-        # 3 - Is ECM PDP Context is active?
+        # 4 - Is ECM PDP Context active?
         logger.info("[4] : Is ECM PDP Context is active?")
         
         output = send_at_com(self.pdp_status_command, "1,1")
         if output[2] == 0:
-            pdp_context = True
+            self.diagnostic["pdp_context"] = True
         else:
-            pdp_context = False
+            self.diagnostic["pdp_context"] = False
+
+        # 5 - Is the network registered?
+        logger.info("[5] : Is the network is registered?")
         
-        diagnostic = {
-            "con_interface" : con_interface,
-            "usb_interface" : usb_interface,
-            "modem_reachable" : modem_reachable,
-            "pdp_context" : pdp_context,
-        }
+        try:
+            self.check_network()
+        except Exception as e:
+            self.diagnostic["network_reqister"] = False
+        else:
+            self.diagnostic["network_reqister"] = True
 
-        print(diagnostic)
+        # 6 - Is the APN OK?
+        logger.info("[6] : Is the APN is OK?")
+        
+        output = send_at_com("AT+CGDCONT?", APN)
+        if output[2] == 0:
+            modem_apn = True
+        else:
+            modem_apn = False
+        
+        # 7 - Is the modem mode OK?
+        logger.info("[7] : Is the modem mode OK?")
+        
+        output = send_at_com(self.mode_status_command, self.ecm_mode_response)
+        if output[2] == 0:
+            self.diagnostic["modem_mode"] = True
+        else:
+            self.diagnostic["modem_mode"] = False 
 
+        # 8 - Is the SIM ready?
+        logger.info("[8] : Is the SIM ready?")
+        
+        output = send_at_com("AT+CPIN?", "READY")
+        if output[2] == 0:
+            self.diagnostic["sim_ready"] = True
+        else:
+            self.diagnostic["sim_ready"] = False 
+
+        # 9 Extras
+        self.diagnostic["kernel_ver"] = system_info.get("kernel", "")
+        self.diagnostic["modem_fw_ver"] = system_info.get("sw_version", "")
+
+        
+        timestamp = time.strftime("%Y-%m-%d_%H:%M:%S")
+        diag_file_name = "cm-diag_" + str(timestamp) + ".yaml"
+        diag_file_path = DIAG_FOLDER_PATH + diag_file_name
+        logger.info("Creating diagnostic report on --> " + str(diag_file_path))
+        write_yaml_all(diag_file_path, self.diagnostic)
+
+        if DEBUG == True:
+            print("")
+            print("************************************")
+            print("[?] Diagnostic Report -->")
+            for x in self.diagnostic.items():
+                print(str("[+] " + x[0]) + " --> " + str(x[1]))
+            print("************************************")
+            print("")
 
     def reconnect(self):
 
         logger.info("Modem restarting...")
-        
+        time.sleep(60)
+        """
         output = send_at_com(self.reboot_command, "OK")
         if output[2] == 0:
             time.sleep(20)
@@ -270,7 +340,7 @@ class Modem(object):
             
             raise ModemNotFound("Modem couldn't be started after reboot!")   
 
-
+        """
 
 
 
