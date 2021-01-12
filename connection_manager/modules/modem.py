@@ -214,7 +214,7 @@ class Modem(object):
         logger.info("Diagnostic is working...")
         
         # 1 - Is connection interface exist?
-        logger.info("[1] : Is connection interface exist?")
+        logger.debug("[1] : Is connection interface exist?")
 
         output = shell_command("route -n")
         if output[2] == 0:
@@ -226,7 +226,7 @@ class Modem(object):
             raise RuntimeError("Error occured processing shell command!")
         
         # 2 - Is USB interface exist?
-        logger.info("[2] : Is USB interface exist?")
+        logger.debug("[2] : Is USB interface exist?")
 
         output = shell_command("lsusb")
         if output[2] == 0:
@@ -238,7 +238,7 @@ class Modem(object):
             raise RuntimeError("Error occured processing shell command!")
 
         # 3 - Is USB driver exist?
-        logger.info("[3] : Is USB driver exist?")
+        logger.debug("[3] : Is USB driver exist?")
 
         output = shell_command("usb-devices")
         if output[2] == 0:
@@ -250,7 +250,7 @@ class Modem(object):
             raise RuntimeError("Error occured processing shell command!")
 
         # 4 - Is modem reachable?
-        logger.info("[4] : Is modem reachable?")
+        logger.debug("[4] : Is modem reachable?")
         
         output = send_at_com("AT", "OK")
         if output[2] == 0:
@@ -259,7 +259,7 @@ class Modem(object):
             self.diagnostic["modem_reachable"] = False
 
         # 5 - Is ECM PDP Context active?
-        logger.info("[5] : Is ECM PDP Context is active?")
+        logger.debug("[5] : Is ECM PDP Context is active?")
         
         output = send_at_com(self.pdp_status_command, "1,1")
         if output[2] == 0:
@@ -268,7 +268,7 @@ class Modem(object):
             self.diagnostic["pdp_context"] = False
 
         # 6 - Is the network registered?
-        logger.info("[6] : Is the network is registered?")
+        logger.debug("[6] : Is the network is registered?")
         
         try:
             self.check_network()
@@ -278,7 +278,7 @@ class Modem(object):
             self.diagnostic["network_reqister"] = True
 
         # 7 - Is the APN OK?
-        logger.info("[7] : Is the APN is OK?")
+        logger.debug("[7] : Is the APN is OK?")
         
         output = send_at_com("AT+CGDCONT?", APN)
         if output[2] == 0:
@@ -287,7 +287,7 @@ class Modem(object):
             modem_apn = False
         
         # 8 - Is the modem mode OK?
-        logger.info("[8] : Is the modem mode OK?")
+        logger.debug("[8] : Is the modem mode OK?")
         
         output = send_at_com(self.mode_status_command, self.ecm_mode_response)
         if output[2] == 0:
@@ -296,7 +296,7 @@ class Modem(object):
             self.diagnostic["modem_mode"] = False 
 
         # 9 - Is the SIM ready?
-        logger.info("[9] : Is the SIM ready?")
+        logger.debug("[9] : Is the SIM ready?")
         
         output = send_at_com("AT+CPIN?", "READY")
         if output[2] == 0:
