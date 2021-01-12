@@ -6,9 +6,8 @@ from helpers.yamlio import *
 from helpers.queue import queue
 from helpers.exceptions import *
 from helpers.modem_support import ModemSupport
+from helpers.config_parser import *
 
-config = read_yaml_all(CONFIG_PATH)
-DEBUG = config.get("debug_mode", False)
 
 system_id = {
     "platform" : "",
@@ -118,7 +117,7 @@ def identify_setup():
         logger.error("Error occured while getting OS identification!")
         raise RuntimeError("Error occured while getting OS identification!")
 
-    if DEBUG == True:
+    if DEBUG == True and VERBOSE_MODE == True:
         print("")
         print("********************************************************************")
         print("[?] IDENTIFICATION REPORT")

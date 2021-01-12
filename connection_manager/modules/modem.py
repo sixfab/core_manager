@@ -7,24 +7,9 @@ from helpers.logger import initialize_logger
 from helpers.commander import shell_command, send_at_com
 from helpers.yamlio import *
 from helpers.exceptions import *
-
+from helpers.config_parser import *
 
 PING_TIMEOUT = 9
-
-try:
-    config = read_yaml_all(CONFIG_PATH)
-except Exception as e:
-    logger.warning(e)
-
-try:
-    system_info = read_yaml_all(SYSTEM_PATH)
-except Exception as e:
-    logger.warning(e)
-
-DEBUG = config.get("debug_mode", False)
-APN = config.get("apn", "super")
-
-logger = initialize_logger(DEBUG)
 
 class Modem(object):
     # main properties
@@ -331,7 +316,7 @@ class Modem(object):
         logger.info("Creating diagnostic report on --> " + str(diag_file_path))
         write_yaml_all(diag_file_path, self.diagnostic)
 
-        if DEBUG == True:
+        if DEBUG == True and VERBOSE_MODE == True:
             print("")
             print("********************************************************************")
             print("[?] DIAGNOSTIC REPORT")

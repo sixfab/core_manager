@@ -27,7 +27,7 @@ def initialize_logger(debug=False):
                                                             backupCount=3
     )
     
-    if debug is True:
+    if debug == True:
         stream_handler = logging.StreamHandler(sys.stdout)
         stream_handler.setFormatter(formatter)
         logger.addHandler(stream_handler)

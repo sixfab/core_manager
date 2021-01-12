@@ -2,6 +2,7 @@ apn : "super"
 modem : "quectel ec25"
 
 debug_mode : True
+verbose_mode : False
 
 check_internet_interval : 10
 check_config_interval : 60

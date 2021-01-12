@@ -5,9 +5,10 @@ import os.path
 
 from helpers.commander import send_at_com
 from helpers.yamlio import *
-from helpers.logger import initialize_logger
 from helpers.exceptions import *
+from helpers.config_parser import *
 from helpers.queue import queue
+
 from modules.identify import identify_setup
 from modules.modem import Modem
 
@@ -19,19 +20,14 @@ else:
     try:
         identify_setup()
     except Exception as e:
-        logger.critical(e)
-        logger.critiacal("First identification failed. Program is exiting!")
+        logger.critical(str(e))
+        logger.critical("First identification failed. Program is exiting!")
         exit(1)
 
+logger.info("Connection Manager started.")
 
 # Start step
 queue.set_step(0,0,0,0,0,0)
-
-config = read_yaml_all(CONFIG_PATH)
-system_info = read_yaml_all(SYSTEM_PATH)
-
-DEBUG = config.get("debug_mode", False)
-APN = config.get("apn", "super")
 
 modem = Modem(
     vendor = system_info.get("modem_vendor", ""),
@@ -43,7 +39,7 @@ modem = Modem(
     product_id = system_info.get("modem_product_id", "")
 )
 
-if DEBUG == True:
+if DEBUG == True and VERBOSE_MODE == True:
     print("")
     print("********************************************************************")
     print("[?] MODEM REPORT")
@@ -57,7 +53,6 @@ if DEBUG == True:
 def _organizer():
     if queue.base == 0:
         queue.sub = 1
-        print("[ORG] STARTER")
     else:    
         # print("Base: " + str(queue.base) + "\tSub: " + str(queue.sub))
         if queue.is_ok == True:
