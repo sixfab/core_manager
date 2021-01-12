@@ -205,7 +205,6 @@ class Modem(object):
             "con_interface" : True,
             "modem_reachable" : True,
             "usb_driver" : True,
-            "modem_driver" : True,
             "pdp_context" : True,
             "network_reqister" : True,
             "sim_ready" : True,
@@ -241,8 +240,20 @@ class Modem(object):
         else:
             raise RuntimeError("Error occured processing shell command!")
 
-        # 3 - Is modem reachable?
-        logger.info("[3] : Is modem reachable?")
+        # 3 - Is USB driver exist?
+        logger.info("[3] : Is USB driver exist?")
+
+        output = shell_command("usb-devices")
+        if output[2] == 0:
+            if output[0].find("cdc_ether") != -1:
+                self.diagnostic["usb_driver"] = True
+            else: 
+                self.diagnostic["usb_driver"] = False
+        else:
+            raise RuntimeError("Error occured processing shell command!")
+
+        # 4 - Is modem reachable?
+        logger.info("[4] : Is modem reachable?")
         
         output = send_at_com("AT", "OK")
         if output[2] == 0:
@@ -250,8 +261,8 @@ class Modem(object):
         else:
             self.diagnostic["modem_reachable"] = False
 
-        # 4 - Is ECM PDP Context active?
-        logger.info("[4] : Is ECM PDP Context is active?")
+        # 5 - Is ECM PDP Context active?
+        logger.info("[5] : Is ECM PDP Context is active?")
         
         output = send_at_com(self.pdp_status_command, "1,1")
         if output[2] == 0:
@@ -259,8 +270,8 @@ class Modem(object):
         else:
             self.diagnostic["pdp_context"] = False
 
-        # 5 - Is the network registered?
-        logger.info("[5] : Is the network is registered?")
+        # 6 - Is the network registered?
+        logger.info("[6] : Is the network is registered?")
         
         try:
             self.check_network()
@@ -269,8 +280,8 @@ class Modem(object):
         else:
             self.diagnostic["network_reqister"] = True
 
-        # 6 - Is the APN OK?
-        logger.info("[6] : Is the APN is OK?")
+        # 7 - Is the APN OK?
+        logger.info("[7] : Is the APN is OK?")
         
         output = send_at_com("AT+CGDCONT?", APN)
         if output[2] == 0:
@@ -278,8 +289,8 @@ class Modem(object):
         else:
             modem_apn = False
         
-        # 7 - Is the modem mode OK?
-        logger.info("[7] : Is the modem mode OK?")
+        # 8 - Is the modem mode OK?
+        logger.info("[8] : Is the modem mode OK?")
         
         output = send_at_com(self.mode_status_command, self.ecm_mode_response)
         if output[2] == 0:
@@ -287,8 +298,8 @@ class Modem(object):
         else:
             self.diagnostic["modem_mode"] = False 
 
-        # 8 - Is the SIM ready?
-        logger.info("[8] : Is the SIM ready?")
+        # 9 - Is the SIM ready?
+        logger.info("[9] : Is the SIM ready?")
         
         output = send_at_com("AT+CPIN?", "READY")
         if output[2] == 0:
@@ -296,7 +307,8 @@ class Modem(object):
         else:
             self.diagnostic["sim_ready"] = False 
 
-        # 9 Extras
+        
+        # 10 Extras
         self.diagnostic["kernel_ver"] = system_info.get("kernel", "")
         self.diagnostic["modem_fw_ver"] = system_info.get("sw_version", "")
 
@@ -309,12 +321,14 @@ class Modem(object):
 
         if DEBUG == True:
             print("")
-            print("************************************")
-            print("[?] Diagnostic Report -->")
+            print("********************************************************************")
+            print("[?] DIAGNOSTIC REPORT")
+            print("---------------------")
             for x in self.diagnostic.items():
                 print(str("[+] " + x[0]) + " --> " + str(x[1]))
-            print("************************************")
+            print("********************************************************************")
             print("")
+
 
     def reconnect(self):
 
@@ -343,6 +357,34 @@ class Modem(object):
         """
 
 
+    def reset_connection_interface(self):
+        output = shell_command("sudo ifconfig " + str(self.interface_name) + " down")
+        if output[2] == 0:
+           logger.info("Interface " + str(self.interface_name)) + " is down."
+        else:
+            raise RuntimeError("Error occured while interface getting down!")
+        
+        time.sleep(1)
+
+        output = shell_command("sudo ifconfig " + str(self.interface_name) + " up")
+        if output[2] == 0:
+           logger.info("Interface " + str(self.interface_name)) + " is up."
+        else:
+            raise RuntimeError("Error occured while interface getting up!")
+    
+
+    def reset_usb_interface(self):
+        pass
+
+
+    def reset_modem_softly(self):
+        pass
+    
+
+    def reset_modem_hardly(self):
+        pass
+
+    
 
 
 
