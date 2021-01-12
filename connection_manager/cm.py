@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import time
+import os.path
 
 from helpers.commander import send_at_com
 from helpers.yamlio import *
@@ -9,6 +10,20 @@ from helpers.exceptions import *
 from helpers.queue import queue
 from modules.identify import identify_setup
 from modules.modem import Modem
+
+
+# Check the system file exist.
+if os.path.isfile(SYSTEM_PATH):
+    pass
+else:
+    try:
+        identify_setup()
+    except Exception as e:
+        logger.critical(e)
+        logger.critiacal("First identification failed. Program is exiting!")
+        exit(1)
+
+
 # Start step
 queue.set_step(0,0,0,0,0,0)
 

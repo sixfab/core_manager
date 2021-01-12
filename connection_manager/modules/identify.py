@@ -5,7 +5,6 @@ from helpers.commander import send_at_com, shell_command
 from helpers.yamlio import *
 from helpers.queue import queue
 from helpers.exceptions import *
-from modules.modem import Modem
 from helpers.modem_support import ModemSupport
 
 config = read_yaml_all(CONFIG_PATH)

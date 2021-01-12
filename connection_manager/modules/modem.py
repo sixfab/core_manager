@@ -11,8 +11,15 @@ from helpers.exceptions import *
 
 PING_TIMEOUT = 9
 
-config = read_yaml_all(CONFIG_PATH)
-system_info = read_yaml_all(SYSTEM_PATH)
+try:
+    config = read_yaml_all(CONFIG_PATH)
+except Exception as e:
+    logger.warning(e)
+
+try:
+    system_info = read_yaml_all(SYSTEM_PATH)
+except Exception as e:
+    logger.warning(e)
 
 DEBUG = config.get("debug_mode", False)
 APN = config.get("apn", "super")
