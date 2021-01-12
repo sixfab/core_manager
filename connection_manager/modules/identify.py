@@ -72,23 +72,30 @@ def identify_setup():
     else:
         raise RuntimeError("Error occured on usb-devices command!")
 
+    
     # Modem Info Text
+    logger.debug("[+] Modem info")
     output = send_at_com("ATI", "OK")
     system_id["modem_info"] = output[0].replace("\n", " ") if output[2] == 0 else ""
     
+    
     # IMEI
+    logger.debug("[+] IMEI")
     output = send_at_com("AT+CGSN","OK")
     raw_imei = output[0] if output[2] == 0 else "" 
     imei_filter = filter(str.isdigit, raw_imei)
     system_id["imei"] = "".join(imei_filter)
     
+    
     # SW version
+    logger.debug("[+] Modem firmware revision")
     output = send_at_com("AT+CGMR","OK")
     system_id["sw_version"] = output[0].split("\n")[1] if output[2] == 0 else ""
 
     # SIM identification
     # -----------------------------------------
     # CCID
+    logger.debug("[+] SIM UCCID")
     output = send_at_com("AT+CCID","OK")
     raw_ccid = output[0] if output[2] == 0 else ""
     ccid_filter = filter(str.isdigit, raw_ccid)
@@ -97,9 +104,16 @@ def identify_setup():
     # OS identification
     # -----------------------------------------
     try:
+        logger.debug("[+] OS artchitecture")
         system_id["arc"] = str(platform.architecture()[0])
+        
+        logger.debug("[+] Kernel version")
         system_id["kernel"] = str(platform.release())
+        
+        logger.debug("[+] Host name")
         system_id["host_name"] = str(platform.node())
+        
+        logger.debug("[+] OS platform")
         system_id["platform"] = str(platform.platform())
     except Exception as e:
         logger.error("Error occured while getting OS identification!")
