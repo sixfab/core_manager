@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import time
+from usb.core import find as find_usb_dev
 
 from helpers.logger import initialize_logger
 from helpers.commander import shell_command, send_at_com
@@ -21,7 +22,9 @@ logger = initialize_logger(DEBUG)
 class Modem(object):
     # main properties
     vendor = ""
+    vendor_id = ""
     model = ""
+    product_id = ""
     imei = ""
     ccid = ""
     sw_version = ""
@@ -50,12 +53,14 @@ class Modem(object):
             "modem_fw_ver" : "",
         }
 
-    def __init__(self, vendor, model, imei, ccid, sw_version):
+    def __init__(self, vendor, model, imei, ccid, sw_version, vendor_id, product_id):
         self.vendor = vendor
         self.model = model
         self.imei = imei
         self.ccid = ccid
         self.sw_version = sw_version
+        self.vendor_id = vendor_id
+        self.product_id = product_id
 
         if vendor == "Quectel":
             self.interface_name = "usb0"
@@ -374,7 +379,8 @@ class Modem(object):
     
 
     def reset_usb_interface(self):
-        pass
+        dev = find_usb_dev(self.vendor_id, self.product_id)
+        dev.reset()
 
 
     def reset_modem_softly(self):

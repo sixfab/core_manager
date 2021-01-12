@@ -7,11 +7,8 @@ from helpers.yamlio import *
 from helpers.logger import initialize_logger
 from helpers.exceptions import *
 from helpers.queue import queue
-
 from modules.identify import identify_setup
 from modules.modem import Modem
-
-
 # Start step
 queue.set_step(0,0,0,0,0,0)
 
@@ -22,16 +19,25 @@ DEBUG = config.get("debug_mode", False)
 APN = config.get("apn", "super")
 
 modem = Modem(
-    vendor = system_info.get("modem_vendor", "Quectel"),
+    vendor = system_info.get("modem_vendor", ""),
     model = "EC25",
     imei = system_info.get("imei", ""),
     ccid = system_info.get("ccid", ""),
     sw_version = system_info.get("sw_version", ""),
+    vendor_id = system_info.get("modem_vendor_id", ""),
+    product_id = system_info.get("modem_product_id", "")
 )
 
-# attrs = vars(modem_setup)
-# print('\n'.join("%s: %s" % item for item in attrs.items()))
-# exit()
+if DEBUG == True:
+    print("")
+    print("********************************************************************")
+    print("[?] MODEM REPORT")
+    print("-------------------------")
+    attrs = vars(modem)
+    print('\n'.join("[+] %s : %s" % item for item in attrs.items()))
+    print("********************************************************************")
+    print("")
+    #exit()
 
 def _organizer():
     if queue.base == 0:
