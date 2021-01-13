@@ -31,7 +31,7 @@ queue.set_step(0,0,0,0,0,0)
 
 modem = Modem(
     vendor = system_info.get("modem_vendor", ""),
-    model = "EC25",
+    model = system_info.get("modem_name", ""),
     imei = system_info.get("imei", ""),
     ccid = system_info.get("ccid", ""),
     sw_version = system_info.get("sw_version", ""),

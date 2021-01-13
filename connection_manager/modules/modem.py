@@ -105,7 +105,7 @@ class Modem(object):
         try:
             self.configure_apn()
         except Exception as e:
-            raise e
+            raise str(e)
 
         output = send_at_com(self.mode_status_command, self.ecm_mode_response)
 
@@ -116,7 +116,7 @@ class Modem(object):
                 logger.info("ECM mode is activated.")
                 logger.info("The modem is rebooting to apply changes...")
             else:
-                raise ModemNotReachable(output[0])
+                raise ModemNotReachable("Error occured while setting mode configuration! " + output[0])
 
             time.sleep(20)
 

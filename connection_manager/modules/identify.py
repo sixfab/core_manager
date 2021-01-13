@@ -34,6 +34,7 @@ def identify_setup():
     
     # Vendor Name
     logger.debug("[+] Modem vendor name")
+    system_id["modem_vendor"] = ""
     output = shell_command("lsusb")
 
     if output[2] == 0:
@@ -47,8 +48,30 @@ def identify_setup():
     else:
         raise RuntimeError("Error occured on lsusb command!")
 
+
+    # Product Name
+    logger.debug("[+] Product Name")
+    system_id["modem_name"] = ""
+    output = shell_command("usb-devices")
+    if output[2] == 0:
+        for vendor in ModemSupport.vendors:
+            for key in vendor.modules:
+                product_name = key.split("_")[0]
+                if output[0].find(product_name) != -1:
+                    #print(product_name)
+                    system_id["modem_name"] = str(product_name)
+
+        if system_id["modem_name"] == "":
+            # raise ModemNotSupported("Modem is not supported!")
+            logger.warning("Modem name is unknown!")
+
+    else:
+        raise RuntimeError("Error occured on usb-devices command!")
+
+
     # Vendor ID & Product ID
     logger.debug("[+] Modem vendor id and product id")
+    system_id["modem_product_id"] = ""
     output = shell_command("usb-devices")
 
     if output[2] == 0:
@@ -73,9 +96,22 @@ def identify_setup():
     
     # Modem Info Text
     logger.debug("[+] Modem info")
-    output = send_at_com("ATI", "OK")
-    system_id["modem_info"] = output[0].replace("\n", " ") if output[2] == 0 else ""
+    system_id["modem_info"] = ""
+    output = send_at_com("AT+GMM", "OK")
     
+    if output[2] == 0:
+        for vendor in ModemSupport.vendors:
+            for key in vendor.modules:
+                product_name = key.split("_")[0]
+                if output[0].find(product_name) != -1:
+                    #print(product_name)
+                    system_id["modem_info"] = system_id["modem_vendor"] + " " + product_name
+                
+        if system_id["modem_info"] == "":
+            raise ModemNotSupported("Modem is not supported!")
+    else:
+        raise RuntimeError("Error occured on usb-devices command!")
+
     
     # IMEI
     logger.debug("[+] IMEI")
