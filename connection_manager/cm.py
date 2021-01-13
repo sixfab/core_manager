@@ -177,6 +177,10 @@ steps = {
 def execute_step(x):
     steps.get(x)()
 
-while(True):
+def manage_connection():
     execute_step(queue.sub)
     time.sleep(queue.interval)
+
+if __name__  == "__main__":
+    while True:
+        manage_connection()
