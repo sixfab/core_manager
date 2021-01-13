@@ -1,0 +1,12 @@
+arc: 32bit
+ccid: '89883070000004436588'
+host_name: pi-yk-case-one
+imei: '867698041933220'
+kernel: 5.4.65-v7l+
+modem_info: Quectel EG25
+modem_name: EG25
+modem_product_id: '0125'
+modem_vendor: Quectel
+modem_vendor_id: 2c7c
+platform: Linux-5.4.65-v7l+-armv7l-with-debian-10.6
+sw_version: EG25GGBR07A08M2G
