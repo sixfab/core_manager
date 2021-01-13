@@ -6,26 +6,30 @@ from threading import Thread, Lock
 from cm import manage_connection
 from helpers.config_parser import logger
 
-logger.info("Connection Manager started.")
-
 lock = Lock()
 
-def worker1():
+def thread_manage_connection():
+    interval = 0
     while(True):
         with lock:
-            print("Worker 1")
-            time.sleep(1)
+            interval = manage_connection() 
+        time.sleep(interval)
 
-def worker2():
+def thread_monitor_and_config():
     while(True):
         with lock:
-            print("worker 2")
-        time.sleep(2)
+            print("")
+            logger.info("[Config & Monitor] Other threads are locked!")
+            logger.info("<--> Check monitor <-->")
+            logger.info("<--> Check configurations <-->")
+        logger.info("[Config & Monitor] Other threads are released!")
+        time.sleep(60)
 
 def main():
-    Thread(target=worker1).start()
-    Thread(target=worker2).start()
+    Thread(target=thread_manage_connection).start()
+    Thread(target=thread_monitor_and_config).start()
 
-main()
+if __name__ == "__main__":
+    main()
 
 

@@ -179,8 +179,9 @@ def execute_step(x):
 
 def manage_connection():
     execute_step(queue.sub)
-    time.sleep(queue.interval)
+    return queue.interval
 
 if __name__  == "__main__":
     while True:
-        manage_connection()
+        interval = manage_connection()
+        time.sleep(interval)
