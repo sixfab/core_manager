@@ -17,9 +17,8 @@ default_config = {
 }
 
 config = {}
-system_info = {}
 
-# Check the system file exist.
+# Check the config file exist.
 if os.path.isfile(CONFIG_PATH):
     pass
 else:
@@ -30,14 +29,8 @@ else:
     except Exception as e:
         print("Error occured when default config file is creating!")
 
-
 try:
     config = read_yaml_all(CONFIG_PATH)
-except Exception as e:
-    print(e)
-
-try:
-    system_info = read_yaml_all(SYSTEM_PATH)
 except Exception as e:
     print(e)
 

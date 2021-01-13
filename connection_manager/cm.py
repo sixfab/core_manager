@@ -12,12 +12,14 @@ from helpers.queue import queue
 from modules.identify import identify_setup
 from modules.modem import Modem
 
+system_info = {}
 
 # Check the system file exist.
 if os.path.isfile(SYSTEM_PATH):
     pass
 else:
     try:
+        logger.warning("system.yaml doesn't exist! Identifying the system...")
         identify_setup()
     except Exception as e:
         logger.critical(str(e))
@@ -25,6 +27,12 @@ else:
         exit(1)
 
 logger.info("Connection Manager started.")
+
+# Getting system info
+try:
+    system_info = read_yaml_all(SYSTEM_PATH)
+except Exception as e:
+    logger.critical(str(e))
 
 # Start step
 queue.set_step(0,0,0,0,0,0)
