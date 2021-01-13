@@ -9,7 +9,6 @@ from helpers.yamlio import *
 from helpers.exceptions import *
 from helpers.config_parser import *
 
-PING_TIMEOUT = 9
 
 class Modem(object):
     # main properties
