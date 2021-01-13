@@ -12,22 +12,28 @@ from helpers.queue import queue
 from modules.identify import identify_setup
 from modules.modem import Modem
 
+system_info = {}
+queue.set_step(0,0,0,0,0,0)
+
+logger.info("Connection Manager started.")
 
 # Check the system file exist.
 if os.path.isfile(SYSTEM_PATH):
     pass
 else:
     try:
+        logger.warning("system.yaml doesn't exist! Identifying the system...")
         identify_setup()
     except Exception as e:
         logger.critical(str(e))
         logger.critical("First identification failed. Program is exiting!")
         exit(1)
 
-logger.info("Connection Manager started.")
-
-# Start step
-queue.set_step(0,0,0,0,0,0)
+# Getting system info
+try:
+    system_info = read_yaml_all(SYSTEM_PATH)
+except Exception as e:
+    logger.critical(str(e))
 
 modem = Modem(
     vendor = system_info.get("modem_vendor", ""),
@@ -48,7 +54,7 @@ if DEBUG == True and VERBOSE_MODE == True:
     print('\n'.join("[+] %s : %s" % item for item in attrs.items()))
     print("********************************************************************")
     print("")
-    #exit()
+
 
 def _organizer():
     if queue.base == 0:
@@ -171,6 +177,10 @@ steps = {
 def execute_step(x):
     steps.get(x)()
 
-while(True):
+def manage_connection():
     execute_step(queue.sub)
     time.sleep(queue.interval)
+
+if __name__  == "__main__":
+    while True:
+        manage_connection()

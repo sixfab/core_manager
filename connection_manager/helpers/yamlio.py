@@ -3,15 +3,26 @@
 import yaml
 import os
 
+TEMP_FOLDER_PATH =  os.path.expanduser("~") + "/.sixfab/"
+CONNECT_FOLDER_PATH = TEMP_FOLDER_PATH + "connect/"
+DIAG_FOLDER_PATH = CONNECT_FOLDER_PATH + "diagnostics/"
+CONFIG_FOLDER_PATH = CONNECT_FOLDER_PATH + "configs/"
 
-DIAG_FOLDER_PATH = os.path.expanduser("~")+"/.sixfab/connect/diagnostics/"
-    
+CONFIG_PATH = CONFIG_FOLDER_PATH + "config.yaml"
+SYSTEM_PATH = CONNECT_FOLDER_PATH + "system.yaml"
+MONITOR_PATH = CONNECT_FOLDER_PATH + "monitor.yaml"
+
+if not os.path.exists(TEMP_FOLDER_PATH):
+    os.mkdir(TEMP_FOLDER_PATH)
+
+if not os.path.exists(CONNECT_FOLDER_PATH):
+    os.mkdir(CONNECT_FOLDER_PATH)
+
 if not os.path.exists(DIAG_FOLDER_PATH):
     os.mkdir(DIAG_FOLDER_PATH)
 
-CM_PATH = os.path.expanduser("~") + "/connection_manager/"
-CONFIG_PATH = CM_PATH + "config.yaml"
-SYSTEM_PATH = CM_PATH + "system.yaml"
+if not os.path.exists(CONFIG_FOLDER_PATH):
+    os.mkdir(CONFIG_FOLDER_PATH)
 
 
 def read_yaml_all(file):

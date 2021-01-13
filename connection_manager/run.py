@@ -3,19 +3,18 @@
 import time
 from threading import Thread, Lock
 
-from helpers.logger import initialize_logger
+from cm import manage_connection
+from helpers.config_parser import logger
 
-logger = initialize_logger(True)
 logger.info("Connection Manager started.")
 
 lock = Lock()
 
 def worker1():
     while(True):
-
         with lock:
-            print("worker 1")
-        time.sleep(4)
+            print("Worker 1")
+            time.sleep(1)
 
 def worker2():
     while(True):
