@@ -13,6 +13,9 @@ from modules.identify import identify_setup
 from modules.modem import Modem
 
 system_info = {}
+queue.set_step(0,0,0,0,0,0)
+
+logger.info("Connection Manager started.")
 
 # Check the system file exist.
 if os.path.isfile(SYSTEM_PATH):
@@ -26,16 +29,11 @@ else:
         logger.critical("First identification failed. Program is exiting!")
         exit(1)
 
-logger.info("Connection Manager started.")
-
 # Getting system info
 try:
     system_info = read_yaml_all(SYSTEM_PATH)
 except Exception as e:
     logger.critical(str(e))
-
-# Start step
-queue.set_step(0,0,0,0,0,0)
 
 modem = Modem(
     vendor = system_info.get("modem_vendor", ""),
@@ -56,7 +54,7 @@ if DEBUG == True and VERBOSE_MODE == True:
     print('\n'.join("[+] %s : %s" % item for item in attrs.items()))
     print("********************************************************************")
     print("")
-    #exit()
+
 
 def _organizer():
     if queue.base == 0:
