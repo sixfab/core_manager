@@ -231,7 +231,6 @@ def identify_setup():
         logger.warning("Modem VID PID identification failed!")
         raise ModemNotSupported("Modem is not supported!")
 
-    
     # IMEI (Optional)
     logger.debug("[+] IMEI")
     try:
@@ -239,7 +238,6 @@ def identify_setup():
     except Exception as e:
         logger.warning("IMEI identification failed!")
         system_id["imei"] = "Unknown"
-    
     
     # SW version (Optional)
     logger.debug("[+] Modem firmware revision")
@@ -249,7 +247,6 @@ def identify_setup():
         logger.warning("Modem firmware ver. identification failed!")
         system_id["sw_version"] = "Unknown"
 
-    
     # CCID (Optional)
     logger.debug("[+] SIM UCCID")
     try:
@@ -265,7 +262,7 @@ def identify_setup():
     except Exception as e:
         logger.warning("OS identification failed!")
     
-
+    # IDENTIFICATION REPORT
     if DEBUG == True and VERBOSE_MODE == True:
         print("")
         print("********************************************************************")
@@ -276,11 +273,12 @@ def identify_setup():
         print("********************************************************************")
         print("")
 
+    # Save ID's to file
     try:
         write_yaml_all(SYSTEM_PATH, system_id)
     except Exception as e:
         logger.error(e)
-        raise RuntimeError(e)
+        raise e
 
 if __name__ == "__main__":
     identify_setup()
