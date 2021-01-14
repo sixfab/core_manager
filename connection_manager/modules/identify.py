@@ -29,7 +29,7 @@ def _turn_off_echo():
     if output[2] == 0:
         pass
     else:
-        raise ModemNotReachable("Message: " + output[0])
+        raise ModemNotReachable("Error occured turning of AT echo : send_at_com -> ATE0")
 
 def _identify_vendor_name(method=0):
     system_id["modem_vendor"] = ""
@@ -215,6 +215,13 @@ def identify_setup():
         logger.critical("Modem vendor identification failed!")
         raise ModemNotSupported("Modem is not supported!")
 
+    # Turn off AT command echo (Required)
+    logger.debug("[+] Modem vendor name")
+    try:
+        _turn_off_echo()
+    except Exception as e:
+        raise e
+    
     # Product Name (Optional)
     logger.debug("[+] Product Name")
     try:
