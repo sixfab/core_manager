@@ -13,7 +13,7 @@ from modules.identify import identify_setup
 from modules.modem import Modem
 
 system_info = {}
-queue.set_step(0,0,0,0,0,0)
+queue.set_step(0,0,0,0,0,0,0,0)
 
 logger.info("Connection Manager started.")
 
@@ -60,16 +60,21 @@ def _organizer():
     if queue.base == 0:
         queue.sub = 1
     else:    
-        # print("Base: " + str(queue.base) + "\tSub: " + str(queue.sub))
         if queue.is_ok == True:
             queue.sub = queue.success
             queue.is_ok = False
+            queue.clear_counter()
         else:
-            queue.sub = queue.fail
+            if queue.counter >= queue.retry:
+                queue.sub = queue.kill
+                queue.clear_counter()
+            else:
+                queue.sub = queue.fail
+                queue.counter_tick()
 
 def _identify_setup():
     global modem
-    queue.set_step(sub=0, base=1, success=2, fail=1, interval=0.1, is_ok=False)
+    queue.set_step(sub=0, base=1, success=2, fail=1, kill=1, interval=0.1, is_ok=False, retry=5)
 
     try:
         new_id = identify_setup()
@@ -90,7 +95,7 @@ def _identify_setup():
         queue.is_ok = True
 
 def _configure_modem():
-    queue.set_step(sub=0, base=2, success=3, fail=2, interval=0.1, is_ok=False)
+    queue.set_step(sub=0, base=2, success=3, fail=2, kill=1, interval=1, is_ok=False, retry=5)
 
     try:
         modem.configure_modem()
@@ -105,7 +110,7 @@ def _configure_modem():
         queue.is_ok = True
 
 def _check_network():
-    queue.set_step(sub=0, base=3, success=4, fail=3, interval=0.1, is_ok=False)
+    queue.set_step(sub=0, base=3, success=4, fail=3, kill=1, interval=0.1, is_ok=False, retry=5)
 
     try:
         modem.check_network()
@@ -116,7 +121,7 @@ def _check_network():
         queue.is_ok = True
 
 def _initiate_ecm():
-    queue.set_step(sub=0, base=4, success=5, fail=4, interval=0.1, is_ok=False)
+    queue.set_step(sub=0, base=4, success=5, fail=4, kill=1, interval=0.1, is_ok=False, retry=5)
 
     try:
         modem.initiate_ecm()
@@ -127,7 +132,7 @@ def _initiate_ecm():
         queue.is_ok = True
 
 def _check_internet():
-    queue.set_step(sub=0, base=5, success=5, fail=6, interval=5, is_ok=False)
+    queue.set_step(sub=0, base=5, success=5, fail=6, kill=1, interval=10, is_ok=False, retry=0)
 
     try:
         modem.check_internet()
@@ -139,7 +144,7 @@ def _check_internet():
         queue.is_ok = True
 
 def _double_check_internet():
-    queue.set_step(sub=0, base=6, success=5, fail=7, interval=5, is_ok=False)
+    queue.set_step(sub=0, base=6, success=5, fail=7, kill=1, interval=10, is_ok=False, retry=0)
 
     try:
         modem.check_internet()
@@ -151,7 +156,7 @@ def _double_check_internet():
         queue.is_ok = True
 
 def _diagnose():
-    queue.set_step(sub=0, base=7, success=8, fail=7, interval=0.1, is_ok=False)
+    queue.set_step(sub=0, base=7, success=8, fail=7, kill=1, interval=0.1, is_ok=False, retry=5)
 
     try:
         modem.diagnose()
@@ -163,7 +168,7 @@ def _diagnose():
 
 def _reconnect():
     # Identify setup
-    queue.set_step(sub=0, base=8, success=3, fail=8, interval=0.1, is_ok=False)
+    queue.set_step(sub=0, base=8, success=3, fail=8, kill=1, interval=0.1, is_ok=False, retry=5)
 
     try:
         modem.reconnect()
