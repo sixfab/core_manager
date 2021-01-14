@@ -178,7 +178,7 @@ def _identify_fw_version():
         raise ModemNotReachable("Firmware Ver. couldn't be detected!")
 
 def _identify_ccid():
-    output = send_at_com("AT+CCID","OK")
+    output = send_at_com("AT+ICCID","OK")
     raw_ccid = output[0] if output[2] == 0 else ""
 
     if raw_ccid != "":
