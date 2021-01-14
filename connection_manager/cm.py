@@ -68,14 +68,25 @@ def _organizer():
             queue.sub = queue.fail
 
 def _identify_setup():
+    global modem
     queue.set_step(sub=0, base=1, success=2, fail=1, interval=0.1, is_ok=False)
 
     try:
-        identify_setup()
+        new_id = identify_setup()
     except Exception as e:
         logger.error(str(e))
         queue.is_ok = False
     else:
+        if new_id != 0:
+            modem.update(
+                vendor = new_id.get("modem_vendor", ""),
+                model = new_id.get("modem_name", ""),
+                imei = new_id.get("imei", ""),
+                ccid = new_id.get("ccid", ""),
+                sw_version = new_id.get("sw_version", ""),
+                vendor_id = new_id.get("modem_vendor_id", ""),
+                product_id = new_id.get("modem_product_id", "")
+            ) 
         queue.is_ok = True
 
 def _configure_modem():

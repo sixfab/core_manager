@@ -205,6 +205,15 @@ def _identify_os():
         raise RuntimeError("Error occured while getting OS identification!")
     
 def identify_setup():
+
+    # Get old system setup if it is exist
+    old_system_id = {}
+    if os.path.isfile(SYSTEM_PATH):
+        try:
+            old_system_id = read_yaml_all(SYSTEM_PATH)
+        except Exception as e:
+            logger.warning("Old system_id in system.yaml file couln't be read!")
+
     logger.info("[?] System identifying...")
     
     # Modem vendor name (Required)
@@ -286,6 +295,12 @@ def identify_setup():
     except Exception as e:
         logger.error(e)
         raise e
+
+    if system_id != old_system_id:
+        logger.warning("System setup has changed!")
+        return system_id
+    else:
+        return 0
 
 if __name__ == "__main__":
     identify_setup()
