@@ -216,7 +216,7 @@ def identify_setup():
         raise ModemNotSupported("Modem is not supported!")
 
     # Turn off AT command echo (Required)
-    logger.debug("[+] Modem vendor name")
+    logger.debug("[+] Turning off AT command echo")
     try:
         _turn_off_echo()
     except Exception as e:

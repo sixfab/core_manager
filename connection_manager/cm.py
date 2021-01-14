@@ -17,17 +17,17 @@ queue.set_step(0,0,0,0,0,0)
 
 logger.info("Connection Manager started.")
 
-# Check the system file exist.
-if os.path.isfile(SYSTEM_PATH):
-    pass
-else:
-    try:
-        logger.warning("system.yaml doesn't exist! Identifying the system...")
-        identify_setup()
-    except Exception as e:
-        logger.critical(str(e))
-        logger.critical("First identification failed. Program is exiting!")
-        exit(1)
+while True:
+    if os.path.isfile(SYSTEM_PATH):
+        break
+    else:
+        try:
+            logger.warning("system.yaml doesn't exist! Identifying the system...")
+            identify_setup()
+        except Exception as e:
+            logger.critical(e)
+            logger.critical("First identification failed. Retrying to identify required parameters!")
+    time.sleep(2)
 
 # Getting system info
 try:
