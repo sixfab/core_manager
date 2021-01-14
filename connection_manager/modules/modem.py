@@ -104,7 +104,7 @@ class Modem(object):
         try:
             self.configure_apn()
         except Exception as e:
-            raise str(e)
+            raise e
 
         output = send_at_com(self.mode_status_command, self.ecm_mode_response)
 
