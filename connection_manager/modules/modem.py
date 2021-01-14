@@ -72,6 +72,10 @@ class Modem(object):
             self.pdp_status_command = "AT#ECM?"
     
 
+    def update(self, vendor, model, imei, ccid, sw_version, vendor_id, product_id):
+        self.__init__(vendor, model, imei, ccid, sw_version, vendor_id, product_id)
+
+
     def detect_modem(self):
         output = shell_command("lsusb")
         if output[2] == 0:
@@ -104,7 +108,7 @@ class Modem(object):
         try:
             self.configure_apn()
         except Exception as e:
-            raise str(e)
+            raise e
 
         output = send_at_com(self.mode_status_command, self.ecm_mode_response)
 
