@@ -13,7 +13,7 @@ from modules.identify import identify_setup
 from modules.modem import Modem
 
 system_info = {}
-queue.set_step(0,0,0,0,0,0,0,0)
+queue.set_step(0,0,0,0,0,0,0)
 
 logger.info("Connection Manager started.")
 
@@ -56,26 +56,14 @@ if DEBUG == True and VERBOSE_MODE == True:
     print("")
 
 
-def _organizer():
+def _organizer(arg):
     if queue.base == 0:
-        queue.sub = 9
+        queue.sub = 1
     else:    
         if queue.is_ok == True:
             queue.sub = queue.success
-            queue.is_ok = False
-            
-            if queue.base == 5 or queue.base == 6:
-                queue.recovery_is_ok = True
-
-            if queue.recovery_is_ok == False and queue.base > 7:
-                logger.debug("Recovery Session --> Base: " + str(queue.base) + "\tKill: " + str(queue.kill))
-                queue.sub = queue.kill
-
+            queue.is_ok = False    
         else:
-            if queue.base == 5 or queue.base == 6:
-                logger.debug("No internet --> Recovery ispreparing...")
-                queue.recovery_is_ok = False
-
             if queue.counter >= queue.retry:
                 queue.sub = queue.fail
                 queue.clear_counter()
@@ -83,9 +71,9 @@ def _organizer():
                 queue.sub = queue.base
                 queue.counter_tick()
 
-def _identify_setup():
+def _identify_setup(arg):
     global modem
-    queue.set_step(sub=0, base=1, success=2, fail=1, kill=1, interval=0.1, is_ok=False, retry=5)
+    queue.set_step(sub=0, base=1, success=2, fail=1, interval=0.1, is_ok=False, retry=5)
 
     try:
         new_id = identify_setup()
@@ -105,8 +93,8 @@ def _identify_setup():
             ) 
         queue.is_ok = True
 
-def _configure_modem():
-    queue.set_step(sub=0, base=2, success=3, fail=2, kill=1, interval=1, is_ok=False, retry=5)
+def _configure_modem(arg):
+    queue.set_step(sub=0, base=2, success=3, fail=2, interval=1, is_ok=False, retry=5)
 
     try:
         modem.configure_modem()
@@ -120,8 +108,8 @@ def _configure_modem():
     else:
         queue.is_ok = True
 
-def _check_network():
-    queue.set_step(sub=0, base=3, success=4, fail=3, kill=1, interval=0.1, is_ok=False, retry=5)
+def _check_network(arg):
+    queue.set_step(sub=0, base=3, success=4, fail=3, interval=0.1, is_ok=False, retry=5)
 
     try:
         modem.check_network()
@@ -131,8 +119,8 @@ def _check_network():
     else:
         queue.is_ok = True
 
-def _initiate_ecm():
-    queue.set_step(sub=0, base=4, success=5, fail=4, kill=1, interval=0.1, is_ok=False, retry=5)
+def _initiate_ecm(arg):
+    queue.set_step(sub=0, base=4, success=5, fail=4, interval=0.1, is_ok=False, retry=5)
 
     try:
         modem.initiate_ecm()
@@ -142,8 +130,14 @@ def _initiate_ecm():
     else:
         queue.is_ok = True
 
-def _check_internet():
-    queue.set_step(sub=0, base=5, success=5, fail=6, kill=1, interval=10, is_ok=False, retry=0)
+def _check_internet(arg):
+    
+    if queue.sub == 5:
+        queue.set_step(sub=0, base=5, success=5, fail=6, interval=10, is_ok=False, retry=0)
+    elif queue.sub == 8:
+        queue.set_step(sub=0, base=8, success=5, fail=9, interval=10, is_ok=False, retry=0)
+    elif queue.sub == 10:
+        queue.set_step(sub=0, base=10, success=5, fail=11, interval=10, is_ok=False, retry=0)
 
     try:
         modem.check_internet()
@@ -154,20 +148,8 @@ def _check_internet():
         print(".", end="", flush=True)  # debug purpose
         queue.is_ok = True
 
-def _double_check_internet():
-    queue.set_step(sub=0, base=6, success=5, fail=7, kill=1, interval=10, is_ok=False, retry=0)
-
-    try:
-        modem.check_internet()
-    except Exception as e:
-        logger.error(str(e))
-        queue.is_ok = False
-    else:
-        print("/", end="", flush=True)  # debug purpose
-        queue.is_ok = True
-
-def _diagnose():
-    queue.set_step(sub=0, base=7, success=8, fail=7, kill=1, interval=0.1, is_ok=False, retry=5)
+def _diagnose(arg):
+    queue.set_step(sub=0, base=6, success=7, fail=6, interval=0.1, is_ok=False, retry=5)
 
     try:
         modem.diagnose()
@@ -177,8 +159,8 @@ def _diagnose():
     else:
         queue.is_ok = True
 
-def _reset_connection_interface():
-    queue.set_step(sub=0, base=8, success=5, fail=9, kill=9, interval=1, is_ok=False, retry=2)
+def _reset_connection_interface(arg):
+    queue.set_step(sub=0, base=7, success=8, fail=9, interval=1, is_ok=False, retry=2)
 
     try:
         modem.reset_connection_interface()
@@ -188,8 +170,8 @@ def _reset_connection_interface():
     else:
         queue.is_ok = True
 
-def _reset_usb_interface():
-    queue.set_step(sub=0, base=9, success=5, fail=10, kill=10, interval=1, is_ok=False, retry=2)
+def _reset_usb_interface(arg):
+    queue.set_step(sub=0, base=9, success=10, fail=11, interval=1, is_ok=False, retry=2)
 
     try:
         modem.reset_usb_interface()
@@ -199,8 +181,8 @@ def _reset_usb_interface():
     else:
         queue.is_ok = True
 
-def _reset_modem_softly():
-    queue.set_step(sub=0, base=10, success=3, fail=11, kill=11, interval=1, is_ok=False, retry=1)
+def _reset_modem_softly(arg):
+    queue.set_step(sub=0, base=11, success=1, fail=12, interval=1, is_ok=False, retry=1)
 
     try:
         modem.reset_modem_softly()
@@ -210,8 +192,8 @@ def _reset_modem_softly():
     else:
         queue.is_ok = True
 
-def _reset_modem_hardly():
-    queue.set_step(sub=0, base=11, success=2, fail=1, kill=1, interval=1, is_ok=False, retry=1)
+def _reset_modem_hardly(arg):
+    queue.set_step(sub=0, base=12, success=1, fail=1, interval=1, is_ok=False, retry=1)
 
     try:
         modem.reset_modem_hardly()
@@ -228,16 +210,17 @@ steps = {
     3: _check_network,
     4: _initiate_ecm,
     5: _check_internet,
-    6: _double_check_internet,
-    7: _diagnose,
-    8: _reset_connection_interface,
+    6: _diagnose,
+    7: _reset_connection_interface,
+    8: _check_internet,
     9: _reset_usb_interface,
-    10: _reset_modem_softly,
-    11: _reset_modem_hardly,
+    10: _check_internet,
+    11: _reset_modem_softly,
+    12: _reset_modem_hardly,
 }
     
-def execute_step(x):
-    steps.get(x)()
+def execute_step(x, arg=None):
+    steps.get(x)(arg)
 
 def manage_connection():
     execute_step(queue.sub)

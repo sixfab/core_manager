@@ -6,12 +6,10 @@ class Queue(object):
     base = 0
     success = 0
     fail = 0
-    kill = 0
     interval = 0
     is_ok = False
     retry = 0
     counter = 0
-    recovery_is_ok = 0
 
     def clear_counter(self):
         self.counter = 0
@@ -19,12 +17,11 @@ class Queue(object):
     def counter_tick(self):
         self.counter += 1
 
-    def set_step(self, sub, base, success, fail, kill, interval = 0, is_ok = False, retry = 0):
+    def set_step(self, sub, base, success, fail, interval = 0, is_ok = False, retry = 0):
         self.sub = sub
         self.base = base
         self.success = success
         self.fail = fail
-        self.kill = kill
         self.interval = interval
         self.is_ok = is_ok
         self.retry = retry
