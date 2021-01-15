@@ -11,6 +11,7 @@ class Queue(object):
     is_ok = False
     retry = 0
     counter = 0
+    recovery_is_ok = 0
 
     def clear_counter(self):
         self.counter = 0

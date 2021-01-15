@@ -58,18 +58,29 @@ if DEBUG == True and VERBOSE_MODE == True:
 
 def _organizer():
     if queue.base == 0:
-        queue.sub = 1
+        queue.sub = 9
     else:    
         if queue.is_ok == True:
             queue.sub = queue.success
             queue.is_ok = False
-            queue.clear_counter()
-        else:
-            if queue.counter >= queue.retry:
+            
+            if queue.base == 5 or queue.base == 6:
+                queue.recovery_is_ok = True
+
+            if queue.recovery_is_ok == False and queue.base > 7:
+                logger.debug("Recovery Session --> Base: " + str(queue.base) + "\tKill: " + str(queue.kill))
                 queue.sub = queue.kill
+
+        else:
+            if queue.base == 5 or queue.base == 6:
+                logger.debug("No internet --> Recovery ispreparing...")
+                queue.recovery_is_ok = False
+
+            if queue.counter >= queue.retry:
+                queue.sub = queue.fail
                 queue.clear_counter()
             else:
-                queue.sub = queue.fail
+                queue.sub = queue.base
                 queue.counter_tick()
 
 def _identify_setup():
@@ -166,11 +177,22 @@ def _diagnose():
     else:
         queue.is_ok = True
 
-def _reconnect():
-    queue.set_step(sub=0, base=8, success=3, fail=8, kill=1, interval=0.1, is_ok=False, retry=5)
+def _reset_connection_interface():
+    queue.set_step(sub=0, base=8, success=5, fail=9, kill=9, interval=1, is_ok=False, retry=2)
 
     try:
-        modem.reconnect()
+        modem.reset_connection_interface()
+    except Exception as e:
+        logger.error(e)
+        queue.is_ok = False
+    else:
+        queue.is_ok = True
+
+def _reset_usb_interface():
+    queue.set_step(sub=0, base=9, success=5, fail=10, kill=10, interval=1, is_ok=False, retry=2)
+
+    try:
+        modem.reset_usb_interface()
     except Exception as e:
         logger.error(str(e))
         queue.is_ok = False
@@ -178,10 +200,21 @@ def _reconnect():
         queue.is_ok = True
 
 def _reset_modem_softly():
-    queue.set_step(sub=0, base=9, success=3, fail=9, kill=1, interval=0.1, is_ok=False, retry=5)
+    queue.set_step(sub=0, base=10, success=3, fail=11, kill=11, interval=1, is_ok=False, retry=1)
 
     try:
         modem.reset_modem_softly()
+    except Exception as e:
+        logger.error(str(e))
+        queue.is_ok = False
+    else:
+        queue.is_ok = True
+
+def _reset_modem_hardly():
+    queue.set_step(sub=0, base=11, success=2, fail=1, kill=1, interval=1, is_ok=False, retry=1)
+
+    try:
+        modem.reset_modem_hardly()
     except Exception as e:
         logger.error(str(e))
         queue.is_ok = False
@@ -197,8 +230,10 @@ steps = {
     5: _check_internet,
     6: _double_check_internet,
     7: _diagnose,
-    8: _reconnect,
-    9: _reset_modem_softly,
+    8: _reset_connection_interface,
+    9: _reset_usb_interface,
+    10: _reset_modem_softly,
+    11: _reset_modem_hardly,
 }
     
 def execute_step(x):
