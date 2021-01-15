@@ -177,12 +177,27 @@ class Modem(object):
 
 
     def initiate_ecm(self):
+        output = send_at_com(self.pdp_status_command, "1,1")
+        if output[2] == 0:
+           logger.info("ECM is already initiated.")
+           time.sleep(10)
+           return 0
 
         logger.info("ECM Connection is initiating...")
         output = send_at_com(self.pdp_activate_command,"OK")
             
         if output[2] == 0:
-            logger.info("ECM Connection is initiated.")
+            for i in range(60):
+                output = send_at_com(self.pdp_status_command, "1,1")
+
+                if output[2] == 0:
+                    logger.info("ECM Connection is initiated.")
+                    time.sleep(5)
+                    return 0
+                else:
+                    time.sleep(1)
+            
+            raise PDPContextFailed("ECM initiation timeout!")       
         else:
             raise PDPContextFailed("ECM initiation failed!")
 
@@ -195,7 +210,7 @@ class Modem(object):
         if output[2] == 0:
             return 0
         else:
-            raise NoInternet("no internet")
+            raise NoInternet("No internet!")
 
 
     def diagnose(self):
@@ -331,31 +346,8 @@ class Modem(object):
 
 
     def reconnect(self):
-
-        logger.info("Modem restarting...")
-        time.sleep(60)
-        """
-        output = send_at_com(self.reboot_command, "OK")
-        if output[2] == 0:
-            time.sleep(20)
-        else:
-            raise ModemNotReachable("Reboot message couldn't be reach to modem!")
-
-        # Check modem is started!
-        for i in range(120):
-            output = shell_command("route -n")   
-            if output[0].find(self.interface_name) != -1:
-                logger.info("Modem started.")
-                time.sleep(5)
-                break
-            else:
-                time.sleep(1)
-                print("*", end="", flush=True)  # debug
-            
-            raise ModemNotFound("Modem couldn't be started after reboot!")   
-
-        """
-
+        pass
+       
 
     def reset_connection_interface(self):
         output = shell_command("sudo ifconfig " + str(self.interface_name) + " down")
@@ -374,14 +366,91 @@ class Modem(object):
     
 
     def reset_usb_interface(self):
-        dev = find_usb_dev(self.vendor_id, self.product_id)
-        dev.reset()
+        try:
+            dev = find_usb_dev(self.vendor_id, self.product_id)
+            dev.reset()
+        except Exception as e:
+            raise e
+
+
+    def wait_until_modem_turned_off(self):
+        counter = 0
+        for i in range(60):
+            output = shell_command("lsusb")   
+            if output[0].find(self.vendor) != -1:
+                time.sleep(1)
+                counter += 1
+                print(str(counter) + " - ", end="", flush=True)  # debug
+            else:
+                print() # debug
+                logger.debug("Modem turned off.")
+                counter = 0
+                return 0
+        raise RuntimeError("Modem didn't turn off as expected!")
+
+
+    def wait_until_modem_started(self):
+        result = 0
+        counter = 0
+        # Check modem USB interface
+        for i in range(120):
+            output = shell_command("lsusb")   
+            if output[0].find(self.vendor) != -1:
+                print() # debug
+                logger.debug("Modem USB interface detected.")
+                counter = 0
+                result += 1
+                break
+            else:
+                time.sleep(1)
+                counter += 1
+                print(str(counter) + " + ", end="", flush=True)  # debug
+
+        # Check modem AT FW
+        for i in range(10):
+            output = send_at_com("AT", "OK")   
+            if output[2] == 0:
+                print() # debug
+                logger.debug("Modem AT FW is working.")
+                counter = 0
+                result += 1
+                break
+            else:
+                time.sleep(1)
+                counter += 1
+                print(str(counter) + " * ", end="", flush=True)  # debug
+
+        # Check modem connection interface
+        for i in range(20):
+            output = shell_command("route -n")   
+            if output[0].find(self.interface_name) != -1:
+                print() # debug
+                logger.info("Modem started.")
+                counter = 0
+                result += 1
+                break
+            else:
+                time.sleep(1)
+                counter += 1
+                print(str(counter) + " : ", end="", flush=True)  # debug
+
+        if result != 3:
+            raise ModemNotFound("Modem couldn't be started!")
 
 
     def reset_modem_softly(self):
-        pass
-    
+        logger.info("Modem is resetting softly...")
+        output = send_at_com(self.reboot_command, "OK")
+        if output[2] == 0:
+            try:
+                self.wait_until_modem_turned_off()
+                self.wait_until_modem_started()
+            except Exception as e:
+                raise e
+        else:
+            raise RuntimeError("Reboot command couldn't be reach to the modem!")
 
+        
     def reset_modem_hardly(self):
         pass
 

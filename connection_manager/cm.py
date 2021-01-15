@@ -58,7 +58,7 @@ if DEBUG == True and VERBOSE_MODE == True:
 
 def _organizer():
     if queue.base == 0:
-        queue.sub = 1
+        queue.sub = 9
     else:    
         if queue.is_ok == True:
             queue.sub = queue.success
@@ -167,11 +167,21 @@ def _diagnose():
         queue.is_ok = True
 
 def _reconnect():
-    # Identify setup
     queue.set_step(sub=0, base=8, success=3, fail=8, kill=1, interval=0.1, is_ok=False, retry=5)
 
     try:
         modem.reconnect()
+    except Exception as e:
+        logger.error(str(e))
+        queue.is_ok = False
+    else:
+        queue.is_ok = True
+
+def _reset_modem_softly():
+    queue.set_step(sub=0, base=9, success=3, fail=9, kill=1, interval=0.1, is_ok=False, retry=5)
+
+    try:
+        modem.reset_modem_softly()
     except Exception as e:
         logger.error(str(e))
         queue.is_ok = False
@@ -188,6 +198,7 @@ steps = {
     6: _double_check_internet,
     7: _diagnose,
     8: _reconnect,
+    9: _reset_modem_softly,
 }
     
 def execute_step(x):
