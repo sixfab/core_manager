@@ -58,7 +58,7 @@ if DEBUG == True and VERBOSE_MODE == True:
 
 def _organizer():
     if queue.base == 0:
-        queue.sub = 9
+        queue.sub = 1
     else:    
         if queue.is_ok == True:
             queue.sub = queue.success

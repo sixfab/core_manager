@@ -102,7 +102,7 @@ class Modem(object):
 
 
     def configure_modem(self):
-
+        force_reset = 0
         logger.info("Modem configuration started.")
 
         try:
@@ -117,31 +117,24 @@ class Modem(object):
             
             if output[2] == 0:
                 logger.info("ECM mode is activated.")
-                logger.info("The modem is rebooting to apply changes...")
+                logger.info("The modem will reboot to apply changes.")
             else:
                 raise ModemNotReachable("Error occured while setting mode configuration! " + output[0])
 
-            time.sleep(20)
-
-            output = shell_command("route -n")
-
-            if output[0].find(self.interface_name):
-                logger.info("Modem started.")
-            else:
-                output = send_at_com(self.reboot_command, "OK")
+            try:
                 time.sleep(20)
-
-                # Check modem is started!
-                for i in range(120):
-                    output = shell_command("route -n")     
-                    if output[0].find(self.reboot_command):
-                        logger.info("Modem started.")
-                        break
-                    else:
-                        time.sleep(1)
-                        print("*", end="", flush=True)
-                
-                time.sleep(5)
+                self.wait_until_modem_started()
+            except Exception as e:
+                logger.warning(str(e))
+                force_reset = 1
+            
+            if force_reset == 1:
+                force_reset = 0
+                try:
+                    self.reset_modem_softly()
+                except Exception as e:
+                    raise e
+            
 
 
     def check_network(self):
@@ -375,7 +368,7 @@ class Modem(object):
 
     def wait_until_modem_turned_off(self):
         counter = 0
-        for i in range(60):
+        for i in range(20):
             output = shell_command("lsusb")   
             if output[0].find(self.vendor) != -1:
                 time.sleep(1)
