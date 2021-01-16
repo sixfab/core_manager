@@ -94,7 +94,7 @@ def _identify_setup(arg):
         queue.is_ok = True
 
 def _configure_modem(arg):
-    queue.set_step(sub=0, base=2, success=3, fail=2, interval=1, is_ok=False, retry=5)
+    queue.set_step(sub=0, base=2, success=3, fail=1, interval=1, is_ok=False, retry=5)
 
     try:
         modem.configure_modem()
@@ -109,7 +109,7 @@ def _configure_modem(arg):
         queue.is_ok = True
 
 def _check_network(arg):
-    queue.set_step(sub=0, base=3, success=4, fail=3, interval=0.1, is_ok=False, retry=5)
+    queue.set_step(sub=0, base=3, success=4, fail=1, interval=0.1, is_ok=False, retry=5)
 
     try:
         modem.check_network()
@@ -120,7 +120,7 @@ def _check_network(arg):
         queue.is_ok = True
 
 def _initiate_ecm(arg):
-    queue.set_step(sub=0, base=4, success=5, fail=4, interval=0.1, is_ok=False, retry=5)
+    queue.set_step(sub=0, base=4, success=5, fail=1, interval=0.1, is_ok=False, retry=5)
 
     try:
         modem.initiate_ecm()

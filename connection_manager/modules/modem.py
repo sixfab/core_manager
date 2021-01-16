@@ -10,6 +10,7 @@ from helpers.exceptions import *
 from helpers.config_parser import *
 
 BASE_HAT_DISABLE_PIN = 26 # For raspberry pi
+reset_usb_script = "helpers/reset_usb.py"
 
 class Modem(object):
     # main properties
@@ -216,8 +217,6 @@ class Modem(object):
             "sim_ready" : True,
             "modem_mode" : True,
             "modem_apn" : True,
-            "kernel_ver" : "",
-            "modem_fw_ver" : "",
         }
 
         logger.info("Diagnostic is working...")
@@ -331,17 +330,13 @@ class Modem(object):
             print("")
 
 
-    def reconnect(self):
-        pass
-       
-
     def reset_connection_interface(self):
         down = "sudo ifconfig " + str(self.interface_name) + " down"
         up = "sudo ifconfig " + str(self.interface_name) + " up"
-        print(up)
-        print(down)
+
+        logger.info("Connection interface is reset...")
+
         output = shell_command(down)
-        print(output)
         if output[2] == 0:
            logger.info("Interface " + str(self.interface_name) + " is down.")
         else:
@@ -362,19 +357,17 @@ class Modem(object):
 
 
     def reset_usb_interface(self):
-        vendor_id_int = int(self.vendor_id, 16)
-        product_id_int = int(self.product_id, 16)
+        logger.info("USB interface is reset...")
+        
+        output = shell_command("sudo python3 " + reset_usb_script)
 
-        try:
-            dev = finddev(idVendor=vendor_id_int, idProduct=product_id_int)
-            dev.reset()
-        except Exception as e:
-            raise e
-
-        try:
-            self.wait_until_modem_interface_up()
-        except Exception as e:
-            raise e
+        if output[2] != 0:
+            raise RuntimeError("Message: " + output)
+        else:
+            try:
+               self.wait_until_modem_interface_up()
+            except Exception as e:
+                raise e
 
 
     def wait_until_modem_turned_off(self):
