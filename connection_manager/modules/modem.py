@@ -212,6 +212,7 @@ class Modem(object):
             "con_interface" : "",
             "modem_reachable" : "",
             "usb_driver" : "",
+
             "pdp_context" : "",
             "network_reqister" : "",
             "sim_ready" : "",
@@ -252,9 +253,12 @@ class Modem(object):
         output = shell_command("usb-devices")
         if output[2] == 0:
             if output[0].find("cdc_ether") != -1:
-                self.diagnostic["usb_driver"] = True
-            else: 
-                self.diagnostic["usb_driver"] = False
+                if output[0].count("cdc_ether") >= 2:
+                    self.diagnostic["usb_driver"] = True
+                else: 
+                    self.diagnostic["usb_driver"] = False
+            else:
+                self.diagnostic["usb_driver"] = False    
         else:
             raise RuntimeError("Error occured processing shell command!")
 
