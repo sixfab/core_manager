@@ -205,18 +205,19 @@ class Modem(object):
             raise NoInternet("No internet!")
 
 
-    def diagnose(self):
+    def diagnose(self, diag_type=0):
         
         self.diagnostic = {
-            "con_interface" : True,
-            "con_interface" : True,
-            "modem_reachable" : True,
-            "usb_driver" : True,
-            "pdp_context" : True,
-            "network_reqister" : True,
-            "sim_ready" : True,
-            "modem_mode" : True,
-            "modem_apn" : True,
+            "con_interface" : "",
+            "con_interface" : "",
+            "modem_reachable" : "",
+            "usb_driver" : "",
+            "pdp_context" : "",
+            "network_reqister" : "",
+            "sim_ready" : "",
+            "modem_mode" : "",
+            "modem_apn" : "",
+            "timestamp" : "",
         }
 
         logger.info("Diagnostic is working...")
@@ -314,10 +315,20 @@ class Modem(object):
 
                
         timestamp = time.strftime("%Y-%m-%d_%H:%M:%S")
-        diag_file_name = "cm-diag_" + str(timestamp) + ".yaml"
-        diag_file_path = DIAG_FOLDER_PATH + diag_file_name
-        logger.info("Creating diagnostic report on --> " + str(diag_file_path))
-        write_yaml_all(diag_file_path, self.diagnostic)
+        self.diagnostic["timestamp"] = timestamp
+
+        if diag_type == 0:
+            diag_file_name = "cm-diag_" + str(timestamp) + ".yaml"
+            diag_file_path = DIAG_FOLDER_PATH + diag_file_name
+            logger.info("Creating diagnostic report on --> " + str(diag_file_path))
+            write_yaml_all(diag_file_path, self.diagnostic)
+        else:
+            diag_file_name = "cm-diag-repeated.yaml"
+            diag_file_path = DIAG_FOLDER_PATH + diag_file_name
+            logger.info("Creating diagnostic report on --> " + str(diag_file_path))
+            write_yaml_all(diag_file_path, self.diagnostic)
+
+        
 
         if DEBUG == True and VERBOSE_MODE == True:
             print("")
@@ -489,20 +500,4 @@ class Modem(object):
             time.sleep(2)
         else:
             raise RuntimeError("Error occured gpio command!")
-
-
-    
-
-
-
-
-
-        
-
-
-
-
-
-
-
 

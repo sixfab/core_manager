@@ -94,7 +94,7 @@ def _identify_setup(arg):
         queue.is_ok = True
 
 def _configure_modem(arg):
-    queue.set_step(sub=0, base=2, success=3, fail=1, interval=1, is_ok=False, retry=5)
+    queue.set_step(sub=0, base=2, success=3, fail=13, interval=1, is_ok=False, retry=5)
 
     try:
         modem.configure_modem()
@@ -109,7 +109,7 @@ def _configure_modem(arg):
         queue.is_ok = True
 
 def _check_network(arg):
-    queue.set_step(sub=0, base=3, success=4, fail=1, interval=0.1, is_ok=False, retry=5)
+    queue.set_step(sub=0, base=3, success=4, fail=13, interval=0.1, is_ok=False, retry=5)
 
     try:
         modem.check_network()
@@ -120,7 +120,7 @@ def _check_network(arg):
         queue.is_ok = True
 
 def _initiate_ecm(arg):
-    queue.set_step(sub=0, base=4, success=5, fail=1, interval=0.1, is_ok=False, retry=5)
+    queue.set_step(sub=0, base=4, success=5, fail=13, interval=0.1, is_ok=False, retry=5)
 
     try:
         modem.initiate_ecm()
@@ -149,10 +149,16 @@ def _check_internet(arg):
         queue.is_ok = True
 
 def _diagnose(arg):
-    queue.set_step(sub=0, base=6, success=7, fail=6, interval=0.1, is_ok=False, retry=5)
-
+    diag_type = 0
+    
+    if queue.sub == 6:
+        queue.set_step(sub=0, base=6, success=7, fail=6, interval=0.1, is_ok=False, retry=5)
+        diag_type = 0
+    elif queue.sub == 13:
+        queue.set_step(sub=0, base=13, success=1, fail=1, interval=0.1, is_ok=False, retry=5) 
+        diag_type = 1
     try:
-        modem.diagnose()
+        modem.diagnose(diag_type)
     except Exception as e:
         logger.error(str(e))
         queue.is_ok = False
@@ -217,6 +223,7 @@ steps = {
     10: _check_internet,
     11: _reset_modem_softly,
     12: _reset_modem_hardly,
+    13: _diagnose,
 }
     
 def execute_step(x, arg=None):
@@ -230,3 +237,4 @@ if __name__  == "__main__":
     while True:
         interval = manage_connection()
         time.sleep(interval)
+
