@@ -169,6 +169,7 @@ class Modem(object):
 
 
     def initiate_ecm(self):
+        logger.info("Checking the ECM initialization...")
         output = send_at_com(self.pdp_status_command, "OK")
         if output[2] == 0:
             if(output[0].find("0,1") != -1 or output[0].find("1,1") != -1):
