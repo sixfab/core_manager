@@ -145,17 +145,19 @@ def _check_internet(arg):
         logger.error(str(e))
         queue.is_ok = False
     else:
+        modem.monitor["cellular_connection"] = True
         print(".", end="", flush=True)  # debug purpose
         queue.is_ok = True
 
 def _diagnose(arg):
+    modem.monitor["cellular_connection"] = False
     diag_type = 0
     
     if queue.sub == 6:
-        queue.set_step(sub=0, base=6, success=7, fail=6, interval=0.1, is_ok=False, retry=5)
+        queue.set_step(sub=0, base=6, success=7, fail=7, interval=0.1, is_ok=False, retry=5)
         diag_type = 0
     elif queue.sub == 13:
-        queue.set_step(sub=0, base=13, success=1, fail=1, interval=0.1, is_ok=False, retry=5) 
+        queue.set_step(sub=0, base=13, success=7, fail=7, interval=0.1, is_ok=False, retry=5) 
         diag_type = 1
     try:
         modem.diagnose(diag_type)

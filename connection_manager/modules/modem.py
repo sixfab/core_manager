@@ -22,6 +22,16 @@ class Modem(object):
     ccid = ""
     sw_version = ""
 
+    # monitoring properties
+    monitor = {
+        "cellular_connection" : "Unknown",
+        "usable_interfaces" : "Unknown",
+        "active_interface" : "Unknown",
+        "signal_quality" : "Unknown",
+        "roaming_operator" : "Unknown",
+        "active_lte_tech": "Unknown",
+    }
+
     # additional properties
     interface_name = ""
     mode_status_command = ""
@@ -32,17 +42,17 @@ class Modem(object):
     pdp_status_command = ""
 
     diagnostic = {
-            "con_interface" : True,
-            "con_interface" : True,
-            "modem_reachable" : True,
-            "usb_driver" : True,
-            "modem_driver" : True,
-            "pdp_context" : True,
-            "network_reqister" : True,
-            "sim_ready" : True,
-            "modem_mode" : True,
-            "modem_apn" : True,
-        }
+        "con_interface" : True,
+        "con_interface" : True,
+        "modem_reachable" : True,
+        "usb_driver" : True,
+        "modem_driver" : True,
+        "pdp_context" : True,
+        "network_reqister" : True,
+        "sim_ready" : True,
+        "modem_mode" : True,
+        "modem_apn" : True,
+    }
 
     def __init__(self, vendor, model, imei, ccid, sw_version, vendor_id, product_id):
         self.vendor = vendor
@@ -110,9 +120,11 @@ class Modem(object):
         except Exception as e:
             raise e
 
+        logger.info("Checking the mode of modem...")
         output = send_at_com(self.mode_status_command, self.ecm_mode_response)
 
         if output[2] != 0:
+            logger.info("Modem mode is not set. ECM mode will be activated soon.")
             output = send_at_com(self.ecm_mode_setter_command, "OK")
             
             if output[2] == 0:
@@ -134,8 +146,8 @@ class Modem(object):
                     self.reset_modem_softly()
                 except Exception as e:
                     raise e
-            
 
+            
     def check_network(self):
         
         sim_ready = 0
@@ -169,6 +181,7 @@ class Modem(object):
 
 
     def initiate_ecm(self):
+        logger.info("Checking the ECM initialization...")
         output = send_at_com(self.pdp_status_command, "OK")
         if output[2] == 0:
             if(output[0].find("0,1") != -1 or output[0].find("1,1") != -1):
@@ -509,3 +522,97 @@ class Modem(object):
         else:
             raise RuntimeError("Error occured gpio command!")
 
+
+    def get_cellular_status(self):
+        return self.monitor.get("cellular_connection","Unknown")
+
+
+    def find_usable_interfaces(self):
+        # Supported interfaces
+        interfaces = ["eth0", "wlan0", "usb0", "wwan0"]
+        usable_interafaces = []
+
+        output = shell_command("route -n")
+        
+        if output[2] == 0:
+            for i in interfaces:
+                if output[0].find(i) != -1:
+                    usable_interafaces.append(i)
+        
+        return usable_interafaces
+
+
+    def find_active_interface(self):
+        # Supported interfaces and locations
+        interfaces = {"eth0": 10000, "wlan0": 10000, "usb0": 10000, "wwan0": 10000}
+
+        output = shell_command("route -n")
+        
+        if output[2] == 0:
+            for key in interfaces:
+                location = output[0].find(key)
+                if  location != -1:
+                    interfaces[key] = location
+        else:
+            raise RuntimeError("Error occured on \"route -n\" command!")
+
+        # find interface has highest priority
+        last_location = 10000
+        high = "Unknown"
+        for key in interfaces:
+            if  interfaces[key] < last_location:
+                last_location = interfaces[key] 
+                high = key
+
+        return high
+
+
+    def get_significant_data(self, output, header):
+        header += " "
+        header_size = len(header)
+        index_of_data = output[0].find(header) + header_size
+        end_of_data = index_of_data + output[0][index_of_data:].find("\n")
+        sig_data = output[0][index_of_data:end_of_data].split(",")
+        return sig_data
+
+
+    def get_roaming_operator(self):
+        output = send_at_com("AT+COPS?", "OK")
+        
+        if output[2] == 0:
+            data = self.get_significant_data(output, "+COPS:")
+            return data[2]
+        else:
+            raise RuntimeError("Error occured on \"AT+CSQ\" command!")
+
+
+    def get_signal_quality(self):
+        output = send_at_com("AT+CSQ", "OK")
+        if output[2] == 0:
+            data = self.get_significant_data(output, "+CSQ:")
+            return data[0]
+        else:
+            raise RuntimeError("Error occured on \"AT+CSQ\" command!")
+
+
+    def get_active_lte_tech(self):
+        techs = {
+            "0": "GSM",
+            "2": "UTRAN",
+            "3": "GSM W/EGPRS",
+            "4": "UTRAN W/HSDPA",
+            "5": "UTRAN W/HSUPA",
+            "6": "UTRAN W/HSDPA and HSUPA",
+            "7": "E-UTRAN",
+        }
+        
+        output = send_at_com("AT+COPS?", "OK")
+        
+        if output[2] == 0:
+            data = self.get_significant_data(output, "+COPS:")
+            return techs.get(data[3], "Unknown")
+        else:
+            raise RuntimeError("Error occured on \"AT+CSQ\" command!")
+
+
+    
