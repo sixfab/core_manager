@@ -20,4 +20,3 @@ class NetworkRegFailed(Exception):
 
 class PDPContextFailed(Exception):
     """Raise when the network registeration is failed"""
-

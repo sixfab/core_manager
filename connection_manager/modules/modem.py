@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import time
-from usb.core import find as find_usb_dev
+from usb.core import find as finddev
 
 from helpers.logger import initialize_logger
 from helpers.commander import shell_command, send_at_com
@@ -9,6 +9,8 @@ from helpers.yamlio import *
 from helpers.exceptions import *
 from helpers.config_parser import *
 
+BASE_HAT_DISABLE_PIN = 26 # For raspberry pi
+reset_usb_script = "helpers/reset_usb.py"
 
 class Modem(object):
     # main properties
@@ -40,8 +42,6 @@ class Modem(object):
             "sim_ready" : True,
             "modem_mode" : True,
             "modem_apn" : True,
-            "kernel_ver" : "",
-            "modem_fw_ver" : "",
         }
 
     def __init__(self, vendor, model, imei, ccid, sw_version, vendor_id, product_id):
@@ -102,7 +102,7 @@ class Modem(object):
 
 
     def configure_modem(self):
-
+        force_reset = 0
         logger.info("Modem configuration started.")
 
         try:
@@ -117,32 +117,24 @@ class Modem(object):
             
             if output[2] == 0:
                 logger.info("ECM mode is activated.")
-                logger.info("The modem is rebooting to apply changes...")
+                logger.info("The modem will reboot to apply changes.")
             else:
                 raise ModemNotReachable("Error occured while setting mode configuration! " + output[0])
 
-            time.sleep(20)
-
-            output = shell_command("route -n")
-
-            if output[0].find(self.interface_name):
-                logger.info("Modem started.")
-            else:
-                output = send_at_com(self.reboot_command, "OK")
+            try:
                 time.sleep(20)
-
-                # Check modem is started!
-                for i in range(120):
-                    output = shell_command("route -n")     
-                    if output[0].find(self.reboot_command):
-                        logger.info("Modem started.")
-                        break
-                    else:
-                        time.sleep(1)
-                        print("*", end="", flush=True)
-                
-                time.sleep(5)
-
+                self.wait_until_modem_started()
+            except Exception as e:
+                logger.warning(str(e))
+                force_reset = 1
+            
+            if force_reset == 1:
+                force_reset = 0
+                try:
+                    self.reset_modem_softly()
+                except Exception as e:
+                    raise e
+            
 
     def check_network(self):
         
@@ -177,12 +169,27 @@ class Modem(object):
 
 
     def initiate_ecm(self):
+        output = send_at_com(self.pdp_status_command, "1,1")
+        if output[2] == 0:
+           logger.info("ECM is already initiated.")
+           time.sleep(10)
+           return 0
 
         logger.info("ECM Connection is initiating...")
         output = send_at_com(self.pdp_activate_command,"OK")
             
         if output[2] == 0:
-            logger.info("ECM Connection is initiated.")
+            for i in range(60):
+                output = send_at_com(self.pdp_status_command, "1,1")
+
+                if output[2] == 0:
+                    logger.info("ECM Connection is initiated.")
+                    time.sleep(5)
+                    return 0
+                else:
+                    time.sleep(1)
+            
+            raise PDPContextFailed("ECM initiation timeout!")       
         else:
             raise PDPContextFailed("ECM initiation failed!")
 
@@ -195,23 +202,22 @@ class Modem(object):
         if output[2] == 0:
             return 0
         else:
-            raise NoInternet("no internet")
+            raise NoInternet("No internet!")
 
 
-    def diagnose(self):
+    def diagnose(self, diag_type=0):
         
         self.diagnostic = {
-            "con_interface" : True,
-            "con_interface" : True,
-            "modem_reachable" : True,
-            "usb_driver" : True,
-            "pdp_context" : True,
-            "network_reqister" : True,
-            "sim_ready" : True,
-            "modem_mode" : True,
-            "modem_apn" : True,
-            "kernel_ver" : "",
-            "modem_fw_ver" : "",
+            "con_interface" : "",
+            "con_interface" : "",
+            "modem_reachable" : "",
+            "usb_driver" : "",
+            "pdp_context" : "",
+            "network_reqister" : "",
+            "sim_ready" : "",
+            "modem_mode" : "",
+            "modem_apn" : "",
+            "timestamp" : "",
         }
 
         logger.info("Diagnostic is working...")
@@ -307,17 +313,22 @@ class Modem(object):
         else:
             self.diagnostic["sim_ready"] = False 
 
-        
-        # 10 Extras
-        self.diagnostic["kernel_ver"] = system_info.get("kernel", "")
-        self.diagnostic["modem_fw_ver"] = system_info.get("sw_version", "")
+               
+        timestamp = time.strftime("%Y-%m-%d_%H:%M:%S")
+        self.diagnostic["timestamp"] = timestamp
+
+        if diag_type == 0:
+            diag_file_name = "cm-diag_" + str(timestamp) + ".yaml"
+            diag_file_path = DIAG_FOLDER_PATH + diag_file_name
+            logger.info("Creating diagnostic report on --> " + str(diag_file_path))
+            write_yaml_all(diag_file_path, self.diagnostic)
+        else:
+            diag_file_name = "cm-diag-repeated.yaml"
+            diag_file_path = DIAG_FOLDER_PATH + diag_file_name
+            logger.info("Creating diagnostic report on --> " + str(diag_file_path))
+            write_yaml_all(diag_file_path, self.diagnostic)
 
         
-        timestamp = time.strftime("%Y-%m-%d_%H:%M:%S")
-        diag_file_name = "cm-diag_" + str(timestamp) + ".yaml"
-        diag_file_path = DIAG_FOLDER_PATH + diag_file_name
-        logger.info("Creating diagnostic report on --> " + str(diag_file_path))
-        write_yaml_all(diag_file_path, self.diagnostic)
 
         if DEBUG == True and VERBOSE_MODE == True:
             print("")
@@ -330,73 +341,163 @@ class Modem(object):
             print("")
 
 
-    def reconnect(self):
-
-        logger.info("Modem restarting...")
-        time.sleep(60)
-        """
-        output = send_at_com(self.reboot_command, "OK")
-        if output[2] == 0:
-            time.sleep(20)
-        else:
-            raise ModemNotReachable("Reboot message couldn't be reach to modem!")
-
-        # Check modem is started!
-        for i in range(120):
-            output = shell_command("route -n")   
-            if output[0].find(self.interface_name) != -1:
-                logger.info("Modem started.")
-                time.sleep(5)
-                break
-            else:
-                time.sleep(1)
-                print("*", end="", flush=True)  # debug
-            
-            raise ModemNotFound("Modem couldn't be started after reboot!")   
-
-        """
-
-
     def reset_connection_interface(self):
-        output = shell_command("sudo ifconfig " + str(self.interface_name) + " down")
+        down = "sudo ifconfig " + str(self.interface_name) + " down"
+        up = "sudo ifconfig " + str(self.interface_name) + " up"
+
+        logger.info("Connection interface is reset...")
+
+        output = shell_command(down)
         if output[2] == 0:
-           logger.info("Interface " + str(self.interface_name)) + " is down."
+           logger.info("Interface " + str(self.interface_name) + " is down.")
         else:
             raise RuntimeError("Error occured while interface getting down!")
         
-        time.sleep(1)
+        time.sleep(5)
 
-        output = shell_command("sudo ifconfig " + str(self.interface_name) + " up")
+        output = shell_command(up)
         if output[2] == 0:
-           logger.info("Interface " + str(self.interface_name)) + " is up."
+           logger.info("Interface " + str(self.interface_name) + " is up.")
         else:
             raise RuntimeError("Error occured while interface getting up!")
-    
+
+        try:
+            self.wait_until_modem_interface_up()
+        except Exception as e:
+            raise e
+
 
     def reset_usb_interface(self):
-        dev = find_usb_dev(self.vendor_id, self.product_id)
-        dev.reset()
+        logger.info("USB interface is reset...")
+        
+        output = shell_command("sudo python3 " + reset_usb_script)
+
+        if output[2] != 0:
+            raise RuntimeError("Message: " + output)
+        else:
+            try:
+               self.wait_until_modem_interface_up()
+            except Exception as e:
+                raise e
+
+
+    def wait_until_modem_turned_off(self):
+        counter = 0
+        for i in range(20):
+            output = shell_command("lsusb")   
+            if output[0].find(self.vendor) != -1:
+                time.sleep(1)
+                counter += 1
+                print(str(counter) + " - ", end="", flush=True)  # debug
+            else:
+                print() # debug
+                logger.debug("Modem turned off.")
+                counter = 0
+                return 0
+        raise RuntimeError("Modem didn't turn off as expected!")
+
+
+    def wait_until_modem_started(self):
+        result = 0
+        counter = 0
+        # Check modem USB interface
+        for i in range(120):
+            output = shell_command("lsusb")   
+            if output[0].find(self.vendor) != -1:
+                print() # debug
+                logger.debug("Modem USB interface detected.")
+                counter = 0
+                result += 1
+                break
+            else:
+                time.sleep(1)
+                counter += 1
+                print(str(counter) + " + ", end="", flush=True)  # debug
+
+        # Check modem AT FW
+        for i in range(10):
+            output = send_at_com("AT", "OK")   
+            if output[2] == 0:
+                print() # debug
+                logger.debug("Modem AT FW is working.")
+                counter = 0
+                result += 1
+                break
+            else:
+                time.sleep(1)
+                counter += 1
+                print(str(counter) + " * ", end="", flush=True)  # debug
+
+        # Check modem connection interface
+        for i in range(20):
+            output = shell_command("route -n")   
+            if output[0].find(self.interface_name) != -1:
+                print() # debug
+                logger.info("Modem started.")
+                counter = 0
+                result += 1
+                break
+            else:
+                time.sleep(1)
+                counter += 1
+                print(str(counter) + " : ", end="", flush=True)  # debug
+
+        if result != 3:
+            raise ModemNotFound("Modem couldn't be started!")
+
+
+    def wait_until_modem_interface_up(self):
+        counter = 0
+        # Check modem connection interface
+        for i in range(20):
+            output = shell_command("route -n")   
+            if output[0].find(self.interface_name) != -1:
+                logger.info("Modem interface is detected.")
+                counter = 0
+                break
+            else:
+                time.sleep(1)
+                counter += 1
+                print(str(counter) + " : ", end="", flush=True)  # debug
+
+        if counter != 0:
+            raise ModemNotFound("Modem interface couln't be detected.")
 
 
     def reset_modem_softly(self):
-        pass
-    
-
-    def reset_modem_hardly(self):
-        pass
-
-    
-
-
-
-
+        logger.info("Modem is resetting softly...")
+        output = send_at_com(self.reboot_command, "OK")
+        if output[2] == 0:
+            try:
+                self.wait_until_modem_turned_off()
+                self.wait_until_modem_started()
+            except Exception as e:
+                raise e
+        else:
+            raise RuntimeError("Reboot command couldn't be reach to the modem!")
 
         
+    def reset_modem_hardly(self):
+        logger.info("Modem is resetting via hardware...")
 
+        # Pin direction
+        output = shell_command("gpio -g mode " + str(BASE_HAT_DISABLE_PIN) + " out")
+        if output[2] == 0:
+            pass
+        else:
+            raise RuntimeError("Error occured gpio command!")
 
+        # Disable power
+        output = shell_command("gpio -g write " + str(BASE_HAT_DISABLE_PIN) + " 1")
+        if output[2] == 0:
+            time.sleep(2)
+        else:
+            raise RuntimeError("Error occured gpio command!")
 
-
-
-
-
+        # Enable power
+        output = shell_command("gpio -g write " + str(BASE_HAT_DISABLE_PIN) + " 0")
+        if output[2] == 0:
+            time.sleep(2)
+        else:
+            raise RuntimeError("Error occured gpio command!")
 
