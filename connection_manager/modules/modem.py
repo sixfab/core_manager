@@ -169,23 +169,27 @@ class Modem(object):
 
 
     def initiate_ecm(self):
-        output = send_at_com(self.pdp_status_command, "1,1")
+        output = send_at_com(self.pdp_status_command, "OK")
         if output[2] == 0:
-           logger.info("ECM is already initiated.")
-           time.sleep(10)
-           return 0
-
+            if(output[0].find("0,1") != -1 or output[0].find("1,1") != -1):
+                logger.info("ECM is already initiated.")
+                time.sleep(10)
+                return 0
+    
         logger.info("ECM Connection is initiating...")
         output = send_at_com(self.pdp_activate_command,"OK")
             
         if output[2] == 0:
             for i in range(60):
-                output = send_at_com(self.pdp_status_command, "1,1")
+                output = send_at_com(self.pdp_status_command, "OK")
 
                 if output[2] == 0:
-                    logger.info("ECM Connection is initiated.")
-                    time.sleep(5)
-                    return 0
+                    if(output[0].find("0,1") != -1 or output[0].find("1,1") != -1):
+                        logger.info("ECM is initiated.")
+                        time.sleep(10)
+                        return 0
+                    else:
+                        time.sleep(1)
                 else:
                     time.sleep(1)
             
