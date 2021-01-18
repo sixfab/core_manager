@@ -109,7 +109,7 @@ def _configure_modem(arg):
         queue.is_ok = True
 
 def _check_network(arg):
-    queue.set_step(sub=0, base=3, success=4, fail=13, interval=0.1, is_ok=False, retry=5)
+    queue.set_step(sub=0, base=3, success=4, fail=13, interval=5, is_ok=False, retry=120)
 
     try:
         modem.check_network()
