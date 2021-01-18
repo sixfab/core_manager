@@ -4,6 +4,7 @@ import time
 from threading import Thread, Lock
 
 from cm import manage_connection
+from monitor import monitor
 from helpers.config_parser import logger
 
 lock = Lock()
@@ -20,8 +21,11 @@ def thread_monitor_and_config():
         with lock:
             print("")
             logger.info("[Config & Monitor] Other threads are locked!")
+            
             logger.info("<--> Check monitor <-->")
-            logger.info("<--> Check configurations <-->")
+            monitor()
+
+            # logger.info("<--> Check configurations <-->")
         logger.info("[Config & Monitor] Other threads are released!")
         time.sleep(60)
 
