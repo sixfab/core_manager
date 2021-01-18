@@ -157,7 +157,7 @@ class Modem(object):
         # Network Registeration
         output = send_at_com("AT+CREG?", "OK")
         if (output[2] == 0):
-            if(output[0].find("+CREG: 0,1") or output[0].find("+CREG: 0,5")):
+            if(output[0].find("+CREG: 0,1") != -1 or output[0].find("+CREG: 0,5") != -1):
                 logger.info("Network is registered.")
                 network_reg = 1
             else:
