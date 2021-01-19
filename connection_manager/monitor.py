@@ -18,19 +18,21 @@ def monitor():
 
 
     # --> cellular_connection status receives automatically
-    modem.monitor["usable_interfaces"] = modem.find_usable_interfaces()
-    modem.monitor["active_interface"] = modem.find_active_interface()
-    modem.monitor["active_lte_tech"] = modem.get_active_lte_tech()
-    modem.monitor["roaming_operator"] = modem.get_roaming_operator()
-    modem.monitor["signal_quality"] = modem.get_signal_quality()
+    try:
+        modem.monitor["usable_interfaces"] = modem.find_usable_interfaces()
+        modem.monitor["active_interface"] = modem.find_active_interface()
+        modem.monitor["active_lte_tech"] = modem.get_active_lte_tech()
+        modem.monitor["roaming_operator"] = modem.get_roaming_operator()
+        modem.monitor["signal_quality"] = modem.get_signal_quality()
+    except Exception as e:
+        logger.error(str(e))
 
     if modem.monitor != old_monitor:
         # Save ID's to file
         try:
             write_yaml_all(MONITOR_PATH, modem.monitor)
         except Exception as e:
-            logger.error(e)
-            raise e
+            logger.error(str(e))
         else:
             logger.info("Monitoring data updated with changes.")
     else:
@@ -48,7 +50,6 @@ def monitor():
         print("********************************************************************")
         print("")
 
-    return modem.monitor
 
 if __name__  == "__main__":
     interval = monitor()
