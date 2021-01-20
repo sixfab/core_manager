@@ -17,8 +17,8 @@ def monitor():
             logger.warning("Old monitor data in monitor.yaml file couln't be read!")
 
 
-    # --> cellular_connection status receives automatically
     try:
+        modem.monitor["cellular_connection"] = modem.get_cellular_status()
         modem.monitor["usable_interfaces"] = modem.find_usable_interfaces()
         modem.monitor["active_interface"] = modem.find_active_interface()
         modem.monitor["active_lte_tech"] = modem.get_active_lte_tech()

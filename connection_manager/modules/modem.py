@@ -24,12 +24,12 @@ class Modem(object):
 
     # monitoring properties
     monitor = {
-        "cellular_connection" : "Unknown",
-        "usable_interfaces" : "Unknown",
-        "active_interface" : "Unknown",
-        "signal_quality" : "Unknown",
-        "roaming_operator" : "Unknown",
-        "active_lte_tech": "Unknown",
+        "cellular_connection" : None,
+        "usable_interfaces" : None,
+        "active_interface" : None,
+        "signal_quality" : None,
+        "roaming_operator" : None,
+        "active_lte_tech": None,
     }
 
     # additional properties
@@ -524,8 +524,11 @@ class Modem(object):
 
 
     def get_cellular_status(self):
-        return self.monitor.get("cellular_connection","Unknown")
-
+        status = self.monitor.get("cellular_connection", None)
+        if isinstance(status,bool):
+            return bool(status)
+        else:
+            return status
 
     def find_usable_interfaces(self):
         # Supported interfaces
@@ -558,7 +561,7 @@ class Modem(object):
 
         # find interface has highest priority
         last_location = 10000
-        high = "Unknown"
+        high = None
         for key in interfaces:
             if  interfaces[key] < last_location:
                 last_location = interfaces[key] 
@@ -572,13 +575,12 @@ class Modem(object):
         header_size = len(header)
         index_of_data = output[0].find(header) + header_size
         end_of_data = index_of_data + output[0][index_of_data:].find("\n")
-        sig_data = output[0][index_of_data:end_of_data].split(",")
+        sig_data = output[0][index_of_data:end_of_data].replace("\"", "").split(",")
         return sig_data
 
 
     def get_roaming_operator(self):
         output = send_at_com("AT+COPS?", "OK")
-        
         if output[2] == 0:
             data = self.get_significant_data(output, "+COPS:")
             return data[2]
@@ -590,7 +592,7 @@ class Modem(object):
         output = send_at_com("AT+CSQ", "OK")
         if output[2] == 0:
             data = self.get_significant_data(output, "+CSQ:")
-            return data[0]
+            return int(data[0])
         else:
             raise RuntimeError("Error occured on \"AT+CSQ\" command!")
 
