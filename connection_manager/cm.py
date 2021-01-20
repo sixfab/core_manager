@@ -27,6 +27,8 @@ while True:
         except Exception as e:
             logger.critical(e)
             logger.critical("First identification failed. Retrying to identify required parameters!")
+        else:
+            queue.sub = 2   # pass to _configure_modem step without running identification step
     time.sleep(2)
 
 # Getting system info
@@ -73,7 +75,7 @@ def _organizer(arg):
 
 def _identify_setup(arg):
     global modem
-    queue.set_step(sub=0, base=1, success=2, fail=1, interval=0.1, is_ok=False, retry=5)
+    queue.set_step(sub=0, base=1, success=2, fail=13, interval=0.1, is_ok=False, retry=50)
 
     try:
         new_id = identify_setup()

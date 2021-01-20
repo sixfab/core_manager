@@ -12,6 +12,7 @@ from helpers.config_parser import *
 system_id = {
     "platform" : "",
     "arc" : "",
+    "machine": "",
     "kernel" : "",
     "host_name" : "",
     "modem_vendor" : "",
@@ -193,6 +194,9 @@ def _identify_os():
         logger.debug("[+] OS artchitecture")
         system_id["arc"] = str(platform.architecture()[0])
         
+        logger.debug("[+] OS machine")
+        system_id["machine"] = str(platform.machine())
+
         logger.debug("[+] Kernel version")
         system_id["kernel"] = str(platform.release())
         
