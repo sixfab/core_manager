@@ -78,7 +78,7 @@ class Modem(object):
             self.ecm_mode_response = "4"
             self.ecm_mode_setter_command = "AT#USBCFG=4"
             self.reboot_command = "AT#REBOOT"
-            self.pdp_activate_command = "AT#ECM=1,0,\"\",\"\",0"
+            self.pdp_activate_command = "AT#ECM=1,0"
             self.pdp_status_command = "AT#ECM?"
     
 
