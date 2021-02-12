@@ -7,6 +7,7 @@ from helpers.queue import queue
 from helpers.exceptions import *
 from helpers.modem_support import ModemSupport
 from helpers.config_parser import *
+from __version__ import version
 
 
 system_id = {
@@ -21,6 +22,7 @@ system_id = {
     "imei" : "",
     "ccid" : "",
     "sw_version" : "",
+    "manager_version" : version, 
 }
 
 
