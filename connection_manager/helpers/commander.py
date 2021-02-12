@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 import subprocess
+from .config_parser import logger 
 
 def shell_command(command):
     try:

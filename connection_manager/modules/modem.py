@@ -137,7 +137,7 @@ class Modem(object):
                 time.sleep(20)
                 self.wait_until_modem_started()
             except Exception as e:
-                logger.warning(str(e))
+                logger.warning("wait_until_modem_started() -> " + str(e))
                 force_reset = 1
             
             if force_reset == 1:
@@ -394,7 +394,7 @@ class Modem(object):
         output = shell_command("sudo python3 " + reset_usb_script)
 
         if output[2] != 0:
-            raise RuntimeError("Message: " + output)
+            raise RuntimeError("Message: ", output)
         else:
             try:
                self.wait_until_modem_interface_up()

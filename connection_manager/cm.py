@@ -25,7 +25,7 @@ while True:
             logger.warning("system.yaml doesn't exist! Identifying the system...")
             identify_setup()
         except Exception as e:
-            logger.critical(e)
+            logger.critical("identify_setup() -> " + str(e))
             logger.critical("First identification failed. Retrying to identify required parameters!")
         else:
             queue.sub = 2   # pass to _configure_modem step without running identification step
@@ -35,7 +35,7 @@ while True:
 try:
     system_info = read_yaml_all(SYSTEM_PATH)
 except Exception as e:
-    logger.critical(str(e))
+    logger.critical("read_yaml_all(SYSTEM_PATH) -> " + str(e))
 
 modem = Modem(
     vendor = system_info.get("modem_vendor", ""),
@@ -80,7 +80,7 @@ def _identify_setup(arg):
     try:
         new_id = identify_setup()
     except Exception as e:
-        logger.error(str(e))
+        logger.error("identify_setup -> " + str(e))
         queue.is_ok = False
     else:
         if new_id != 0:
@@ -105,7 +105,7 @@ def _configure_modem(arg):
     except ModemNotFound:
         queue.is_ok = False
     except Exception as e:
-        logger.error(str(e))
+        logger.error("configure_modem() -> " + str(e))
         queue.is_ok = False
     else:
         queue.is_ok = True
@@ -116,7 +116,7 @@ def _check_network(arg):
     try:
         modem.check_network()
     except Exception as e:
-        logger.error(str(e))
+        logger.error("check_network() -> " + str(e))
         queue.is_ok = False
     else:
         queue.is_ok = True
@@ -127,7 +127,7 @@ def _initiate_ecm(arg):
     try:
         modem.initiate_ecm()
     except Exception as e:
-        logger.error(str(e))
+        logger.error("initiate_ecm() -> " + str(e))
         queue.is_ok = False
     else:
         queue.is_ok = True
@@ -144,7 +144,7 @@ def _check_internet(arg):
     try:
         modem.check_internet()
     except Exception as e:
-        logger.error(str(e))
+        logger.error("check_internet() -> " + str(e))
         queue.is_ok = False
     else:
         modem.monitor["cellular_connection"] = True
@@ -164,7 +164,7 @@ def _diagnose(arg):
     try:
         modem.diagnose(diag_type)
     except Exception as e:
-        logger.error(str(e))
+        logger.error("diagnose() ->" + str(e))
         queue.is_ok = False
     else:
         queue.is_ok = True
@@ -175,7 +175,7 @@ def _reset_connection_interface(arg):
     try:
         modem.reset_connection_interface()
     except Exception as e:
-        logger.error(e)
+        logger.error("reset_connection_interface() -> " + str(e))
         queue.is_ok = False
     else:
         queue.is_ok = True
@@ -186,7 +186,7 @@ def _reset_usb_interface(arg):
     try:
         modem.reset_usb_interface()
     except Exception as e:
-        logger.error(str(e))
+        logger.error("reset_usb_interface() -> " + str(e))
         queue.is_ok = False
     else:
         queue.is_ok = True
@@ -197,7 +197,7 @@ def _reset_modem_softly(arg):
     try:
         modem.reset_modem_softly()
     except Exception as e:
-        logger.error(str(e))
+        logger.error("reset_modem_softly() -> " + str(e))
         queue.is_ok = False
     else:
         queue.is_ok = True
@@ -208,7 +208,7 @@ def _reset_modem_hardly(arg):
     try:
         modem.reset_modem_hardly()
     except Exception as e:
-        logger.error(str(e))
+        logger.error("reset_modem_hardly() -> " + str(e))
         queue.is_ok = False
     else:
         queue.is_ok = True
