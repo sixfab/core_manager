@@ -16,7 +16,6 @@ def monitor():
         except Exception as e:
             logger.warning("Old monitor data in monitor.yaml file couln't be read!")
 
-
     try:
         modem.monitor["cellular_connection"] = modem.get_cellular_status()
         modem.monitor["usable_interfaces"] = modem.find_usable_interfaces()
@@ -25,14 +24,14 @@ def monitor():
         modem.monitor["roaming_operator"] = modem.get_roaming_operator()
         modem.monitor["signal_quality"] = modem.get_signal_quality()
     except Exception as e:
-        logger.error(str(e))
+        logger.error("monitor() -> ", e)
 
     if modem.monitor != old_monitor:
         # Save ID's to file
         try:
             write_yaml_all(MONITOR_PATH, modem.monitor)
         except Exception as e:
-            logger.error(str(e))
+            logger.error("write_yaml_all(MONITOR_PATH, modem.monitor) -> ", e)
         else:
             logger.info("Monitoring data updated with changes.")
     else:
