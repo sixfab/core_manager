@@ -20,13 +20,13 @@ def thread_monitor_and_config():
     while(True):
         with lock:
             print("")
-            logger.info("[Config & Monitor] Other threads are locked!")
+            #logger.debug("[Config & Monitor] Other threads are locked!")
             
-            logger.info("<--> Check monitor <-->")
+            #logger.debug("<--> Check monitor <-->")
             monitor()
 
-            # logger.info("<--> Check configurations <-->")
-        logger.info("[Config & Monitor] Other threads are released!")
+            # logger.debug("<--> Check configurations <-->")
+        #logger.debug("[Config & Monitor] Other threads are released!")
         time.sleep(60)
 
 def main():

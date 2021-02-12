@@ -33,22 +33,22 @@ def monitor():
         except Exception as e:
             logger.error("write_yaml_all(MONITOR_PATH, modem.monitor) -> " + str(e))
         else:
-            logger.info("Monitoring data updated with changes.")
+            logger.debug("Monitoring data updated with changes.")
+
+            # IDENTIFICATION REPORT
+            if DEBUG == True and VERBOSE_MODE == True:
+                print("")
+                print("********************************************************************")
+                print("[?] MONITOR REPORT")
+                print("-------------------------")
+                for x in modem.monitor.items():
+                    print(str("[+] " + x[0]) + " --> " + str(x[1]))
+                print("********************************************************************")
+                print("")
+            # END OF IDENTIFICATION REPORT
     else:
-        logger.info("No change on monitoring data.")
-
-
-    # IDENTIFICATION REPORT
-    if DEBUG == True and VERBOSE_MODE == True:
-        print("")
-        print("********************************************************************")
-        print("[?] MONITOR REPORT")
-        print("-------------------------")
-        for x in modem.monitor.items():
-            print(str("[+] " + x[0]) + " --> " + str(x[1]))
-        print("********************************************************************")
-        print("")
-
+        #logger.debug("No change on monitoring data.")
+        pass
 
 if __name__  == "__main__":
     interval = monitor()
