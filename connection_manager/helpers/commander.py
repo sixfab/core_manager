@@ -8,7 +8,7 @@ def shell_command(command):
         com = command.split(" ")
         cp = subprocess.run(com, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except Exception as e:
-        logger.error("Message: ", e.message)
+        logger.error("Message: " + str(e))
         return ("", "", 1)
     else:
         return (cp.stdout, cp.stderr, cp.returncode)
@@ -18,7 +18,7 @@ def send_at_com(command, desired):
     try:
         cp = subprocess.run(["atcom", command, "--find", desired], universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     except Exception as e:
-        logger.error("Message: ", e)
+        logger.error("Message: " + str(e))
         return ("", "", 1)
     else:
         if cp.returncode == 0:

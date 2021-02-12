@@ -137,7 +137,7 @@ class Modem(object):
                 time.sleep(20)
                 self.wait_until_modem_started()
             except Exception as e:
-                logger.warning("wait_until_modem_started() -> ", e)
+                logger.warning("wait_until_modem_started() -> " + str(e))
                 force_reset = 1
             
             if force_reset == 1:

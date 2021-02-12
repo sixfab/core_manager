@@ -24,14 +24,14 @@ def monitor():
         modem.monitor["roaming_operator"] = modem.get_roaming_operator()
         modem.monitor["signal_quality"] = modem.get_signal_quality()
     except Exception as e:
-        logger.error("monitor() -> ", e)
+        logger.error("monitor() -> " + str(e))
 
     if modem.monitor != old_monitor:
         # Save ID's to file
         try:
             write_yaml_all(MONITOR_PATH, modem.monitor)
         except Exception as e:
-            logger.error("write_yaml_all(MONITOR_PATH, modem.monitor) -> ", e)
+            logger.error("write_yaml_all(MONITOR_PATH, modem.monitor) -> " + str(e))
         else:
             logger.info("Monitoring data updated with changes.")
     else:
