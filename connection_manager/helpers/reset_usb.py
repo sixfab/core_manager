@@ -2,10 +2,13 @@
 from usb.core import find as finddev
 from yamlio import read_yaml_all, SYSTEM_PATH
 
+# Change it according to user
+SYSTEM_YAML_PATH = "/home/sixfab/.sixfab/connect/system.yaml"
+
 temp = {}
 
 try:
-    temp = read_yaml_all(SYSTEM_PATH)
+    temp = read_yaml_all(SYSTEM_YAML_PATH)
 except Exception as e:
     exit(1)
 
