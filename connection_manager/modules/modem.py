@@ -469,6 +469,7 @@ class Modem(object):
 
     def wait_until_modem_interface_up(self):
         counter = 0
+        logger.debug("Interface Name: " + str(self.interface_name))
         # Check modem connection interface
         for i in range(20):
             output = shell_command("route -n")   
