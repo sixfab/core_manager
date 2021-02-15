@@ -1,14 +1,11 @@
 #!/usr/bin/python3
 from usb.core import find as finddev
-from yamlio import read_yaml_all
-
-# Change it according to user
-SYSTEM_YAML_PATH = "/home/pi/.sixfab/connect/system.yaml"
+from yamlio import read_yaml_all, SYSTEM_PATH
 
 temp = {}
 
 try:
-    temp = read_yaml_all(SYSTEM_YAML_PATH)
+    temp = read_yaml_all(SYSTEM_PATH)
 except Exception as e:
     exit(1)
 
