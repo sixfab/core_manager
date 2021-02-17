@@ -41,7 +41,7 @@ modem = Modem(
     vendor = system_info.get("modem_vendor", ""),
     model = system_info.get("modem_name", ""),
     imei = system_info.get("imei", ""),
-    ccid = system_info.get("ccid", ""),
+    iccid = system_info.get("iccid", ""),
     sw_version = system_info.get("sw_version", ""),
     vendor_id = system_info.get("modem_vendor_id", ""),
     product_id = system_info.get("modem_product_id", "")
@@ -88,7 +88,7 @@ def _identify_setup(arg):
                 vendor = new_id.get("modem_vendor", ""),
                 model = new_id.get("modem_name", ""),
                 imei = new_id.get("imei", ""),
-                ccid = new_id.get("ccid", ""),
+                iccid = new_id.get("iccid", ""),
                 sw_version = new_id.get("sw_version", ""),
                 vendor_id = new_id.get("modem_vendor_id", ""),
                 product_id = new_id.get("modem_product_id", "")
