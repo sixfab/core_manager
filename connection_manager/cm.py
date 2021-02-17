@@ -135,7 +135,7 @@ def _initiate_ecm(arg):
 def _check_internet(arg):
     
     if queue.sub == 5:
-        queue.set_step(sub=0, base=5, success=5, fail=6, interval=10, is_ok=False, retry=0)
+        queue.set_step(sub=0, base=5, success=5, fail=6, interval=INTERVAL_CHECK_INTERNET, is_ok=False, retry=0)
     elif queue.sub == 8:
         queue.set_step(sub=0, base=8, success=5, fail=9, interval=10, is_ok=False, retry=0)
     elif queue.sub == 10:

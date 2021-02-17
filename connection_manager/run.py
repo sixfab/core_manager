@@ -5,7 +5,7 @@ from threading import Thread, Lock
 
 from cm import manage_connection
 from monitor import monitor
-from helpers.config_parser import logger
+from helpers.config_parser import logger, INTERVAL_SEND_MONITOR
 
 lock = Lock()
 
@@ -27,7 +27,7 @@ def thread_monitor_and_config():
 
             # logger.debug("<--> Check configurations <-->")
         #logger.debug("[Config & Monitor] Other threads are released!")
-        time.sleep(60)
+        time.sleep(INTERVAL_SEND_MONITOR)
 
 def main():
     Thread(target=thread_manage_connection).start()
