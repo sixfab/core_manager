@@ -144,15 +144,22 @@ def _check_internet(arg):
     try:
         modem.check_internet()
     except Exception as e:
+        print("") # debug purpose
         logger.error("check_internet() -> " + str(e))
         queue.is_ok = False
     else:
         modem.monitor["cellular_connection"] = True
+        
+        if modem.incident_flag == True:
+            modem.monitor["fixed_incident"] += 1
+            modem.incident_flag = False
+
         print(".", end="", flush=True)  # debug purpose
         queue.is_ok = True
 
 def _diagnose(arg):
     modem.monitor["cellular_connection"] = False
+    modem.incident_flag = True
     diag_type = 0
     
     if queue.sub == 6:

@@ -23,6 +23,15 @@ def monitor():
         modem.monitor["active_lte_tech"] = modem.get_active_lte_tech()
         modem.monitor["roaming_operator"] = modem.get_roaming_operator()
         modem.monitor["signal_quality"] = modem.get_signal_quality()
+
+        incident_count = modem.monitor.get("fixed_incident", 0)
+        old_incident_count = old_monitor.get("fixed_incident", 0)
+
+        if incident_count >= old_incident_count:
+            modem.monitor["fixed_incident"] = modem.get_fixed_incident_count()
+        else:
+            modem.monitor["fixed_incident"] = old_incident_count
+
     except Exception as e:
         logger.error("monitor() -> " + str(e))
 

@@ -30,6 +30,7 @@ class Modem(object):
         "signal_quality" : None,
         "roaming_operator" : None,
         "active_lte_tech": None,
+        "fixed_incident": 0,
     }
 
     # additional properties
@@ -40,6 +41,7 @@ class Modem(object):
     reboot_command = ""
     pdp_activate_command = ""
     pdp_status_command = ""
+    incident_flag = False
 
     diagnostic = {
         "con_interface" : True,
@@ -411,7 +413,7 @@ class Modem(object):
                 counter += 1
                 print(str(counter) + " - ", end="", flush=True)  # debug
             else:
-                print() # debug
+                print("") # debug
                 logger.debug("Modem turned off.")
                 counter = 0
                 return 0
@@ -425,7 +427,7 @@ class Modem(object):
         for i in range(120):
             output = shell_command("lsusb")   
             if output[0].find(self.vendor) != -1:
-                print() # debug
+                print("") # debug
                 logger.debug("Modem USB interface detected.")
                 counter = 0
                 result += 1
@@ -439,7 +441,7 @@ class Modem(object):
         for i in range(10):
             output = send_at_com("AT", "OK")   
             if output[2] == 0:
-                print() # debug
+                print("") # debug
                 logger.debug("Modem AT FW is working.")
                 counter = 0
                 result += 1
@@ -453,7 +455,7 @@ class Modem(object):
         for i in range(20):
             output = shell_command("route -n")   
             if output[0].find(self.interface_name) != -1:
-                print() # debug
+                print("") # debug
                 logger.info("Modem started.")
                 counter = 0
                 result += 1
@@ -474,6 +476,7 @@ class Modem(object):
         for i in range(20):
             output = shell_command("route -n")   
             if output[0].find(self.interface_name) != -1:
+                print("") # debug
                 logger.info("Modem interface is detected.")
                 counter = 0
                 break
@@ -530,6 +533,7 @@ class Modem(object):
             return bool(status)
         else:
             return status
+
 
     def find_usable_interfaces(self):
         # Supported interfaces
@@ -616,6 +620,11 @@ class Modem(object):
             return techs.get(data[3], "Unknown")
         else:
             raise RuntimeError("Error occured on \"AT+CSQ\" command!")
+
+    
+    def get_fixed_incident_count(self):
+        count = self.monitor.get("fixed_incident", 0)
+        return count
 
 
     
