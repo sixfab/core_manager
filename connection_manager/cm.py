@@ -148,11 +148,17 @@ def _check_internet(arg):
         queue.is_ok = False
     else:
         modem.monitor["cellular_connection"] = True
+        
+        if modem.incident_flag == True:
+            modem.monitor["fixed_incident"] += 1
+            modem.incident_flag = False
+
         print(".", end="", flush=True)  # debug purpose
         queue.is_ok = True
 
 def _diagnose(arg):
     modem.monitor["cellular_connection"] = False
+    modem.incident_flag = True
     diag_type = 0
     
     if queue.sub == 6:

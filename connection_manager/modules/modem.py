@@ -30,6 +30,7 @@ class Modem(object):
         "signal_quality" : None,
         "roaming_operator" : None,
         "active_lte_tech": None,
+        "fixed_incident": 0,
     }
 
     # additional properties
@@ -40,6 +41,7 @@ class Modem(object):
     reboot_command = ""
     pdp_activate_command = ""
     pdp_status_command = ""
+    incident_flag = False
 
     diagnostic = {
         "con_interface" : True,
@@ -531,6 +533,7 @@ class Modem(object):
         else:
             return status
 
+
     def find_usable_interfaces(self):
         # Supported interfaces
         interfaces = ["eth0", "wlan0", "usb0", "wwan0"]
@@ -616,6 +619,11 @@ class Modem(object):
             return techs.get(data[3], "Unknown")
         else:
             raise RuntimeError("Error occured on \"AT+CSQ\" command!")
+
+    
+    def get_fixed_incident_count(self):
+        count = self.monitor.get("fixed_incident", 0)
+        return count
 
 
     
