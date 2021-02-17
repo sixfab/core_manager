@@ -314,9 +314,9 @@ class Modem(object):
         
         output = send_at_com("AT+CGDCONT?", APN)
         if output[2] == 0:
-            modem_apn = True
+            self.diagnostic["modem_apn"] = True
         else:
-            modem_apn = False
+            self.diagnostic["modem_apn"] = False
         
         # 8 - Is the modem mode OK?
         logger.debug("[8] : Is the modem mode OK?")
