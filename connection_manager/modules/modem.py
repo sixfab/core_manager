@@ -19,7 +19,7 @@ class Modem(object):
     model = ""
     product_id = ""
     imei = ""
-    ccid = ""
+    iccid = ""
     sw_version = ""
 
     # monitoring properties
@@ -56,11 +56,11 @@ class Modem(object):
         "modem_apn" : True,
     }
 
-    def __init__(self, vendor, model, imei, ccid, sw_version, vendor_id, product_id):
+    def __init__(self, vendor, model, imei, iccid, sw_version, vendor_id, product_id):
         self.vendor = vendor
         self.model = model
         self.imei = imei
-        self.ccid = ccid
+        self.iccid = iccid
         self.sw_version = sw_version
         self.vendor_id = vendor_id
         self.product_id = product_id
@@ -84,8 +84,8 @@ class Modem(object):
             self.pdp_status_command = "AT#ECM?"
     
 
-    def update(self, vendor, model, imei, ccid, sw_version, vendor_id, product_id):
-        self.__init__(vendor, model, imei, ccid, sw_version, vendor_id, product_id)
+    def update(self, vendor, model, imei, iccid, sw_version, vendor_id, product_id):
+        self.__init__(vendor, model, imei, iccid, sw_version, vendor_id, product_id)
 
 
     def detect_modem(self):

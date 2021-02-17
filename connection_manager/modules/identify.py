@@ -20,7 +20,7 @@ system_id = {
     "modem_vendor_id" : "",
     "modem_product_id" : "",
     "imei" : "",
-    "ccid" : "",
+    "iccid" : "",
     "sw_version" : "",
     "manager_version" : version, 
 }
@@ -180,16 +180,16 @@ def _identify_fw_version():
     else: 
         raise ModemNotReachable("Firmware Ver. couldn't be detected!")
 
-def _identify_ccid():
+def _identify_iccid():
     output = send_at_com("AT+ICCID","OK")
-    raw_ccid = output[0] if output[2] == 0 else ""
+    raw_iccid = output[0] if output[2] == 0 else ""
 
-    if raw_ccid != "":
-        ccid_filter = filter(str.isdigit, raw_ccid)
-        system_id["ccid"] = "".join(ccid_filter)
-        return system_id["ccid"]
+    if raw_iccid != "":
+        iccid_filter = filter(str.isdigit, raw_iccid)
+        system_id["iccid"] = "".join(iccid_filter)
+        return system_id["iccid"]
     else: 
-        raise ModemNotReachable("CCID couldn't be detected!")
+        raise ModemNotReachable("ICCID couldn't be detected!")
 
 def _identify_os():
     try:
@@ -269,13 +269,13 @@ def identify_setup():
         logger.warning("Modem firmware ver. identification failed!")
         system_id["sw_version"] = "Unknown"
 
-    # CCID (Optional)
-    logger.debug("[+] SIM UCCID")
+    # ICCID (Optional)
+    logger.debug("[+] SIM ICCID")
     try:
-        _identify_ccid()
+        _identify_iccid()
     except Exception as e:
-        logger.warning("SIM CCID identification failed!")
-        system_id["ccid"] = "Unknown"
+        logger.warning("SIM ICCID identification failed!")
+        system_id["iccid"] = "Unknown"
 
     # OS (Optional)
     logger.debug("[>] OS Identification")
