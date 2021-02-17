@@ -144,6 +144,7 @@ def _check_internet(arg):
     try:
         modem.check_internet()
     except Exception as e:
+        print("") # debug purpose
         logger.error("check_internet() -> " + str(e))
         queue.is_ok = False
     else:

@@ -27,8 +27,6 @@ def monitor():
         incident_count = modem.monitor.get("fixed_incident", 0)
         old_incident_count = old_monitor.get("fixed_incident", 0)
 
-        print("HELLO: ", incident_count, " ", old_incident_count)
-
         if incident_count >= old_incident_count:
             modem.monitor["fixed_incident"] = modem.get_fixed_incident_count()
         else:
