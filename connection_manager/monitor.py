@@ -23,6 +23,7 @@ def monitor():
         modem.monitor["active_lte_tech"] = modem.get_active_lte_tech()
         modem.monitor["roaming_operator"] = modem.get_roaming_operator()
         modem.monitor["signal_quality"] = modem.get_signal_quality()
+        modem.monitor["selected_apn"] = modem.get_apn()
 
         incident_count = modem.monitor.get("fixed_incident", 0)
         old_incident_count = old_monitor.get("fixed_incident", 0)

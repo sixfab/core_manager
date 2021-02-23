@@ -629,4 +629,5 @@ class Modem(object):
         return count
 
 
-    
+    def get_apn(self):
+        return APN
