@@ -3,6 +3,7 @@
 import yaml
 import os
 
+ENV_PATH = "/opt/sixfab/.env.yaml"
 TEMP_FOLDER_PATH =  os.path.expanduser("~") + "/.sixfab/"
 CONNECT_FOLDER_PATH = TEMP_FOLDER_PATH + "connect/"
 DIAG_FOLDER_PATH = CONNECT_FOLDER_PATH + "diagnostics/"
