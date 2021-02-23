@@ -100,9 +100,10 @@ class Modem(object):
 
 
     def configure_apn(self):
-        output = send_at_com("AT+CGDCONT?", APN)
+        apn_with_quotes = '\"%s\"' % APN
+        output = send_at_com("AT+CGDCONT?", apn_with_quotes)
 
-        if( output[2] == 0 ):
+        if output[2] == 0:
             logger.info("APN is up-to-date.") 
         else:
             output = send_at_com("AT+CGDCONT=1,\"IPV4V6\",\"" + APN + "\"","OK")
@@ -312,7 +313,8 @@ class Modem(object):
         # 7 - Is the APN OK?
         logger.debug("[7] : Is the APN is OK?")
         
-        output = send_at_com("AT+CGDCONT?", APN)
+        apn_with_quotes = '\"%s\"' % APN
+        output = send_at_com("AT+CGDCONT?", apn_with_quotes)
         if output[2] == 0:
             self.diagnostic["modem_apn"] = True
         else:
