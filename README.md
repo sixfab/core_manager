@@ -1,1 +1,1 @@
-# sixfab_connection_manager
+# Sixfab Core Manager

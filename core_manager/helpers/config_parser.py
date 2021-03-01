@@ -13,7 +13,7 @@ if os.path.isfile(ENV_PATH):
     except Exception as e:
         print(e) # debug
     else:
-        connect_dict = env.get("connect", {})
+        connect_dict = env.get("core", {})
 else:
     print(".env.yaml file doesn't exist!")
 
