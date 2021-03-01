@@ -3,7 +3,7 @@ from usb.core import find as finddev
 from yamlio import read_yaml_all, SYSTEM_PATH
 
 # Change it according to user
-SYSTEM_YAML_PATH = "/home/sixfab/.sixfab/connect/system.yaml"
+SYSTEM_YAML_PATH = "/home/sixfab/.core/system.yaml"
 
 temp = {}
 

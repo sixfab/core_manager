@@ -12,12 +12,12 @@ def initialize_logger(debug=False):
     if logger:
         return logger
 
-    LOG_PATH = os.path.expanduser("~")+"/.sixfab/connect/logs/"
+    LOG_PATH = os.path.expanduser("~")+"/.core/logs/"
     
     if not os.path.exists(LOG_PATH):
         os.mkdir(LOG_PATH)
 
-    logger = logging.getLogger("connection_manager")
+    logger = logging.getLogger("core_manager")
     logger.setLevel(logging.DEBUG)
 
     formatter = logging.Formatter("%(asctime)s --> %(filename)-14s %(levelname)-8s %(message)s")

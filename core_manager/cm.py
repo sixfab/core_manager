@@ -15,7 +15,7 @@ from modules.modem import Modem
 system_info = {}
 queue.set_step(0,0,0,0,0,0,0)
 
-logger.info("Connection Manager started.")
+logger.info("Core Manager started.")
 
 while True:
     if os.path.isfile(SYSTEM_PATH):
