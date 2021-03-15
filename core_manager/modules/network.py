@@ -14,17 +14,31 @@ def parse_output(output, header, end):
     return sig_data
 
 class Network(object):
+    
+    # monitoring properties
+    monitor = {
+        "wlan0_connection" : None,
+        "wlan0_latency" : None,
+        "eth0_connection": None,
+        "eth0_latency" : None,
+    }
+
     def __init__(self):
         pass
 
     def check_interface_health(self, interface):
-        output = shell_command("ping -q -c 1 -s 0 -w "  + str(PING_TIMEOUT) + " -I " + interface + " 8.8.8.8")
+        output = shell_command("ping -q -c 1 -s 8 -w "  + str(PING_TIMEOUT) + " -I " + interface + " 8.8.8.8")
         #print(output)
 
         if output[2] == 0:
-            ping_latency = parse_output(output, "time", "ms")
-            #print(ping_latency)
-            return (0, ping_latency)
+            
+            try:
+                ping_latencies = parse_output(output, "min/avg/max/mdev =", "ms")
+                min_latency = float(ping_latencies.split("/")[0])
+            except:
+                raise RuntimeError("Error occured while getting ping latency!")
+            
+            return (0, min_latency)
         else:
             raise NoInternet("No internet!")
 
@@ -41,7 +55,9 @@ class Network(object):
                 if output[0].find(i) != -1:
                     usable_interafaces.append(i)
         
-        return usable_interafaces
+            return usable_interafaces
+        else:
+            raise RuntimeError("Error occured on \"route -n\" command!")
 
 
     def find_active_interface(self):
@@ -69,6 +85,22 @@ class Network(object):
         return high
 
     
+    def get_wlan0_connection(self):
+        return self.monitor.get("wlan0_connection")
+
+
+    def get_wlan0_latency(self):
+        return self.monitor.get("wlan0_latency")
+
+
+    def get_eth0_connection(self):
+        return self.monitor.get("eth0_connection")
+
+    
+    def get_eth0_latency(self):
+        return self.monitor.get("eth0_latency")
+
+
 
     
 

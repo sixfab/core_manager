@@ -4,6 +4,7 @@ import time
 from threading import Thread, Lock
 
 from cm import manage_connection
+from nm import manage_network
 from monitor import monitor
 from helpers.config_parser import logger, INTERVAL_SEND_MONITOR
 
@@ -22,6 +23,8 @@ def thread_monitor_and_config():
             print("")
             #logger.debug("[Config & Monitor] Other threads are locked!")
             
+            #logger.debug("<--> Check network manager <-->")    
+            manage_network()
             #logger.debug("<--> Check monitor <-->")
             monitor()
 

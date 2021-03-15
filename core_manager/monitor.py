@@ -16,6 +16,10 @@ monitor_data = {
     "roaming_operator" : None,
     "active_lte_tech": None,
     "fixed_incident": 0,
+    "wlan0_connection": None,
+    "eth0_connection": None,
+    "wlan0_latency": None,
+    "eth0_latency": None,
 }
 
 def monitor():
@@ -36,6 +40,10 @@ def monitor():
 
         monitor_data["usable_interfaces"] = network.find_usable_interfaces()
         monitor_data["active_interface"] = network.find_active_interface()
+        monitor_data["wlan0_connection"] = network.get_wlan0_connection()
+        monitor_data["eth0_connection"] = network.get_eth0_connection()
+        monitor_data["wlan0_latency"] = network.get_wlan0_latency()
+        monitor_data["eth0_latency"] = network.get_eth0_latency()
 
         incident_count = monitor_data.get("fixed_incident", 0)
         old_incident_count = old_monitor.get("fixed_incident", 0)
