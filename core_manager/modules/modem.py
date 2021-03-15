@@ -25,11 +25,6 @@ class Modem(object):
     # monitoring properties
     monitor = {
         "cellular_connection" : None,
-        "usable_interfaces" : None,
-        "active_interface" : None,
-        "signal_quality" : None,
-        "roaming_operator" : None,
-        "active_lte_tech": None,
         "fixed_incident": 0,
     }
 
@@ -535,46 +530,6 @@ class Modem(object):
             return bool(status)
         else:
             return status
-
-
-    def find_usable_interfaces(self):
-        # Supported interfaces
-        interfaces = ["eth0", "wlan0", "usb0", "wwan0"]
-        usable_interafaces = []
-
-        output = shell_command("route -n")
-        
-        if output[2] == 0:
-            for i in interfaces:
-                if output[0].find(i) != -1:
-                    usable_interafaces.append(i)
-        
-        return usable_interafaces
-
-
-    def find_active_interface(self):
-        # Supported interfaces and locations
-        interfaces = {"eth0": 10000, "wlan0": 10000, "usb0": 10000, "wwan0": 10000}
-
-        output = shell_command("route -n")
-        
-        if output[2] == 0:
-            for key in interfaces:
-                location = output[0].find(key)
-                if  location != -1:
-                    interfaces[key] = location
-        else:
-            raise RuntimeError("Error occured on \"route -n\" command!")
-
-        # find interface has highest priority
-        last_location = 10000
-        high = None
-        for key in interfaces:
-            if  interfaces[key] < last_location:
-                last_location = interfaces[key] 
-                high = key
-
-        return high
 
 
     def get_significant_data(self, output, header):

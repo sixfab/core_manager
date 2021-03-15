@@ -28,6 +28,8 @@ default_config = {
     "send_monitoring_data_interval" : 60,
 
     "ping_timeout" : 9,
+
+    "network_priority" : { "1" : "eth0", "2" : "wlan0", "3" : "wwan0", "4" : "usb0",}
 }
 
 # Check the config file exist.
@@ -53,6 +55,7 @@ APN = config.get("apn", "super")
 PING_TIMEOUT = config.get("ping_timeout", 9)
 INTERVAL_CHECK_INTERNET = config.get("check_internet_interval", 60)
 INTERVAL_SEND_MONITOR = config.get("send_monitoring_data_interval", 60)
+NETWORK_PRIORITIES = config.get("network_priority")
 
 logger = initialize_logger(DEBUG)
 
