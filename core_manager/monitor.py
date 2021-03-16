@@ -38,13 +38,6 @@ def monitor():
         monitor_data["signal_quality"] = modem.get_signal_quality()
         monitor_data["selected_apn"] = modem.get_apn()
 
-        monitor_data["usable_interfaces"] = network.find_usable_interfaces()
-        monitor_data["active_interface"] = network.find_active_interface()
-        monitor_data["wlan0_connection"] = network.get_wlan0_connection()
-        monitor_data["eth0_connection"] = network.get_eth0_connection()
-        monitor_data["wlan0_latency"] = network.get_wlan0_latency()
-        monitor_data["eth0_latency"] = network.get_eth0_latency()
-
         incident_count = monitor_data.get("fixed_incident", 0)
         old_incident_count = old_monitor.get("fixed_incident", 0)
 
@@ -54,7 +47,18 @@ def monitor():
             monitor_data["fixed_incident"] = old_incident_count
 
     except Exception as e:
-        logger.error("monitor() -> " + str(e))
+        logger.error("monitor() @modem -> " + str(e))
+        
+    try:    
+        monitor_data["usable_interfaces"] = network.find_usable_interfaces()
+        monitor_data["active_interface"] = network.find_active_interface()
+        monitor_data["wlan0_connection"] = network.get_wlan0_connection()
+        monitor_data["eth0_connection"] = network.get_eth0_connection()
+        monitor_data["wlan0_latency"] = network.get_wlan0_latency()
+        monitor_data["eth0_latency"] = network.get_eth0_latency()
+
+    except Exception as e:
+        logger.error("monitor() @network -> " + str(e))
 
     if monitor_data != old_monitor:
         # Save ID's to file

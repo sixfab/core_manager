@@ -1,10 +1,13 @@
 #!/usr/bin/python3
 
+import netifaces
+
 from helpers.commander import shell_command
 from helpers.exceptions import NoInternet
-from helpers.config_parser import logger, PING_TIMEOUT, NETWORK_PRIORITIES
+from helpers.config_parser import logger, PING_TIMEOUT, NETWORK_NAME, NETWORK_PRIORTY
 from helpers.netiface import NetInterface
 from cm import modem
+
 
 lowest_priority_factor = 100
 
@@ -33,8 +36,20 @@ class Network(object):
     eth = NetInterface()
     wlan = NetInterface()
     
+
     def __init__(self):
         pass
+
+    
+    def find_usable_interfaces(self):
+        try:
+            ifs = netifaces.interfaces()
+        except:
+            raise RuntimeError("Error occured getting usable interfaces!")
+        else:
+            ifs.remove("lo")
+            return ifs
+
 
     def check_interface_health(self, interface):
         output = shell_command("ping -q -c 1 -s 8 -w "  + str(PING_TIMEOUT) + " -I " + interface + " 8.8.8.8")
@@ -51,25 +66,8 @@ class Network(object):
             return (0, min_latency)
         else:
             raise NoInternet("No internet!")
-
-
-    def find_usable_interfaces(self):
-        # Supported interfaces
-        interfaces = ["eth0", "wlan0", "usb0", "wwan0"]
-        usable_interfaces = []
-
-        output = shell_command("route -n")
-        
-        if output[2] == 0:
-            for i in interfaces:
-                if output[0].find(i) != -1:
-                    usable_interfaces.append(i)
-        
-            return usable_interfaces
-        else:
-            raise RuntimeError("Error occured on \"route -n\" command!")
-
-
+    
+    
     def find_active_interface(self):
         # Supported interfaces and locations
         interfaces = {"eth0": 10000, "wlan0": 10000, "usb0": 10000, "wwan0": 10000}
@@ -130,10 +128,16 @@ class Network(object):
         else:
             usable_interfaces = output
 
+        self.eth.name = NETWORK_NAME.get("eth", "eth0")
+        self.wlan.name = NETWORK_NAME.get("wlan", "wlan0")
+        self.cell.name = modem.interface_name
+
+        print("Names: ", self.eth.name, self.wlan.name, self.cell.name)
+
         for x in usable_interfaces:
             if x == self.eth.name:   
                 try:
-                    output = self.check_interface_health("eth0")
+                    output = self.check_interface_health(x)
                 except:
                     self.monitor["eth0_connection"] = False
                     self.monitor["eth0_latency"] = None
@@ -143,7 +147,7 @@ class Network(object):
 
             elif x == self.wlan.name:
                 try:
-                    output = self.check_interface_health("wlan0")
+                    output = self.check_interface_health(x)
                 except:
                     self.monitor["wlan0_connection"] = False
                     self.monitor["wlan0_latency"] = None
@@ -158,13 +162,11 @@ class Network(object):
         self.wlan.connection_status = self.get_wlan0_connection()
         self.cell.connection_status = modem.get_cellular_status()
         
-        self.eth.name = "eth0"
-        self.wlan.name = "wlan0"
-        self.cell.name = modem.interface_name
-        
-        self.eth.metric_factor = NETWORK_PRIORITIES.get(self.eth.name)
-        self.wlan.metric_factor = NETWORK_PRIORITIES.get(self.wlan.name)
-        self.cell.metric_factor = NETWORK_PRIORITIES.get(self.cell.name)
+        self.eth.metric_factor = NETWORK_PRIORTY.get("eth")
+        self.wlan.metric_factor = NETWORK_PRIORTY.get("wlan")
+        self.cell.metric_factor = NETWORK_PRIORTY.get("cell")
+
+        print("Metric Factors: ", self.eth.metric_factor, self.wlan.metric_factor, self.cell.metric_factor)
 
         ifaces = [self.eth, self.wlan, self.cell]
 
