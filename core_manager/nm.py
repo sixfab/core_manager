@@ -37,8 +37,17 @@ def manage_network():
                 network.monitor["wlan0_connection"] = True
                 network.monitor["wlan0_latency"] = output[1]
 
-    print(network.monitor["wlan0_connection"], network.monitor["wlan0_latency"])
-    print(network.monitor["eth0_connection"], network.monitor["eth0_latency"])
+    #print(network.monitor["wlan0_connection"], network.monitor["wlan0_latency"])
+    #print(network.monitor["eth0_connection"], network.monitor["eth0_latency"])
+
+    logger.info("Priorities are adjusting...")
+    
+    try:
+        network.adjust_priorities()
+    except Exception as e:
+        logger.critical("adjust_priorities --> " + str(e))
+        
+    network.debug_routes()
 
 if __name__  == "__main__":
     manage_network()

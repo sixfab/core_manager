@@ -4,6 +4,8 @@ from helpers.commander import shell_command
 from helpers.exceptions import NoInternet
 from helpers.config_parser import PING_TIMEOUT, NETWORK_PRIORITIES
 from helpers.config_parser import logger
+from cm import modem
+
 
 def parse_output(output, header, end):
     header += " "
@@ -22,6 +24,11 @@ class Network(object):
         "eth0_connection": None,
         "eth0_latency" : None,
     }
+
+    last_cellular_connection = False
+    last_eth_connection = False
+    last_wlan_connection = False
+
 
     def __init__(self):
         pass
@@ -46,16 +53,16 @@ class Network(object):
     def find_usable_interfaces(self):
         # Supported interfaces
         interfaces = ["eth0", "wlan0", "usb0", "wwan0"]
-        usable_interafaces = []
+        usable_interfaces = []
 
         output = shell_command("route -n")
         
         if output[2] == 0:
             for i in interfaces:
                 if output[0].find(i) != -1:
-                    usable_interafaces.append(i)
+                    usable_interfaces.append(i)
         
-            return usable_interafaces
+            return usable_interfaces
         else:
             raise RuntimeError("Error occured on \"route -n\" command!")
 
@@ -100,6 +107,73 @@ class Network(object):
     def get_eth0_latency(self):
         return self.monitor.get("eth0_latency")
 
+
+    def adjust_metric(self, interface, metric_factor):
+        metric = metric_factor * 100
+
+        output = shell_command("sudo ifmetric " + str(interface) + " " + str(metric))
+
+        if output[2] == 0:
+            return 0
+        else:
+            raise RuntimeError("Error occured on \"route -n\" command!")
+
+
+    def adjust_priorities(self):
+        
+        cellular_connection = modem.get_cellular_status()
+        wlan_connection = self.get_wlan0_connection()
+        eth_connection = self.get_eth0_connection()
+
+        cellular_interface = modem.interface_name
+        #print("Cellular Interface Name: ", cellular_interface)
+
+        eth_metric_factor = NETWORK_PRIORITIES.get("eth")
+        wlan_metric_factor = NETWORK_PRIORITIES.get("wlan")
+        cellular_metric_factor = NETWORK_PRIORITIES.get(cellular_interface)
+
+        if cellular_connection != self.last_cellular_connection:
+            print("Cellular connection status is changed : ", cellular_connection)
+            if cellular_connection == True:
+                self.adjust_metric(cellular_interface, cellular_metric_factor)
+            else:
+                self.adjust_metric(cellular_interface, 100)
+            
+            self.last_cellular_connection = cellular_connection
+
+        if wlan_connection != self.last_wlan_connection:
+            print("WLAN connection status is changed : ", wlan_connection)
+            if wlan_connection == True:
+                self.adjust_metric("wlan0", wlan_metric_factor)
+            else:
+                self.adjust_metric("wlan0", 100)
+
+            self.last_wlan_connection = wlan_connection
+
+        if eth_connection != self.last_eth_connection:
+            print("ETH connection status is changed : ", eth_connection)
+            if eth_connection == True:
+                self.adjust_metric("eth0", eth_metric_factor)
+            else:
+                self.adjust_metric("eth0", 100)
+
+            self.last_eth_connection = eth_connection
+
+        
+    def debug_routes(self):
+        output = shell_command("route -n")
+
+        if output[2] == 0:
+            print("")
+            print("*****************************************************************")
+            print(output[0])
+            print("*****************************************************************")
+            print("")
+            return 0
+        else:
+            raise RuntimeError("Error occured on \"route -n\" command!")
+
+        
 
 
     

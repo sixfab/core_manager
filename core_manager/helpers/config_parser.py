@@ -29,7 +29,7 @@ default_config = {
 
     "ping_timeout" : 9,
 
-    "network_priority" : { "1" : "eth0", "2" : "wlan0", "3" : "wwan0", "4" : "usb0",}
+    "network_priority" : { "eth" : 1, "wlan" : 2, "wwan0" : 3, "usb0" : 4}
 }
 
 # Check the config file exist.
