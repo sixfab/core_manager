@@ -8,44 +8,14 @@ usable_interfaces = []
 
 def manage_network():
     
-    try:
-        output = network.find_usable_interfaces()
-    except Exception as e:
-        logger.error("find_usable_interfaces() -> " + str(e))
-    else:
-        usable_interfaces = output
+    network.check_and_create_monitoring()
 
-    for i in usable_interfaces:
-        if i == "eth0":
-            # eth0
-            try:
-                output = network.check_interface_health("eth0")
-            except:
-                network.monitor["eth0_connection"] = False
-                network.monitor["eth0_latency"] = None
-            else:
-                network.monitor["eth0_connection"] = True
-                network.monitor["eth0_latency"] = output[1]
-        elif i == "wlan0":
-            # wlan0
-            try:
-                output = network.check_interface_health("wlan0")
-            except:
-                network.monitor["wlan0_connection"] = False
-                network.monitor["wlan0_latency"] = None
-            else:
-                network.monitor["wlan0_connection"] = True
-                network.monitor["wlan0_latency"] = output[1]
-
-    #print(network.monitor["wlan0_connection"], network.monitor["wlan0_latency"])
-    #print(network.monitor["eth0_connection"], network.monitor["eth0_latency"])
-
-    logger.info("Priorities are adjusting...")
+    #logger.info("Priorities are adjusting...")
     
     try:
         network.adjust_priorities()
     except Exception as e:
-        logger.critical("adjust_priorities --> " + str(e))
+        logger.critical("adjust_priorities() --> " + str(e))
         
     network.debug_routes()
 

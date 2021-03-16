@@ -23,8 +23,6 @@ def thread_monitor_and_config():
             print("")
             #logger.debug("[Config & Monitor] Other threads are locked!")
             
-            #logger.debug("<--> Check network manager <-->")    
-            manage_network()
             #logger.debug("<--> Check monitor <-->")
             monitor()
 
@@ -32,9 +30,17 @@ def thread_monitor_and_config():
         #logger.debug("[Config & Monitor] Other threads are released!")
         time.sleep(INTERVAL_SEND_MONITOR)
 
+def thread_manage_network():
+    while(True):
+        with lock:
+            manage_network()
+
+        time.sleep(10)
+
 def main():
     Thread(target=thread_manage_connection).start()
     Thread(target=thread_monitor_and_config).start()
+    Thread(target=thread_manage_network).start()
 
 if __name__ == "__main__":
     main()

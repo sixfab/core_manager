@@ -2,10 +2,11 @@
 
 from helpers.commander import shell_command
 from helpers.exceptions import NoInternet
-from helpers.config_parser import PING_TIMEOUT, NETWORK_PRIORITIES
-from helpers.config_parser import logger
+from helpers.config_parser import logger, PING_TIMEOUT, NETWORK_PRIORITIES
+from helpers.netiface import NetInterface
 from cm import modem
 
+lowest_priority_factor = 100
 
 def parse_output(output, header, end):
     header += " "
@@ -15,21 +16,23 @@ def parse_output(output, header, end):
     sig_data = output[0][index_of_data:end_of_data]
     return sig_data
 
+
 class Network(object):
     
     # monitoring properties
     monitor = {
+        "wlan0_status" : None,
         "wlan0_connection" : None,
         "wlan0_latency" : None,
+        "eth0_status" : None,
         "eth0_connection": None,
         "eth0_latency" : None,
     }
 
-    last_cellular_connection = False
-    last_eth_connection = False
-    last_wlan_connection = False
-
-
+    cell = NetInterface()
+    eth = NetInterface()
+    wlan = NetInterface()
+    
     def __init__(self):
         pass
 
@@ -119,45 +122,70 @@ class Network(object):
             raise RuntimeError("Error occured on \"route -n\" command!")
 
 
+    def check_and_create_monitoring(self):
+        try:
+            output = self.find_usable_interfaces()
+        except Exception as e:
+            logger.error("find_usable_interfaces() -> " + str(e))
+        else:
+            usable_interfaces = output
+
+        for x in usable_interfaces:
+            if x == self.eth.name:   
+                try:
+                    output = self.check_interface_health("eth0")
+                except:
+                    self.monitor["eth0_connection"] = False
+                    self.monitor["eth0_latency"] = None
+                else:
+                    self.monitor["eth0_connection"] = True
+                    self.monitor["eth0_latency"] = output[1]
+
+            elif x == self.wlan.name:
+                try:
+                    output = self.check_interface_health("wlan0")
+                except:
+                    self.monitor["wlan0_connection"] = False
+                    self.monitor["wlan0_latency"] = None
+                else:
+                    self.monitor["wlan0_connection"] = True
+                    self.monitor["wlan0_latency"] = output[1]
+
+ 
     def adjust_priorities(self):
         
-        cellular_connection = modem.get_cellular_status()
-        wlan_connection = self.get_wlan0_connection()
-        eth_connection = self.get_eth0_connection()
+        self.eth.connection_status = self.get_eth0_connection()
+        self.wlan.connection_status = self.get_wlan0_connection()
+        self.cell.connection_status = modem.get_cellular_status()
+        
+        self.eth.name = "eth0"
+        self.wlan.name = "wlan0"
+        self.cell.name = modem.interface_name
+        
+        self.eth.metric_factor = NETWORK_PRIORITIES.get(self.eth.name)
+        self.wlan.metric_factor = NETWORK_PRIORITIES.get(self.wlan.name)
+        self.cell.metric_factor = NETWORK_PRIORITIES.get(self.cell.name)
 
-        cellular_interface = modem.interface_name
-        #print("Cellular Interface Name: ", cellular_interface)
+        ifaces = [self.eth, self.wlan, self.cell]
 
-        eth_metric_factor = NETWORK_PRIORITIES.get("eth")
-        wlan_metric_factor = NETWORK_PRIORITIES.get("wlan")
-        cellular_metric_factor = NETWORK_PRIORITIES.get(cellular_interface)
+        for iface in ifaces:
+            if iface.connection_status != iface.last_connection_status:
+                logger.info(str(iface.name) + " connection status changed : " + str(iface.connection_status))
+                if iface.connection_status != True:
+                    try:
+                        self.adjust_metric(iface.name, lowest_priority_factor)
+                    except:
+                        logger.error("Error occured changing metric : " + str(iface.name)) 
+                    else:
+                        iface.last_connection_status = iface.connection_status
+                else:
+                    try:
+                        self.adjust_metric(iface.name, iface.metric_factor)
+                    except:
+                        logger.error("Error occured changing metric : " + str(iface.name)) 
+                    else:
+                        iface.last_connection_status = iface.connection_status
 
-        if cellular_connection != self.last_cellular_connection:
-            print("Cellular connection status is changed : ", cellular_connection)
-            if cellular_connection == True:
-                self.adjust_metric(cellular_interface, cellular_metric_factor)
-            else:
-                self.adjust_metric(cellular_interface, 100)
-            
-            self.last_cellular_connection = cellular_connection
-
-        if wlan_connection != self.last_wlan_connection:
-            print("WLAN connection status is changed : ", wlan_connection)
-            if wlan_connection == True:
-                self.adjust_metric("wlan0", wlan_metric_factor)
-            else:
-                self.adjust_metric("wlan0", 100)
-
-            self.last_wlan_connection = wlan_connection
-
-        if eth_connection != self.last_eth_connection:
-            print("ETH connection status is changed : ", eth_connection)
-            if eth_connection == True:
-                self.adjust_metric("eth0", eth_metric_factor)
-            else:
-                self.adjust_metric("eth0", 100)
-
-            self.last_eth_connection = eth_connection
 
         
     def debug_routes(self):
