@@ -5,9 +5,9 @@ from usb.core import find as finddev
 
 from helpers.logger import initialize_logger
 from helpers.commander import shell_command, send_at_com
-from helpers.yamlio import *
+from helpers.yamlio import read_yaml_all, write_yaml_all, DIAG_FOLDER_PATH
 from helpers.exceptions import *
-from helpers.config_parser import *
+from helpers.config_parser import logger, APN, PING_TIMEOUT, DEBUG, VERBOSE_MODE
 
 BASE_HAT_DISABLE_PIN = 26 # For raspberry pi
 reset_usb_script = "helpers/reset_usb.py"
@@ -39,7 +39,6 @@ class Modem(object):
     incident_flag = False
 
     diagnostic = {
-        "con_interface" : True,
         "con_interface" : True,
         "modem_reachable" : True,
         "usb_driver" : True,
@@ -148,10 +147,6 @@ class Modem(object):
             
     def check_network(self):
         
-        sim_ready = 0
-        network_reg = 0
-        network_ready = 0
-
         # Check the network is ready
         logger.info("Checking the network is ready...")
 
@@ -159,7 +154,6 @@ class Modem(object):
         output = send_at_com("AT+CPIN?", "CPIN: READY")
         if output[2] == 0:
             logger.info("SIM is ready.")
-            sim_ready = 1
         else:
             logger.error(output[0])
             raise SIMNotReady(output[0])
@@ -169,7 +163,6 @@ class Modem(object):
         if (output[2] == 0):
             if(output[0].find("+CREG: 0,1") != -1 or output[0].find("+CREG: 0,5") != -1):
                 logger.info("Network is registered.")
-                network_reg = 1
             else:
                 logger.error(output[0])
                 raise NetworkRegFailed(output[0])
@@ -224,10 +217,8 @@ class Modem(object):
         
         self.diagnostic = {
             "con_interface" : "",
-            "con_interface" : "",
             "modem_reachable" : "",
             "usb_driver" : "",
-
             "pdp_context" : "",
             "network_reqister" : "",
             "sim_ready" : "",
@@ -300,7 +291,7 @@ class Modem(object):
         
         try:
             self.check_network()
-        except Exception as e:
+        except:
             self.diagnostic["network_reqister"] = False
         else:
             self.diagnostic["network_reqister"] = True
