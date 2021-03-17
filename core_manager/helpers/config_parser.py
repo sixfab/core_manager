@@ -28,7 +28,8 @@ default_config = {
     "send_monitoring_data_interval" : 60,
     "network_manager_interval" : 10,
 
-    "ping_timeout" : 9,
+    "cell_ping_timeout" : 9,
+    "other_ping_timeout" : 3,
 
     "network_name" : { "eth" : "eth0", "wlan" : "wlan0", "cell1" : "wwan0", "cell2" : "usb0"},
     "network_priority" : { "eth" : 1, "wlan" : 2, "cell" : 3}   
@@ -47,7 +48,8 @@ else:
 VERBOSE_MODE = config.get("verbose_mode", default_config.get("verbose_mode"))
 DEBUG = config.get("debug_mode", default_config.get("debug_mode"))
 APN = config.get("apn", default_config.get("apn"))
-PING_TIMEOUT = config.get("ping_timeout", default_config.get("ping_timeout"))
+PING_TIMEOUT = config.get("cell_ping_timeout", default_config.get("cell_ping_timeout"))
+OTHER_PING_TIMEOUT = config.get("other_ping_timeout", default_config.get("other_ping_timeout"))
 INTERVAL_CHECK_INTERNET = config.get("check_internet_interval", default_config.get("check_internet_interval"))
 INTERVAL_SEND_MONITOR = config.get("send_monitoring_data_interval", default_config.get("send_monitoring_data_interval"))
 INTERVAL_MANAGE_NETWORK = config.get("send_monitoring_data_interval", default_config.get("send_monitoring_data_interval"))

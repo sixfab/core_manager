@@ -4,7 +4,7 @@ import netifaces
 
 from helpers.commander import shell_command
 from helpers.exceptions import NoInternet
-from helpers.config_parser import logger, PING_TIMEOUT, NETWORK_NAME, NETWORK_PRIORTY
+from helpers.config_parser import logger, OTHER_PING_TIMEOUT, NETWORK_NAME, NETWORK_PRIORTY
 from helpers.netiface import NetInterface
 from cm import modem
 
@@ -52,7 +52,7 @@ class Network(object):
 
 
     def check_interface_health(self, interface):
-        output = shell_command("ping -q -c 1 -s 8 -w "  + str(PING_TIMEOUT) + " -I " + interface + " 8.8.8.8")
+        output = shell_command("ping -q -c 1 -s 8 -w "  + str(OTHER_PING_TIMEOUT) + " -I " + interface + " 8.8.8.8")
         #print(output)
 
         if output[2] == 0:
