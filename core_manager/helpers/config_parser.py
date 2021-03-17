@@ -27,12 +27,12 @@ default_config = {
 
     "check_internet_interval" : 60,
     "send_monitoring_data_interval" : 60,
-    "network_manager_interval" : 10,
+    "network_manager_interval" : 30,
 
     "cell_ping_timeout" : 9,
     "other_ping_timeout" : 3,
 
-    "network_priority" : { "eth0" : 1, "wlan0" : 2, "wwan0" : 3}   
+    "network_priority" : { "eth0" : 1, "wlan0" : 2, "wwan0" : 3, "usb0": 4}   
 }
 
 # Check the config file exist.

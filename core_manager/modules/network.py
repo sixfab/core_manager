@@ -26,10 +26,6 @@ class Network(object):
     monitor = {}
     interfaces = []
 
-    cell = NetInterface()
-    eth = NetInterface()
-    wlan = NetInterface()
-    
 
     def __init__(self):
         pass
@@ -56,14 +52,15 @@ class Network(object):
 
 
     def check_interfaces(self):
-        usables = self.find_usable_interfaces()
-        print("Usables: ", usables)
         actual = []
 
+        try:
+            usables = self.find_usable_interfaces()
+        except Exception as e:
+            logger.error("find_usable_interfaces() --> " + str(e))
+        
         for interface in self.interfaces:
             actual.append(interface.name)
-
-        print("Actuals: ", actual) 
 
         for x in usables:
             if x not in actual:
@@ -74,12 +71,8 @@ class Network(object):
                 for y in self.interfaces:
                     if y.name == x:
                         self.removeInterface(y)
-        
-        # DEBUG
-        for i in self.interfaces:
-            print(i.name)
+    
             
-
     def check_interface_health(self, interface):
         output = shell_command("ping -q -c 1 -s 8 -w "  + str(OTHER_PING_TIMEOUT) + " -I " + interface + " 8.8.8.8")
         #print(output)
@@ -97,15 +90,12 @@ class Network(object):
             raise NoInternet("No internet!")
     
     
-    def find_active_interface(self):
-        
+    def find_active_interface(self):   
         interfaces = {}
 
         for x in self.interfaces:
             interfaces[x.name] = 10000
         
-        print(interfaces)
-
         output = shell_command("route -n")
         
         if output[2] == 0:
@@ -149,8 +139,6 @@ class Network(object):
             else:
                 x.connection_status = True
                 self.monitor[x.name] = [True, output[1]]
-
-        print(self.monitor)
 
 
     def adjust_priorities(self):
