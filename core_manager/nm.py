@@ -8,9 +8,10 @@ usable_interfaces = []
 
 def manage_network():
     
+    logger.info("Checking network healties...")
     network.check_and_create_monitoring()
-
-    #logger.info("Priorities are adjusting...")
+    
+    logger.info("Priorities are adjusting...")
     
     try:
         network.adjust_priorities()

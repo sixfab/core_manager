@@ -132,7 +132,7 @@ class Network(object):
         self.wlan.name = NETWORK_NAME.get("wlan", "wlan0")
         self.cell.name = modem.interface_name
 
-        print("Names: ", self.eth.name, self.wlan.name, self.cell.name)
+        #print("Names: ", self.eth.name, self.wlan.name, self.cell.name)
 
         for x in usable_interfaces:
             if x == self.eth.name:   
@@ -166,7 +166,7 @@ class Network(object):
         self.wlan.metric_factor = NETWORK_PRIORTY.get("wlan")
         self.cell.metric_factor = NETWORK_PRIORTY.get("cell")
 
-        print("Metric Factors: ", self.eth.metric_factor, self.wlan.metric_factor, self.cell.metric_factor)
+        #print("Metric Factors: ", self.eth.metric_factor, self.wlan.metric_factor, self.cell.metric_factor)
 
         ifaces = [self.eth, self.wlan, self.cell]
 
@@ -188,14 +188,15 @@ class Network(object):
                     else:
                         iface.last_connection_status = iface.connection_status
 
-
-        
+       
     def debug_routes(self):
         output = shell_command("route -n")
 
         if output[2] == 0:
             print("")
             print("*****************************************************************")
+            print("[?] NETWORK MANAGER REPORT")
+            print("---------------------------")
             print(output[0])
             print("*****************************************************************")
             print("")
