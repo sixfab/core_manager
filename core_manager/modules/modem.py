@@ -155,21 +155,21 @@ class Modem(object):
                 except Exception as e:
                     raise e
 
-            
-    def check_network(self):
-        
-        # Check the network is ready
-        logger.info("Checking the network is ready...")
 
-        # SIM
+    def check_sim_ready(self):
+        logger.info("Checking the SIM is ready...")
+
         output = send_at_com("AT+CPIN?", "CPIN: READY")
         if output[2] == 0:
             logger.info("SIM is ready.")
         else:
             logger.error(output[0])
             raise SIMNotReady(output[0])
+            
 
-        # Network Registeration
+    def check_network(self):      
+        logger.info("Checking the network is ready...")
+
         output = send_at_com("AT+CREG?", "OK")
         if (output[2] == 0):
             if(output[0].find("+CREG: 0,1") != -1 or output[0].find("+CREG: 0,5") != -1):

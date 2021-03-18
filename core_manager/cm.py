@@ -96,7 +96,7 @@ def _identify_setup(arg):
         queue.is_ok = True
 
 def _configure_modem(arg):
-    queue.set_step(sub=0, base=2, success=3, fail=13, interval=1, is_ok=False, retry=5)
+    queue.set_step(sub=0, base=2, success=14, fail=13, interval=1, is_ok=False, retry=5)
 
     try:
         modem.configure_modem()
@@ -109,6 +109,19 @@ def _configure_modem(arg):
         queue.is_ok = False
     else:
         queue.is_ok = True
+
+
+def _check_sim_ready(arg):
+    queue.set_step(sub=0, base=14, success=3, fail=13, interval=1, is_ok=False, retry=5)
+
+    try:
+        modem.check_sim_ready()
+    except Exception as e:
+        logger.error("check_sim_ready() -> " + str(e))
+        queue.is_ok = False
+    else:
+        queue.is_ok = True
+
 
 def _check_network(arg):
     queue.set_step(sub=0, base=3, success=4, fail=13, interval=5, is_ok=False, retry=120)
@@ -233,6 +246,8 @@ steps = {
     11: _reset_modem_softly,
     12: _reset_modem_hardly,
     13: _diagnose,
+    14: _check_sim_ready,
+
 }
     
 def execute_step(x, arg=None):
