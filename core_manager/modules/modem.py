@@ -557,7 +557,13 @@ class Modem(object):
         output = send_at_com("AT+COPS?", "OK")
         if output[2] == 0:
             data = self.get_significant_data(output, "+COPS:")
-            return data[2]
+            
+            try:
+                operator = data[2]
+            except:
+                operator = None
+            else:
+                return operator
         else:
             raise RuntimeError("Error occured on \"AT+CSQ\" command!")
 
@@ -566,7 +572,13 @@ class Modem(object):
         output = send_at_com("AT+CSQ", "OK")
         if output[2] == 0:
             data = self.get_significant_data(output, "+CSQ:")
-            return int(data[0])
+
+            try:
+                sq = int(data[0])
+            except:
+                sq = None
+            else:
+                return sq
         else:
             raise RuntimeError("Error occured on \"AT+CSQ\" command!")
 
@@ -586,7 +598,13 @@ class Modem(object):
         
         if output[2] == 0:
             data = self.get_significant_data(output, "+COPS:")
-            return techs.get(data[3], "Unknown")
+            
+            try:
+                tech_id = data[3]
+            except:
+                return None
+            else:
+                return techs.get(tech_id, "Unknown")
         else:
             raise RuntimeError("Error occured on \"AT+CSQ\" command!")
 
