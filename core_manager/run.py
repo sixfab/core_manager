@@ -20,19 +20,13 @@ def thread_manage_connection():
 def thread_monitor_and_config():
     while(True):
         with lock:
+            manage_network()
             monitor()
         time.sleep(INTERVAL_SEND_MONITOR)
-
-def thread_manage_network():
-    while(True):
-        with lock:
-            manage_network()
-        time.sleep(INTERVAL_MANAGE_NETWORK)
 
 def main():
     Thread(target=thread_manage_connection).start()
     Thread(target=thread_monitor_and_config).start()
-    Thread(target=thread_manage_network).start()
 
 if __name__ == "__main__":
     main()
