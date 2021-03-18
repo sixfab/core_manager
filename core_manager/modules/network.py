@@ -4,7 +4,7 @@ import netifaces
 
 from helpers.commander import shell_command
 from helpers.exceptions import NoInternet
-from helpers.config_parser import logger, OTHER_PING_TIMEOUT, NETWORK_PRIORTY, DEBUG, VERBOSE_MODE
+from helpers.config_parser import logger, OTHER_PING_TIMEOUT, NETWORK_PRIORTY, DEBUG, VERBOSE_MODE, CELLULAR_INTERFACES
 from helpers.netiface import NetInterface
 from cm import modem
 
@@ -74,8 +74,7 @@ class Network(object):
     
             
     def check_interface_health(self, interface):
-        output = shell_command("ping -q -c 1 -s 8 -w "  + str(OTHER_PING_TIMEOUT) + " -I " + interface + " 8.8.8.8")
-        #print(output)
+        output = shell_command("ping -q -c 1 -s 8 -w "  + str(OTHER_PING_TIMEOUT) + " -I " + str(interface) + " 8.8.8.8")
 
         if output[2] == 0:
             
@@ -85,7 +84,7 @@ class Network(object):
             except:
                 raise RuntimeError("Error occured while getting ping latency!")
             
-            return (0, min_latency)
+            return min_latency
         else:
             raise NoInternet("No internet!")
     
@@ -131,14 +130,18 @@ class Network(object):
     def check_and_create_monitoring(self):
     
         for x in self.interfaces:
-            try:
-                output = self.check_interface_health(x.name)
-            except:
-                x.connection_status = False
-                self.monitor[x.name] = [False, None]
+            if x.name in CELLULAR_INTERFACES:
+                x.connection_status = modem.monitor.get("cellular_connection")
+                self.monitor[x.name] = [x.connection_status, modem.monitor.get("cellular_latency")]
             else:
-                x.connection_status = True
-                self.monitor[x.name] = [True, output[1]]
+                try:
+                    latency = self.check_interface_health(x.name)
+                except:
+                    x.connection_status = False
+                    self.monitor[x.name] = [False, None]
+                else:
+                    x.connection_status = True
+                    self.monitor[x.name] = [True, latency]
 
 
     def adjust_priorities(self):

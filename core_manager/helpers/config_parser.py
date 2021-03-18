@@ -27,12 +27,13 @@ default_config = {
 
     "check_internet_interval" : 60,
     "send_monitoring_data_interval" : 60,
-    "network_manager_interval" : 30,
+    "network_manager_interval" : 45,
 
     "cell_ping_timeout" : 9,
     "other_ping_timeout" : 3,
 
-    "network_priority" : { "eth0" : 1, "wlan0" : 2, "wwan0" : 3, "usb0": 4}   
+    "network_priority" : { "eth0" : 1, "wlan0" : 2, "wwan0" : 3, "usb0": 4},
+    "cellular_interfaces" : ["wwan0", "usb0"]  
 }
 
 # Check the config file exist.
@@ -54,6 +55,7 @@ INTERVAL_CHECK_INTERNET = config.get("check_internet_interval", default_config.g
 INTERVAL_SEND_MONITOR = config.get("send_monitoring_data_interval", default_config.get("send_monitoring_data_interval"))
 INTERVAL_MANAGE_NETWORK = config.get("send_monitoring_data_interval", default_config.get("send_monitoring_data_interval"))
 NETWORK_PRIORTY = config.get("network_priority", default_config.get("network_priority"))
+CELLULAR_INTERFACES = config.get("cellular_interfaces", default_config.get("cellular_interfaces"))
 
 logger = initialize_logger(DEBUG)
 

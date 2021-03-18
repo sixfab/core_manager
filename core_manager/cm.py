@@ -147,9 +147,7 @@ def _check_internet(arg):
         print("") # debug purpose
         logger.error("check_internet() -> " + str(e))
         queue.is_ok = False
-    else:
-        modem.monitor["cellular_connection"] = True
-        
+    else:        
         if modem.incident_flag == True:
             modem.monitor["fixed_incident"] += 1
             modem.incident_flag = False

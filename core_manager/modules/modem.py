@@ -12,6 +12,16 @@ from helpers.config_parser import logger, APN, PING_TIMEOUT, DEBUG, VERBOSE_MODE
 BASE_HAT_DISABLE_PIN = 26 # For raspberry pi
 reset_usb_script = "helpers/reset_usb.py"
 
+
+def parse_output(output, header, end):
+    header += " "
+    header_size = len(header)
+    index_of_data = output[0].find(header) + header_size
+    end_of_data = index_of_data + output[0][index_of_data:].find(end)
+    sig_data = output[0][index_of_data:end_of_data]
+    return sig_data
+
+
 class Modem(object):
     # main properties
     vendor = ""
@@ -25,6 +35,7 @@ class Modem(object):
     # monitoring properties
     monitor = {
         "cellular_connection" : None,
+        "cellular_latency" : None,
         "fixed_incident": 0,
     }
 
@@ -202,16 +213,34 @@ class Modem(object):
             raise PDPContextFailed("ECM initiation failed!")
 
 
-    def check_internet(self):
-
-        output = shell_command("ping -q -c 1 -s 0 -w "  + str(PING_TIMEOUT) + " -I " + self.interface_name + " 8.8.8.8")
-        #print(output)
+    def check_interface_health(self, interface, timeout):
+        output = shell_command("ping -q -c 1 -s 8 -w "  + str(timeout) + " -I " + str(interface) + " 8.8.8.8")
 
         if output[2] == 0:
-            return 0
+            
+            try:
+                ping_latencies = parse_output(output, "min/avg/max/mdev =", "ms")
+                min_latency = float(ping_latencies.split("/")[0])
+            except:
+                raise RuntimeError("Error occured while getting ping latency!")
+            
+            return min_latency
         else:
             raise NoInternet("No internet!")
 
+
+    def check_internet(self):
+
+        try:
+            latency = self.check_interface_health(self.interface_name, PING_TIMEOUT)
+        except:
+            self.monitor["cellular_connection"] = False
+            self.monitor["cellular_latency"] = None
+            raise NoInternet("No internet!")
+        else:
+            self.monitor["cellular_connection"] = True
+            self.monitor["cellular_latency"] = latency
+            
 
     def diagnose(self, diag_type=0):
         
@@ -513,14 +542,6 @@ class Modem(object):
             time.sleep(2)
         else:
             raise RuntimeError("Error occured gpio command!")
-
-
-    def get_cellular_status(self):
-        status = self.monitor.get("cellular_connection", None)
-        if isinstance(status,bool):
-            return bool(status)
-        else:
-            return status
 
 
     def get_significant_data(self, output, header):

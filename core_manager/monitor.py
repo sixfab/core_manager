@@ -29,7 +29,8 @@ def monitor():
             logger.warning("Old monitor data in monitor.yaml file couln't be read!")
 
     try:
-        monitor_data["cellular_connection"] = modem.get_cellular_status()
+        monitor_data["cellular_connection"] = modem.monitor.get("cellular_connection")
+        monitor_data["cellular_latency"] = modem.monitor.get("cellular_latency")
         monitor_data["active_lte_tech"] = modem.get_active_lte_tech()
         monitor_data["roaming_operator"] = modem.get_roaming_operator()
         monitor_data["signal_quality"] = modem.get_signal_quality()
