@@ -4,9 +4,9 @@ import time
 import os.path
 
 from helpers.commander import send_at_com
-from helpers.yamlio import *
-from helpers.exceptions import *
-from helpers.config_parser import *
+from helpers.yamlio import read_yaml_all, SYSTEM_PATH
+from helpers.exceptions import ModemNotFound, ModemNotSupported
+from helpers.config_parser import logger, DEBUG, VERBOSE_MODE, INTERVAL_CHECK_INTERNET
 from helpers.queue import queue
 
 from modules.identify import identify_setup
@@ -96,7 +96,7 @@ def _identify_setup(arg):
         queue.is_ok = True
 
 def _configure_modem(arg):
-    queue.set_step(sub=0, base=2, success=3, fail=13, interval=1, is_ok=False, retry=5)
+    queue.set_step(sub=0, base=2, success=14, fail=13, interval=1, is_ok=False, retry=5)
 
     try:
         modem.configure_modem()
@@ -109,6 +109,19 @@ def _configure_modem(arg):
         queue.is_ok = False
     else:
         queue.is_ok = True
+
+
+def _check_sim_ready(arg):
+    queue.set_step(sub=0, base=14, success=3, fail=13, interval=1, is_ok=False, retry=5)
+
+    try:
+        modem.check_sim_ready()
+    except Exception as e:
+        logger.error("check_sim_ready() -> " + str(e))
+        queue.is_ok = False
+    else:
+        queue.is_ok = True
+
 
 def _check_network(arg):
     queue.set_step(sub=0, base=3, success=4, fail=13, interval=5, is_ok=False, retry=120)
@@ -147,9 +160,7 @@ def _check_internet(arg):
         print("") # debug purpose
         logger.error("check_internet() -> " + str(e))
         queue.is_ok = False
-    else:
-        modem.monitor["cellular_connection"] = True
-        
+    else:        
         if modem.incident_flag == True:
             modem.monitor["fixed_incident"] += 1
             modem.incident_flag = False
@@ -235,6 +246,8 @@ steps = {
     11: _reset_modem_softly,
     12: _reset_modem_hardly,
     13: _diagnose,
+    14: _check_sim_ready,
+
 }
     
 def execute_step(x, arg=None):

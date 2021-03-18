@@ -1,11 +1,23 @@
 #!/usr/bin/python3
 import time
+import os.path
 
-from helpers.yamlio import *
-from helpers.exceptions import *
-from helpers.config_parser import *
+from helpers.yamlio import read_yaml_all, write_yaml_all, MONITOR_PATH
+from helpers.exceptions import ModemNotFound
+from helpers.config_parser import logger, DEBUG, VERBOSE_MODE
 from cm import modem
+from nm import network
 
+# monitoring properties
+monitor_data = {
+    "cellular_connection" : None,
+    "usable_interfaces" : None,
+    "active_interface" : None,
+    "signal_quality" : None,
+    "roaming_operator" : None,
+    "active_lte_tech": None,
+    "fixed_incident": 0,
+}
 
 def monitor():
     # Get old system setup if it is exist
@@ -17,29 +29,35 @@ def monitor():
             logger.warning("Old monitor data in monitor.yaml file couln't be read!")
 
     try:
-        modem.monitor["cellular_connection"] = modem.get_cellular_status()
-        modem.monitor["usable_interfaces"] = modem.find_usable_interfaces()
-        modem.monitor["active_interface"] = modem.find_active_interface()
-        modem.monitor["active_lte_tech"] = modem.get_active_lte_tech()
-        modem.monitor["roaming_operator"] = modem.get_roaming_operator()
-        modem.monitor["signal_quality"] = modem.get_signal_quality()
-        modem.monitor["selected_apn"] = modem.get_apn()
+        monitor_data["cellular_connection"] = modem.monitor.get("cellular_connection")
+        monitor_data["cellular_latency"] = modem.monitor.get("cellular_latency")
+        monitor_data["active_lte_tech"] = modem.get_active_lte_tech()
+        monitor_data["roaming_operator"] = modem.get_roaming_operator()
+        monitor_data["signal_quality"] = modem.get_signal_quality()
+        monitor_data["selected_apn"] = modem.get_apn()
 
-        incident_count = modem.monitor.get("fixed_incident", 0)
+        incident_count = monitor_data.get("fixed_incident", 0)
         old_incident_count = old_monitor.get("fixed_incident", 0)
 
         if incident_count >= old_incident_count:
-            modem.monitor["fixed_incident"] = modem.get_fixed_incident_count()
+            monitor_data["fixed_incident"] = modem.get_fixed_incident_count()
         else:
-            modem.monitor["fixed_incident"] = old_incident_count
-
+            monitor_data["fixed_incident"] = old_incident_count
+            
     except Exception as e:
-        logger.error("monitor() -> " + str(e))
+        logger.error("monitor() @modem -> " + str(e))
+        
+    try:    
+        monitor_data["usable_interfaces"] = network.find_usable_interfaces()
+        monitor_data["active_interface"] = network.find_active_interface()
+        monitor_data["ifs_status"] = network.monitor
+    except Exception as e:
+        logger.error("monitor() @network -> " + str(e))
 
-    if modem.monitor != old_monitor:
+    if monitor_data != old_monitor:
         # Save ID's to file
         try:
-            write_yaml_all(MONITOR_PATH, modem.monitor)
+            write_yaml_all(MONITOR_PATH, monitor_data)
         except Exception as e:
             logger.error("write_yaml_all(MONITOR_PATH, modem.monitor) -> " + str(e))
         else:
@@ -51,7 +69,7 @@ def monitor():
                 print("********************************************************************")
                 print("[?] MONITOR REPORT")
                 print("-------------------------")
-                for x in modem.monitor.items():
+                for x in monitor_data.items():
                     print(str("[+] " + x[0]) + " --> " + str(x[1]))
                 print("********************************************************************")
                 print("")
@@ -61,5 +79,5 @@ def monitor():
         pass
 
 if __name__  == "__main__":
-    interval = monitor()
+    monitor()
 

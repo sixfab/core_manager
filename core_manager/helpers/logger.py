@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import os
+import os.path
 import sys
 import logging
 import logging.handlers

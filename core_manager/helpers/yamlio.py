@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import yaml
-import os
+import os.path
 
 ENV_PATH = "/opt/sixfab/.env.yaml"
 TEMP_FOLDER_PATH =  os.path.expanduser("~")
