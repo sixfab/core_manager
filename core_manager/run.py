@@ -6,7 +6,7 @@ from threading import Thread, Lock
 from cm import manage_connection
 from nm import manage_network
 from monitor import monitor
-from helpers.config_parser import logger, INTERVAL_SEND_MONITOR, INTERVAL_MANAGE_NETWORK
+from helpers.config_parser import logger, INTERVAL_SEND_MONITOR
 
 lock = Lock()
 

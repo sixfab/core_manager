@@ -27,7 +27,6 @@ default_config = {
 
     "check_internet_interval" : 60,
     "send_monitoring_data_interval" : 60,
-    "network_manager_interval" : 45,
 
     "cell_ping_timeout" : 9,
     "other_ping_timeout" : 3,
@@ -53,7 +52,6 @@ PING_TIMEOUT = config.get("cell_ping_timeout", default_config.get("cell_ping_tim
 OTHER_PING_TIMEOUT = config.get("other_ping_timeout", default_config.get("other_ping_timeout"))
 INTERVAL_CHECK_INTERNET = config.get("check_internet_interval", default_config.get("check_internet_interval"))
 INTERVAL_SEND_MONITOR = config.get("send_monitoring_data_interval", default_config.get("send_monitoring_data_interval"))
-INTERVAL_MANAGE_NETWORK = config.get("send_monitoring_data_interval", default_config.get("send_monitoring_data_interval"))
 NETWORK_PRIORTY = config.get("network_priority", default_config.get("network_priority"))
 CELLULAR_INTERFACES = config.get("cellular_interfaces", default_config.get("cellular_interfaces"))
 
