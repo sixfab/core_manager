@@ -4,7 +4,7 @@ import netifaces
 
 from helpers.commander import shell_command
 from helpers.exceptions import NoInternet
-from helpers.config_parser import logger, PING_TIMEOUT, NETWORK_NAME, NETWORK_PRIORTY
+from helpers.config_parser import logger, OTHER_PING_TIMEOUT, NETWORK_PRIORTY, DEBUG, VERBOSE_MODE
 from helpers.netiface import NetInterface
 from cm import modem
 
@@ -23,24 +23,14 @@ def parse_output(output, header, end):
 class Network(object):
     
     # monitoring properties
-    monitor = {
-        "wlan0_status" : None,
-        "wlan0_connection" : None,
-        "wlan0_latency" : None,
-        "eth0_status" : None,
-        "eth0_connection": None,
-        "eth0_latency" : None,
-    }
+    monitor = {}
+    interfaces = []
 
-    cell = NetInterface()
-    eth = NetInterface()
-    wlan = NetInterface()
-    
 
     def __init__(self):
         pass
 
-    
+
     def find_usable_interfaces(self):
         try:
             ifs = netifaces.interfaces()
@@ -51,8 +41,40 @@ class Network(object):
             return ifs
 
 
+    def createInterface(self, name):
+        interface = NetInterface()
+        interface.name = name
+        self.interfaces.append(interface)
+
+    
+    def removeInterface(self, value):
+        self.interfaces.remove(value)
+
+
+    def check_interfaces(self):
+        actual = []
+
+        try:
+            usables = self.find_usable_interfaces()
+        except Exception as e:
+            logger.error("find_usable_interfaces() --> " + str(e))
+        
+        for interface in self.interfaces:
+            actual.append(interface.name)
+
+        for x in usables:
+            if x not in actual:
+                self.createInterface(x)
+                
+        for x in actual:
+            if x not in usables:
+                for y in self.interfaces:
+                    if y.name == x:
+                        self.removeInterface(y)
+    
+            
     def check_interface_health(self, interface):
-        output = shell_command("ping -q -c 1 -s 8 -w "  + str(PING_TIMEOUT) + " -I " + interface + " 8.8.8.8")
+        output = shell_command("ping -q -c 1 -s 8 -w "  + str(OTHER_PING_TIMEOUT) + " -I " + interface + " 8.8.8.8")
         #print(output)
 
         if output[2] == 0:
@@ -68,10 +90,12 @@ class Network(object):
             raise NoInternet("No internet!")
     
     
-    def find_active_interface(self):
-        # Supported interfaces and locations
-        interfaces = {"eth0": 10000, "wlan0": 10000, "usb0": 10000, "wwan0": 10000}
+    def find_active_interface(self):   
+        interfaces = {}
 
+        for x in self.interfaces:
+            interfaces[x.name] = 10000
+        
         output = shell_command("route -n")
         
         if output[2] == 0:
@@ -93,22 +117,6 @@ class Network(object):
         return high
 
     
-    def get_wlan0_connection(self):
-        return self.monitor.get("wlan0_connection")
-
-
-    def get_wlan0_latency(self):
-        return self.monitor.get("wlan0_latency")
-
-
-    def get_eth0_connection(self):
-        return self.monitor.get("eth0_connection")
-
-    
-    def get_eth0_latency(self):
-        return self.monitor.get("eth0_latency")
-
-
     def adjust_metric(self, interface, metric_factor):
         metric = metric_factor * 100
 
@@ -121,56 +129,25 @@ class Network(object):
 
 
     def check_and_create_monitoring(self):
-        try:
-            output = self.find_usable_interfaces()
-        except Exception as e:
-            logger.error("find_usable_interfaces() -> " + str(e))
-        else:
-            usable_interfaces = output
+    
+        for x in self.interfaces:
+            try:
+                output = self.check_interface_health(x.name)
+            except:
+                x.connection_status = False
+                self.monitor[x.name] = [False, None]
+            else:
+                x.connection_status = True
+                self.monitor[x.name] = [True, output[1]]
 
-        self.eth.name = NETWORK_NAME.get("eth", "eth0")
-        self.wlan.name = NETWORK_NAME.get("wlan", "wlan0")
-        self.cell.name = modem.interface_name
 
-        #print("Names: ", self.eth.name, self.wlan.name, self.cell.name)
-
-        for x in usable_interfaces:
-            if x == self.eth.name:   
-                try:
-                    output = self.check_interface_health(x)
-                except:
-                    self.monitor["eth0_connection"] = False
-                    self.monitor["eth0_latency"] = None
-                else:
-                    self.monitor["eth0_connection"] = True
-                    self.monitor["eth0_latency"] = output[1]
-
-            elif x == self.wlan.name:
-                try:
-                    output = self.check_interface_health(x)
-                except:
-                    self.monitor["wlan0_connection"] = False
-                    self.monitor["wlan0_latency"] = None
-                else:
-                    self.monitor["wlan0_connection"] = True
-                    self.monitor["wlan0_latency"] = output[1]
-
- 
     def adjust_priorities(self):
+        default_metric_factor = 10
+
+        for x in self.interfaces:
+            x.metric_factor = NETWORK_PRIORTY.get(x.name, default_metric_factor)
         
-        self.eth.connection_status = self.get_eth0_connection()
-        self.wlan.connection_status = self.get_wlan0_connection()
-        self.cell.connection_status = modem.get_cellular_status()
-        
-        self.eth.metric_factor = NETWORK_PRIORTY.get("eth")
-        self.wlan.metric_factor = NETWORK_PRIORTY.get("wlan")
-        self.cell.metric_factor = NETWORK_PRIORTY.get("cell")
-
-        #print("Metric Factors: ", self.eth.metric_factor, self.wlan.metric_factor, self.cell.metric_factor)
-
-        ifaces = [self.eth, self.wlan, self.cell]
-
-        for iface in ifaces:
+        for iface in self.interfaces:
             if iface.connection_status != iface.last_connection_status:
                 logger.info(str(iface.name) + " connection status changed : " + str(iface.connection_status))
                 if iface.connection_status != True:
@@ -189,20 +166,21 @@ class Network(object):
                         iface.last_connection_status = iface.connection_status
 
        
-    def debug_routes(self):
-        output = shell_command("route -n")
+    def debug_routes(self):   
+        if DEBUG == True and VERBOSE_MODE == True:
+            output = shell_command("route -n")
 
-        if output[2] == 0:
-            print("")
-            print("*****************************************************************")
-            print("[?] NETWORK MANAGER REPORT")
-            print("---------------------------")
-            print(output[0])
-            print("*****************************************************************")
-            print("")
-            return 0
-        else:
-            raise RuntimeError("Error occured on \"route -n\" command!")
+            if output[2] == 0:
+                print("")
+                print("*****************************************************************")
+                print("[?] NETWORK MANAGER REPORT")
+                print("---------------------------")
+                print(output[0])
+                print("*****************************************************************")
+                print("")
+                return 0
+            else:
+                raise RuntimeError("Error occured on \"route -n\" command!")
 
         
 

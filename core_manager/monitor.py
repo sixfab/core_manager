@@ -1,9 +1,10 @@
 #!/usr/bin/python3
 import time
+import os.path
 
-from helpers.yamlio import *
-from helpers.exceptions import *
-from helpers.config_parser import *
+from helpers.yamlio import read_yaml_all, write_yaml_all, MONITOR_PATH
+from helpers.exceptions import ModemNotFound
+from helpers.config_parser import logger, DEBUG, VERBOSE_MODE
 from cm import modem
 from nm import network
 
@@ -16,10 +17,6 @@ monitor_data = {
     "roaming_operator" : None,
     "active_lte_tech": None,
     "fixed_incident": 0,
-    "wlan0_connection": None,
-    "eth0_connection": None,
-    "wlan0_latency": None,
-    "eth0_latency": None,
 }
 
 def monitor():
@@ -45,18 +42,14 @@ def monitor():
             monitor_data["fixed_incident"] = modem.get_fixed_incident_count()
         else:
             monitor_data["fixed_incident"] = old_incident_count
-
+            
     except Exception as e:
         logger.error("monitor() @modem -> " + str(e))
         
     try:    
         monitor_data["usable_interfaces"] = network.find_usable_interfaces()
         monitor_data["active_interface"] = network.find_active_interface()
-        monitor_data["wlan0_connection"] = network.get_wlan0_connection()
-        monitor_data["eth0_connection"] = network.get_eth0_connection()
-        monitor_data["wlan0_latency"] = network.get_wlan0_latency()
-        monitor_data["eth0_latency"] = network.get_eth0_latency()
-
+        monitor_data["ifs_status"] = network.monitor
     except Exception as e:
         logger.error("monitor() @network -> " + str(e))
 
