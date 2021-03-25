@@ -1,14 +1,27 @@
-import os.path
+import os
 import glob
 
+
 from helpers.yamlio import read_yaml_all, write_yaml_all, CONFIG_FOLDER_PATH, CONFIG_PATH
-from helpers.config_parser import logger, config
+from helpers.config_parser import logger
+from helpers.commander import shell_command
 
 CONFIG_REQUEST_PATH = CONFIG_FOLDER_PATH + "request"
 
-
 waiting_requests = []
 processing_requests = []
+actual_configs = {}
+
+def get_actual_configs():
+    if os.path.isfile(CONFIG_PATH):
+        try:
+            actual_configs = read_yaml_all(CONFIG_PATH)
+        except Exception as e:
+            raise RuntimeError("get_actual_configs() -->" + str(e))
+        else:
+            return actual_configs
+    else:
+        logger.info("Config file doesn't exist!")
 
 
 def get_requests():
@@ -23,10 +36,10 @@ def compare_request(request_file):
         raise RuntimeError(e)
     else:
         request_keys = set(request.keys())
-        actual_keys = set(config.keys())
+        actual_keys = set(actual_configs.keys())
         shared_keys = request_keys.intersection(actual_keys)
         added = request_keys - actual_keys
-        modified = {x : (request[x], config[x]) for x in shared_keys if request[x] != config[x]}
+        modified = {x : (request[x], actual_configs[x]) for x in shared_keys if request[x] != actual_configs[x]}
         
         diff = {}
         
@@ -42,6 +55,12 @@ def compare_request(request_file):
 def save_configuration():
     num_of_req = len(waiting_requests)
     
+    try:
+        get_actual_configs()
+    except Exception as e:
+        logger.error(str(e))
+        return
+
     if num_of_req:
         req = waiting_requests[-1] 
         try:
@@ -51,44 +70,51 @@ def save_configuration():
             logger.error("compare_request() --> " + str(e))
         else:
             for x in diff:
-                config[x] = diff[x]
+                actual_configs[x] = diff[x]
             
             try:
-                write_yaml_all(CONFIG_PATH, config)
+                write_yaml_all(CONFIG_PATH, actual_configs)
             except Exception as e:
                 logger.error("save_configuration --> " + str(e))
             else:    
                 waiting_requests.pop()
+                processing_requests.append(req)
+
+
+def apply_configs():
+    try:
+        for x in processing_requests:
+            filename = os.path.basename(x)
+            done = filename + "_done"
+
+            print(filename)
+
+            old = os.path.join(CONFIG_REQUEST_PATH, filename)
+            new = os.path.join(CONFIG_REQUEST_PATH, done)
+            os.rename(old, new)
+
+            print(done)
+
+        #shell_command("sudo systemctl restart core_manager")
+    except Exception as e:
+        logger.error("apply_configs() --> " + str(e))
+    else:
+        logger.info("OK")
 
 
 def configure():
 
-    # Read requests and add queue
     get_requests()
-    print(waiting_requests)
-    print("\n")
 
-    save_configuration()
-    print("Actual Config:", config)
-    print("\n")
+    for i in range(len(waiting_requests)):
+        save_configuration()
+        print("Actual Config: ", actual_configs)
+        print("Waiting Requests Count: ", len(waiting_requests))
+        print("Processing Requests Count: ", len(processing_requests))
+        print("\n")
 
-    save_configuration()
-    print("Actual Config:", config)
-    print("\n")
+    apply_configs()
 
-    save_configuration()
-    print("Actual Config:", config)
-    print("\n")
-
-    save_configuration()
-    print("Actual Config:", config)
-    print("\n")
-
- 
-    # Compare request in queue with actual config
-    # If there is a difference update config file 
-    # Apply it if there are new configs 
-    # After applying rename request file with done or failed
 
 
 if __name__ == "__main__":
