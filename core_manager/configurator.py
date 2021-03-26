@@ -1,9 +1,9 @@
 import os
 import glob
-
+import time
 
 from helpers.yamlio import read_yaml_all, write_yaml_all, CONFIG_FOLDER_PATH, CONFIG_PATH
-from helpers.config_parser import logger
+from helpers.config_parser import logger, get_configs
 from helpers.commander import shell_command
 
 CONFIG_REQUEST_PATH = CONFIG_FOLDER_PATH + "request"
@@ -82,24 +82,25 @@ def save_configuration():
 
 
 def apply_configs():
-    try:
-        for x in processing_requests:
-            filename = os.path.basename(x)
-            done = filename + "_done"
 
-            print(filename)
+    if len(processing_requests):
+        try:
+            for x in processing_requests:
+                filename = os.path.basename(x)
+                done = filename + "_done"
 
-            old = os.path.join(CONFIG_REQUEST_PATH, filename)
-            new = os.path.join(CONFIG_REQUEST_PATH, done)
-            os.rename(old, new)
-
-            print(done)
-
-        #shell_command("sudo systemctl restart core_manager")
-    except Exception as e:
-        logger.error("apply_configs() --> " + str(e))
-    else:
-        logger.info("OK")
+                old = os.path.join(CONFIG_REQUEST_PATH, filename)
+                new = os.path.join(CONFIG_REQUEST_PATH, done)         
+                os.rename(old, new)
+            
+                print(done)
+        except Exception as e:
+            logger.error("apply_configs() --> " + str(e))
+        else:
+            processing_requests.clear()
+            conf = get_configs()
+            conf.reload_required = True
+            logger.info("New configs are applied.")
 
 
 def configure():
@@ -118,4 +119,11 @@ def configure():
 
 
 if __name__ == "__main__":
-    configure()
+    while True:
+        conf = get_configs()
+        
+        attrs = vars(conf)
+        print(', '.join("%s: %s" % item for item in attrs.items()))
+        print("---------------------------------------------------------")
+        
+        configure()

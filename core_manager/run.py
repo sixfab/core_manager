@@ -6,7 +6,8 @@ from threading import Thread, Lock
 from cm import manage_connection
 from nm import manage_network
 from monitor import monitor
-from helpers.config_parser import logger, INTERVAL_SEND_MONITOR
+from configurator import configure
+from helpers.config_parser import logger
 
 lock = Lock()
 
@@ -20,9 +21,10 @@ def thread_manage_connection():
 def thread_monitor_and_config():
     while(True):
         with lock:
+            configure()
             manage_network()
-            monitor()
-        time.sleep(INTERVAL_SEND_MONITOR)
+            interval = monitor()
+        time.sleep(20)
 
 def main():
     Thread(target=thread_manage_connection).start()

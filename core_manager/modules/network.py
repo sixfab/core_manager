@@ -4,7 +4,7 @@ import netifaces
 
 from helpers.commander import shell_command
 from helpers.exceptions import NoInternet
-from helpers.config_parser import logger, OTHER_PING_TIMEOUT, NETWORK_PRIORTY, DEBUG, VERBOSE_MODE, CELLULAR_INTERFACES
+from helpers.config_parser import logger, conf, get_configs
 from helpers.netiface import NetInterface
 from cm import modem
 
@@ -74,7 +74,7 @@ class Network(object):
     
             
     def check_interface_health(self, interface):
-        output = shell_command("ping -q -c 1 -s 8 -w "  + str(OTHER_PING_TIMEOUT) + " -I " + str(interface) + " 8.8.8.8")
+        output = shell_command("ping -q -c 1 -s 8 -w "  + str(conf.other_ping_timeout) + " -I " + str(interface) + " 8.8.8.8")
 
         if output[2] == 0:
             
@@ -130,7 +130,7 @@ class Network(object):
     def check_and_create_monitoring(self):
     
         for x in self.interfaces:
-            if x.name in CELLULAR_INTERFACES:
+            if x.name in conf.cellular_interfaces:
                 x.connection_status = modem.monitor.get("cellular_connection")
                 self.monitor[x.name] = [x.connection_status, modem.monitor.get("cellular_latency")]
             else:
@@ -148,7 +148,7 @@ class Network(object):
         default_metric_factor = 10
 
         for x in self.interfaces:
-            x.metric_factor = NETWORK_PRIORTY.get(x.name, default_metric_factor)
+            x.metric_factor = conf.network_priority.get(x.name, default_metric_factor)
         
         for iface in self.interfaces:
             if iface.connection_status != iface.last_connection_status:
@@ -170,7 +170,7 @@ class Network(object):
 
        
     def debug_routes(self):   
-        if DEBUG == True and VERBOSE_MODE == True:
+        if conf.debug_mode == True and conf.verbose_mode == True:
             output = shell_command("route -n")
 
             if output[2] == 0:

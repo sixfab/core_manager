@@ -7,7 +7,7 @@ from helpers.logger import initialize_logger
 from helpers.commander import shell_command, send_at_com
 from helpers.yamlio import read_yaml_all, write_yaml_all, DIAG_FOLDER_PATH
 from helpers.exceptions import *
-from helpers.config_parser import logger, APN, PING_TIMEOUT, DEBUG, VERBOSE_MODE
+from helpers.config_parser import logger, conf, get_configs
 
 BASE_HAT_DISABLE_PIN = 26 # For raspberry pi
 reset_usb_script = "helpers/reset_usb.py"
@@ -105,16 +105,16 @@ class Modem(object):
 
 
     def configure_apn(self):
-        apn_with_quotes = '\"%s\"' % APN
+        apn_with_quotes = '\"%s\"' % conf.apn
         output = send_at_com("AT+CGDCONT?", apn_with_quotes)
 
         if output[2] == 0:
             logger.info("APN is up-to-date.") 
         else:
-            output = send_at_com("AT+CGDCONT=1,\"IPV4V6\",\"" + APN + "\"","OK")
+            output = send_at_com("AT+CGDCONT=1,\"IPV4V6\",\"" + conf.apn + "\"","OK")
 
             if(output[2] == 0):
-                logger.info("APN is updated succesfully : " + APN)
+                logger.info("APN is updated succesfully : " + conf.apn)
             else:
                 raise ModemNotReachable("APN couldn't be set successfully!")
 
@@ -232,7 +232,7 @@ class Modem(object):
     def check_internet(self):
 
         try:
-            latency = self.check_interface_health(self.interface_name, PING_TIMEOUT)
+            latency = self.check_interface_health(self.interface_name, conf.ping_timeout)
         except:
             self.monitor["cellular_connection"] = False
             self.monitor["cellular_latency"] = None
@@ -328,7 +328,7 @@ class Modem(object):
         # 7 - Is the APN OK?
         logger.debug("[7] : Is the APN is OK?")
         
-        apn_with_quotes = '\"%s\"' % APN
+        apn_with_quotes = '\"%s\"' % conf.apn
         output = send_at_com("AT+CGDCONT?", apn_with_quotes)
         if output[2] == 0:
             self.diagnostic["modem_apn"] = True
@@ -370,7 +370,7 @@ class Modem(object):
 
         
 
-        if DEBUG == True and VERBOSE_MODE == True:
+        if conf.debug_mode == True and conf.verbose_mode == True:
             print("")
             print("********************************************************************")
             print("[?] DIAGNOSTIC REPORT")
@@ -615,4 +615,4 @@ class Modem(object):
 
 
     def get_apn(self):
-        return APN
+        return conf.apn
