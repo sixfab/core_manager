@@ -19,11 +19,7 @@ else:
     print(".env.yaml file doesn't exist!")
 
 
-class Config(object):
-    
-    reload_required = True
-
-    default_config = {
+default_config = {
         "apn" : core_env.get("apn", "super"),
         "debug_mode": False,
         "verbose_mode": False,
@@ -35,33 +31,27 @@ class Config(object):
         "cellular_interfaces": ["wwan0", "usb0"]  
     }
 
+
+class Config(object):
+    
+    reload_required = True
     acceptible_apns = ["super", "de1.super", "sg1.super"]
     
-    apn = None
-    debug_mode = None 
-    verbose_mode = None
-    check_internet_interval = None
-    send_monitoring_data_interval = None
-    ping_timeout = None
-    other_ping_timeout = None
-    network_priority = None
-    cellular_interfaces = None
-
 
     def __init__(self):
-        pass
+        self.restore_defaults()
 
     
     def restore_defaults(self):
-        self.apn = self.default_config.get("apn")
-        self.debug_mode = self.default_config.get("debug_mode")
-        self.verbose_mode = self.default_config.get("verbose_mode")
-        self.check_internet_interval = self.default_config.get("check_internet_interval")
-        self.send_monitoring_data_interval = self.default_config.get("send_monitoring_data_interval")
-        self.ping_timeout = self.default_config.get("ping_timeout")
-        self.other_ping_timeout = self.default_config.get("other_ping_timeout")
-        self.network_priority = self.default_config.get("network_priority")
-        self.cellular_interfaces = self.default_config.get("cellular_interfaces")
+        self.apn = default_config.get("apn")
+        self.debug_mode = default_config.get("debug_mode")
+        self.verbose_mode = default_config.get("verbose_mode")
+        self.check_internet_interval = default_config.get("check_internet_interval")
+        self.send_monitoring_data_interval = default_config.get("send_monitoring_data_interval")
+        self.ping_timeout = default_config.get("ping_timeout")
+        self.other_ping_timeout = default_config.get("other_ping_timeout")
+        self.network_priority = default_config.get("network_priority")
+        self.cellular_interfaces = default_config.get("cellular_interfaces")
 
 
     def is_reload_required(self):
@@ -77,9 +67,9 @@ class Config(object):
             if value in self.acceptible_apns:
                 self.apn = value
             else:
-                self.apn = self.default_config.get("apn")
+                self.apn = default_config.get("apn")
         else:
-            self.apn = self.default_config.get("apn")
+            self.apn = default_config.get("apn")
 
     
     def get_debug_mode_config(self):
@@ -90,7 +80,7 @@ class Config(object):
         if type(value) is bool:
             self.debug_mode = value
         else:
-            self.debug_mode = self.default_config.get("debug_mode")
+            self.debug_mode = default_config.get("debug_mode")
     
 
     def get_verbose_mode_config(self):
@@ -101,7 +91,7 @@ class Config(object):
         if type(value) is bool:
             self.verbose_mode = value
         else:
-            self.verbose_mode = self.default_config.get("verbose_mode")
+            self.verbose_mode = default_config.get("verbose_mode")
 
 
     def get_check_internet_interval_config(self):
@@ -113,9 +103,9 @@ class Config(object):
             if (value >= 10) and (value <= 3600):
                 self.check_internet_interval = value
             else:
-                self.check_internet_interval = self.default_config.get("check_internet_interval")
+                self.check_internet_interval = default_config.get("check_internet_interval")
         else:
-            self.check_internet_interval = self.default_config.get("check_internet_interval")
+            self.check_internet_interval = default_config.get("check_internet_interval")
 
 
     def get_send_monitoring_data_interval_config(self):
@@ -127,9 +117,9 @@ class Config(object):
             if (value >= 10) and (value <= 3600):
                 self.send_monitoring_data_interval = value
             else:
-                self.send_monitoring_data_interval = self.default_config.get("send_monitoring_data_interval")
+                self.send_monitoring_data_interval = default_config.get("send_monitoring_data_interval")
         else:
-            self.send_monitoring_data_interval = self.default_config.get("send_monitoring_data_interval")
+            self.send_monitoring_data_interval = default_config.get("send_monitoring_data_interval")
 
 
     def get_ping_timeout_config(self):
@@ -141,9 +131,9 @@ class Config(object):
             if (value >= 1) and (value <= 60):
                 self.ping_timeout = value
             else:
-                self.ping_timeout = self.default_config.get("ping_timeout")
+                self.ping_timeout = default_config.get("ping_timeout")
         else:
-            self.ping_timeout = self.default_config.get("ping_timeout")
+            self.ping_timeout = default_config.get("ping_timeout")
 
     
     def get_other_ping_timeout_config(self):
@@ -155,9 +145,9 @@ class Config(object):
             if (value >= 1) and (value <= 60):
                 self.other_ping_timeout = value
             else:
-                self.other_ping_timeout = self.default_config.get("other_ping_timeout")
+                self.other_ping_timeout = default_config.get("other_ping_timeout")
         else:
-            self.other_ping_timeout = self.default_config.get("other_ping_timeout") 
+            self.other_ping_timeout = default_config.get("other_ping_timeout") 
 
     
     def get_network_priority_config(self):
@@ -168,7 +158,7 @@ class Config(object):
         if type(value) is dict:
             self.network_priority = value
         else:
-            self.network_priority = self.default_config.get("network_priority")
+            self.network_priority = default_config.get("network_priority")
 
     
     def get_cellular_interfaces_config(self):
@@ -179,7 +169,7 @@ class Config(object):
         if type(value) is dict:
             self.cellular_interfaces = value
         else:
-            self.cellular_interfaces = self.default_config.get("cellular_interfaces")
+            self.cellular_interfaces = default_config.get("cellular_interfaces")
 
 
 
