@@ -3,7 +3,7 @@ import glob
 import time
 
 from helpers.yamlio import read_yaml_all, write_yaml_all, CONFIG_FOLDER_PATH, CONFIG_PATH
-from helpers.config_parser import logger, get_configs
+from helpers.config_parser import logger, conf, get_configs
 from helpers.commander import shell_command
 
 CONFIG_REQUEST_PATH = CONFIG_FOLDER_PATH + "request"
@@ -105,25 +105,29 @@ def apply_configs():
 
 def configure():
 
-    get_requests()
+    #get_requests()
 
-    for i in range(len(waiting_requests)):
-        save_configuration()
-        print("Actual Config: ", actual_configs)
-        print("Waiting Requests Count: ", len(waiting_requests))
-        print("Processing Requests Count: ", len(processing_requests))
-        print("\n")
+    #for i in range(len(waiting_requests)):
+    #    save_configuration()
+    #    print("Actual Config: ", actual_configs)
+    #    print("Waiting Requests Count: ", len(waiting_requests))
+    #    print("Processing Requests Count: ", len(processing_requests))
+    #    print("\n")
 
-    apply_configs()
+    #apply_configs()
+
+    conf.update_config(get_configs())
 
 
 
 if __name__ == "__main__":
     while True:
-        conf = get_configs()
+        conf.update_config(get_configs())
         
         attrs = vars(conf)
         print(', '.join("%s: %s" % item for item in attrs.items()))
         print("---------------------------------------------------------")
         
-        configure()
+        #configure()
+
+        time.sleep(5)

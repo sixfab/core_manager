@@ -9,7 +9,6 @@ config = {}
 old_config = {}
 conf = Config()
 
-
 def get_configs():
 
     if os.path.isfile(CONFIG_PATH):
@@ -17,8 +16,6 @@ def get_configs():
             config.update(read_yaml_all(CONFIG_PATH))
         except Exception as e:
             print(str(e))
-        else:
-            print("Config File:", config)
     else:
         print("Config file doesn't exist! Restoring default configs...")
         conf.restore_defaults()
@@ -27,11 +24,8 @@ def get_configs():
         conf.reload_required = False
         return conf
     
-    print("config --> ", config )
-    print("old config -->", old_config)
-
     if config == old_config:
-        print("No chance in configs")
+        #print("No chance in configs")
         return conf
     
     conf.set_verbose_mode_config(config.get("verbose_mode"))
@@ -48,7 +42,7 @@ def get_configs():
     old_config.update(config)
     return conf
 
-
+conf.update_config(get_configs())
 logger = initialize_logger(conf.get_debug_mode_config())
 
 

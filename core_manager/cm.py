@@ -6,7 +6,7 @@ import os.path
 from helpers.commander import send_at_com
 from helpers.yamlio import read_yaml_all, SYSTEM_PATH
 from helpers.exceptions import ModemNotFound, ModemNotSupported
-from helpers.config_parser import logger, conf, get_configs
+from helpers.config_parser import logger, conf
 from helpers.queue import queue
 
 from modules.identify import identify_setup
@@ -75,11 +75,8 @@ def _organizer(arg):
 
 def _identify_setup(arg):
     global modem
-    global conf
     queue.set_step(sub=0, base=1, success=2, fail=13, interval=0.1, is_ok=False, retry=50)
     
-    conf = get_configs()
-
     try:
         new_id = identify_setup()
     except Exception as e:
@@ -149,14 +146,8 @@ def _initiate_ecm(arg):
         queue.is_ok = True
 
 def _check_internet(arg):
-    global conf
-
     if queue.sub == 5:
         queue.set_step(sub=0, base=5, success=5, fail=6, interval=conf.check_internet_interval, is_ok=False, retry=0)
-        if conf != get_configs():
-            conf = get_configs()
-            logger.info("Configuration is changed! Going to configure modem (2.) step...")
-            queue.set_step(sub=0, base=5, success=2, fail=2, interval=conf.check_internet_interval, is_ok=False, retry=0)
     elif queue.sub == 8:
         queue.set_step(sub=0, base=8, success=5, fail=9, interval=10, is_ok=False, retry=0)
     elif queue.sub == 10:
@@ -255,7 +246,6 @@ steps = {
     12: _reset_modem_hardly,
     13: _diagnose,
     14: _check_sim_ready,
-
 }
     
 def execute_step(x, arg=None):

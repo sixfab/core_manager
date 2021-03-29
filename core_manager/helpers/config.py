@@ -24,7 +24,7 @@ default_config = {
         "debug_mode": False,
         "verbose_mode": False,
         "check_internet_interval": 60,
-        "send_monitoring_data_interval": 60,
+        "send_monitoring_data_interval": 25,
         "ping_timeout": 9,
         "other_ping_timeout": 3,
         "network_priority": { "eth0" : 1, "wlan0" : 2, "wwan0" : 3, "usb0": 4},
@@ -42,6 +42,18 @@ class Config(object):
         self.restore_defaults()
 
     
+    def update_config(self, new_config ):
+        self.apn = new_config.apn
+        self.debug_mode = new_config.debug_mode
+        self.verbose_mode = new_config.verbose_mode
+        self.check_internet_interval = new_config.check_internet_interval
+        self.send_monitoring_data_interval = new_config.send_monitoring_data_interval
+        self.ping_timeout = new_config.ping_timeout
+        self.other_ping_timeout = new_config.other_ping_timeout
+        self.network_priority = new_config.network_priority
+        self.cellular_interfaces = new_config.cellular_interfaces
+
+
     def restore_defaults(self):
         self.apn = default_config.get("apn")
         self.debug_mode = default_config.get("debug_mode")

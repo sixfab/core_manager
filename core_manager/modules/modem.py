@@ -7,7 +7,7 @@ from helpers.logger import initialize_logger
 from helpers.commander import shell_command, send_at_com
 from helpers.yamlio import read_yaml_all, write_yaml_all, DIAG_FOLDER_PATH
 from helpers.exceptions import *
-from helpers.config_parser import logger, conf, get_configs
+from helpers.config_parser import logger, conf
 
 BASE_HAT_DISABLE_PIN = 26 # For raspberry pi
 reset_usb_script = "helpers/reset_usb.py"

@@ -4,7 +4,7 @@ import os.path
 
 from helpers.yamlio import read_yaml_all, write_yaml_all, MONITOR_PATH
 from helpers.exceptions import ModemNotFound
-from helpers.config_parser import logger, conf, get_configs
+from helpers.config_parser import logger, conf
 from cm import modem
 from nm import network
 
@@ -20,8 +20,6 @@ monitor_data = {
 }
 
 def monitor():
-    conf = get_configs()
-
     # Get old system setup if it is exist
     old_monitor = {}
     if os.path.isfile(MONITOR_PATH):
@@ -80,7 +78,6 @@ def monitor():
         #logger.debug("No change on monitoring data.")
         pass
 
-    return conf.send_monitoring_data_interval
 
 if __name__  == "__main__":
     monitor()
