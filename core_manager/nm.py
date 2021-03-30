@@ -8,8 +8,6 @@ from helpers.config_parser import logger
 network = Network()
 
 def manage_network():
-    
-    logger.info("Network manager is working...")
     network.check_interfaces()
     network.check_and_create_monitoring()
     

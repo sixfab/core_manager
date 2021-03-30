@@ -6,6 +6,8 @@ from helpers.yamlio import read_yaml_all, write_yaml_all, CONFIG_FOLDER_PATH, CO
 from helpers.config_parser import logger, conf, get_configs
 from helpers.commander import shell_command
 
+from cm import queue
+
 CONFIG_REQUEST_PATH = CONFIG_FOLDER_PATH + "request"
 
 waiting_requests = []
@@ -98,36 +100,56 @@ def apply_configs():
             logger.error("apply_configs() --> " + str(e))
         else:
             processing_requests.clear()
-            conf = get_configs()
             conf.reload_required = True
             logger.info("New configs are applied.")
 
 
+def config_report(): 
+    if conf.debug_mode == True and conf.verbose_mode == True:
+        print("")
+        print("********************************************************************")
+        print("[?] CONFIG REPORT")
+        print("-------------------------")
+        attrs = vars(conf)
+        print('\n'.join("[+] %s --> %s" % item for item in attrs.items()))
+        print("")
+        print("********************************************************************")
+
+
 def configure():
 
-    #get_requests()
+    get_requests()
 
-    #for i in range(len(waiting_requests)):
-    #    save_configuration()
-    #    print("Actual Config: ", actual_configs)
-    #    print("Waiting Requests Count: ", len(waiting_requests))
-    #    print("Processing Requests Count: ", len(processing_requests))
-    #    print("\n")
+    for i in range(len(waiting_requests)):
+        save_configuration()
+        print("Actual Config: ", actual_configs)
+        #print("Waiting Requests Count: ", len(waiting_requests))
+        #print("Processing Requests Count: ", len(processing_requests))
+        #print("\n")
 
-    #apply_configs()
+    apply_configs()
 
-    conf.update_config(get_configs())
+    if conf.reload_required:
+        print("Reload is required")
+        try: 
+            conf.update_config(get_configs())
+        except Exception as e:
+            logger.error("conf.update_config() -->" + str(e))
+        else:
+            print("Reloaded")
+            conf.reload_required = False
 
+    if conf.is_config_changed():
+        print("Config is changed. Go to identification step!")
+        queue.set_step(sub=0, base=1, success=2, fail=13, interval=0.1, is_ok=False, retry=50)
+        conf.config_changed = False
 
+    config_report()
 
+  
 if __name__ == "__main__":
     while True:
-        conf.update_config(get_configs())
+        config_report()
         
-        attrs = vars(conf)
-        print(', '.join("%s: %s" % item for item in attrs.items()))
-        print("---------------------------------------------------------")
-        
-        #configure()
-
+        configure()
         time.sleep(5)

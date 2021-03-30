@@ -63,7 +63,7 @@ def monitor():
         else:
             logger.debug("Monitoring data updated with changes.")
 
-            # IDENTIFICATION REPORT
+            # MONITOR REPORT
             if conf.debug_mode == True and conf.verbose_mode == True:
                 print("")
                 print("********************************************************************")
@@ -73,7 +73,7 @@ def monitor():
                     print(str("[+] " + x[0]) + " --> " + str(x[1]))
                 print("********************************************************************")
                 print("")
-            # END OF IDENTIFICATION REPORT
+            # END OF MONITOR REPORT
     else:
         #logger.debug("No change on monitoring data.")
         pass

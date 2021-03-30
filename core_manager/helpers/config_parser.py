@@ -9,6 +9,7 @@ config = {}
 old_config = {}
 conf = Config()
 
+
 def get_configs():
 
     if os.path.isfile(CONFIG_PATH):
@@ -21,11 +22,9 @@ def get_configs():
         conf.restore_defaults()
         config.update({})
         old_config.update(config)
-        conf.reload_required = False
         return conf
     
     if config == old_config:
-        #print("No chance in configs")
         return conf
     
     conf.set_verbose_mode_config(config.get("verbose_mode"))
@@ -38,11 +37,13 @@ def get_configs():
     conf.set_network_priority_config(config.get("network_priority"))
     conf.set_cellular_interfaces_config(config.get("cellular_interfaces"))
     
-    conf.reload_required = False
+    conf.config_changed = True
     old_config.update(config)
     return conf
 
 conf.update_config(get_configs())
+conf.config_changed = False
+
 logger = initialize_logger(conf.get_debug_mode_config())
 
 

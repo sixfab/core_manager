@@ -28,14 +28,15 @@ default_config = {
         "ping_timeout": 9,
         "other_ping_timeout": 3,
         "network_priority": { "eth0" : 1, "wlan0" : 2, "wwan0" : 3, "usb0": 4},
-        "cellular_interfaces": ["wwan0", "usb0"]  
+        "cellular_interfaces": ["wwan0", "usb0"],
+        "acceptible_apns": ["super", "de1.super", "sg1.super"],
     }
 
 
 class Config(object):
     
-    reload_required = True
-    acceptible_apns = ["super", "de1.super", "sg1.super"]
+    reload_required = False
+    config_changed = False
     
 
     def __init__(self):
@@ -69,6 +70,10 @@ class Config(object):
     def is_reload_required(self):
         return self.reload_required
     
+
+    def is_config_changed(self):
+        return self.config_changed
+
     
     def get_apn_config(self):
         return self.apn
@@ -76,7 +81,7 @@ class Config(object):
 
     def set_apn_config(self, value):
         if value:
-            if value in self.acceptible_apns:
+            if value in default_config.get("acceptible_apns"):
                 self.apn = value
             else:
                 self.apn = default_config.get("apn")
@@ -182,6 +187,3 @@ class Config(object):
             self.cellular_interfaces = value
         else:
             self.cellular_interfaces = default_config.get("cellular_interfaces")
-
-
-

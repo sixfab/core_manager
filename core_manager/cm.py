@@ -7,13 +7,13 @@ from helpers.commander import send_at_com
 from helpers.yamlio import read_yaml_all, SYSTEM_PATH
 from helpers.exceptions import ModemNotFound, ModemNotSupported
 from helpers.config_parser import logger, conf
-from helpers.queue import queue
+from helpers.queue import Queue
 
 from modules.identify import identify_setup
 from modules.modem import Modem
 
 system_info = {}
-queue.set_step(0,0,0,0,0,0,0)
+queue = Queue()
 
 logger.info("Core Manager started.")
 
@@ -89,7 +89,7 @@ def _identify_setup(arg):
                 model = new_id.get("modem_name", ""),
                 imei = new_id.get("imei", ""),
                 iccid = new_id.get("iccid", ""),
-                sw_version = new_id.get("sw_version", ""),
+                sw_version = new_id.get("sw_version", ""), 
                 vendor_id = new_id.get("modem_vendor_id", ""),
                 product_id = new_id.get("modem_product_id", "")
             ) 

@@ -21,8 +21,11 @@ def thread_manage_connection():
 def thread_monitor_and_config():
     while(True):
         with lock:
+            logger.debug("Configurator is working...")
             configure()
+            logger.debug("Network manager is working...")
             manage_network()
+            logger.debug("Monitor is working...")
             monitor()
         time.sleep(conf.get_send_monitoring_data_interval_config())
 

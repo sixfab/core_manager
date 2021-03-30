@@ -5,7 +5,6 @@ import platform
 
 from helpers.commander import send_at_com, shell_command
 from helpers.yamlio import read_yaml_all, write_yaml_all, SYSTEM_PATH
-from helpers.queue import queue
 from helpers.exceptions import ModemNotReachable, ModemNotSupported
 from helpers.modem_support import ModemSupport
 from helpers.config_parser import logger, conf
