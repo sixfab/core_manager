@@ -30,16 +30,18 @@ default_config = {
         "network_priority": { "eth0" : 1, "wlan0" : 2, "wwan0" : 3, "usb0": 4},
         "cellular_interfaces": ["wwan0", "usb0"],
         "acceptable_apns": ["super", "de1.super", "sg1.super"],
+        "logger_level" : "debug",
     }
 
 keys_required_modem_config = ["apn"]
-
+logger_levels = ["debug", "info", "warning", "error", "critical"]
 
 class Config(object):
 
     reload_required = False
     config_changed = False
     modem_config_required = False
+    log_config_required = False
 
     def __init__(self):
         self.restore_defaults()
@@ -56,6 +58,7 @@ class Config(object):
         self.network_priority = new_config.network_priority
         self.cellular_interfaces = new_config.cellular_interfaces
         self.acceptable_apns = new_config.acceptable_apns
+        self.logger_level= new_config.logger_level
 
 
     def restore_defaults(self):
@@ -69,6 +72,7 @@ class Config(object):
         self.network_priority = default_config.get("network_priority")
         self.cellular_interfaces = default_config.get("cellular_interfaces")
         self.acceptable_apns = default_config.get("acceptable_apns")
+        self.logger_level = default_config.get("logger_level")
 
 
     def is_reload_required(self):
@@ -202,3 +206,17 @@ class Config(object):
             self.acceptable_apns = value
         else:
             self.acceptable_apns = default_config.get("acceptable_apns")
+
+    
+    def get_logger_level_config(self):
+        return self.logger_level
+
+
+    def set_logger_level_config(self, value):
+        if value:
+            if value in logger_levels:
+                self.logger_level = value
+            else:
+                self.logger_level = default_config.get("logger_level")
+        else:
+            self.apn = default_config.get("logger_level")

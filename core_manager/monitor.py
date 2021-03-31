@@ -2,9 +2,11 @@
 import time
 import os.path
 
+from helpers.config_parser import conf
+from helpers.logger import logger
 from helpers.yamlio import read_yaml_all, write_yaml_all, MONITOR_PATH
 from helpers.exceptions import ModemNotFound
-from helpers.config_parser import logger, conf
+
 from cm import modem
 from nm import network
 

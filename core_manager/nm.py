@@ -2,8 +2,9 @@
 
 import time
 
+from helpers.logger import logger
 from modules.network import Network
-from helpers.config_parser import logger
+
 
 network = Network()
 

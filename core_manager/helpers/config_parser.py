@@ -1,7 +1,6 @@
 import os.path
 
 from helpers.yamlio import read_yaml_all, CONFIG_PATH
-from helpers.logger import initialize_logger
 from helpers.config import Config, default_config
 
 
@@ -37,6 +36,7 @@ def get_configs():
     conf.set_network_priority_config(config.get("network_priority"))
     conf.set_cellular_interfaces_config(config.get("cellular_interfaces"))
     conf.set_acceptable_apns_config(config.get("acceptable_apns"))
+    conf.set_logger_level_config(config.get("logger_level"))
     
     conf.config_changed = True
     old_config.update(config)
@@ -44,7 +44,3 @@ def get_configs():
 
 conf.update_config(get_configs())
 conf.config_changed = False
-
-logger = initialize_logger(conf.get_debug_mode_config())
-
-

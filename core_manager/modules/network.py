@@ -2,9 +2,10 @@
 
 import netifaces
 
+from helpers.config_parser import conf
+from helpers.logger import logger
 from helpers.commander import shell_command
 from helpers.exceptions import NoInternet
-from helpers.config_parser import logger, conf
 from helpers.netiface import NetInterface
 from cm import modem
 

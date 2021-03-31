@@ -3,10 +3,11 @@
 import time
 import os.path
 
+from helpers.config_parser import conf
+from helpers.logger import logger
 from helpers.commander import send_at_com
 from helpers.yamlio import read_yaml_all, SYSTEM_PATH
 from helpers.exceptions import ModemNotFound, ModemNotSupported
-from helpers.config_parser import logger, conf
 from helpers.queue import Queue
 
 from modules.identify import identify_setup

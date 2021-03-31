@@ -3,11 +3,14 @@
 import time
 from threading import Thread, Lock
 
+from helpers.config_parser import conf
+from helpers.logger import logger
+
 from cm import manage_connection
 from nm import manage_network
 from monitor import monitor
 from configurator import configure
-from helpers.config_parser import logger, conf
+
 
 lock = Lock()
 

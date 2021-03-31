@@ -2,8 +2,9 @@ import os
 import glob
 import time
 
+from helpers.config_parser import conf, get_configs
+from helpers.logger import logger, update_log_debug
 from helpers.yamlio import read_yaml_all, write_yaml_all, CONFIG_FOLDER_PATH, CONFIG_PATH
-from helpers.config_parser import logger, conf, get_configs
 from helpers.commander import shell_command
 from helpers.config import keys_required_modem_config
 
@@ -76,9 +77,14 @@ def save_configuration():
         else:
             for x in diff:
                 actual_configs[x] = diff[x]          
+                
                 # check modem reconfiguration is required
                 if x in keys_required_modem_config:
                     conf.modem_config_required = True
+
+                # check log reconfiguration is required
+                if x == "debug_mode":
+                    conf.log_config_required = True
             try:
                 write_yaml_all(CONFIG_PATH, actual_configs)
             except Exception as e:
@@ -147,6 +153,14 @@ def configure():
             # go to modem configuration step
             queue.set_step(sub=0, base=2, success=14, fail=13, interval=1, is_ok=False, retry=5)
             conf.modem_config_required = False
+
+        if conf.log_config_required:
+            if conf.debug_mode is True:
+                update_log_debug(logger, True)
+            else:
+                update_log_debug(logger, False)
+            
+            conf.log_config_required = False
 
         conf.config_changed = False
         
