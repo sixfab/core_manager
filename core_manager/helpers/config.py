@@ -219,4 +219,4 @@ class Config(object):
             else:
                 self.logger_level = default_config.get("logger_level")
         else:
-            self.apn = default_config.get("logger_level")
+            self.logger_level = default_config.get("logger_level")
