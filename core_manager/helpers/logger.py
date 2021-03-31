@@ -9,7 +9,7 @@ from helpers.config_parser import conf
 
 
 LOG_PATH = os.path.expanduser("~") + "/.core/logs/"
-log_format = "%(asctime)s --> %(filename)-14s %(levelname)-8s %(message)s"
+log_format = "%(asctime)s --> %(filename)-18s %(levelname)-8s %(message)s"
 
 
 def update_log_debug(logger, status):
