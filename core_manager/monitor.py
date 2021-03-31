@@ -2,9 +2,11 @@
 import time
 import os.path
 
+from helpers.config_parser import conf
+from helpers.logger import logger
 from helpers.yamlio import read_yaml_all, write_yaml_all, MONITOR_PATH
 from helpers.exceptions import ModemNotFound
-from helpers.config_parser import logger, DEBUG, VERBOSE_MODE
+
 from cm import modem
 from nm import network
 
@@ -63,8 +65,8 @@ def monitor():
         else:
             logger.debug("Monitoring data updated with changes.")
 
-            # IDENTIFICATION REPORT
-            if DEBUG == True and VERBOSE_MODE == True:
+            # MONITOR REPORT
+            if conf.debug_mode == True and conf.verbose_mode == True:
                 print("")
                 print("********************************************************************")
                 print("[?] MONITOR REPORT")
@@ -73,10 +75,11 @@ def monitor():
                     print(str("[+] " + x[0]) + " --> " + str(x[1]))
                 print("********************************************************************")
                 print("")
-            # END OF IDENTIFICATION REPORT
+            # END OF MONITOR REPORT
     else:
         #logger.debug("No change on monitoring data.")
         pass
+
 
 if __name__  == "__main__":
     monitor()

@@ -3,17 +3,18 @@
 import time
 import os.path
 
+from helpers.config_parser import conf
+from helpers.logger import logger
 from helpers.commander import send_at_com
 from helpers.yamlio import read_yaml_all, SYSTEM_PATH
 from helpers.exceptions import ModemNotFound, ModemNotSupported
-from helpers.config_parser import logger, DEBUG, VERBOSE_MODE, INTERVAL_CHECK_INTERNET
-from helpers.queue import queue
+from helpers.queue import Queue
 
 from modules.identify import identify_setup
 from modules.modem import Modem
 
 system_info = {}
-queue.set_step(0,0,0,0,0,0,0)
+queue = Queue()
 
 logger.info("Core Manager started.")
 
@@ -47,7 +48,7 @@ modem = Modem(
     product_id = system_info.get("modem_product_id", "")
 )
 
-if DEBUG == True and VERBOSE_MODE == True:
+if conf.debug_mode == True and conf.verbose_mode == True:
     print("")
     print("********************************************************************")
     print("[?] MODEM REPORT")
@@ -76,7 +77,7 @@ def _organizer(arg):
 def _identify_setup(arg):
     global modem
     queue.set_step(sub=0, base=1, success=2, fail=13, interval=0.1, is_ok=False, retry=50)
-
+    
     try:
         new_id = identify_setup()
     except Exception as e:
@@ -89,7 +90,7 @@ def _identify_setup(arg):
                 model = new_id.get("modem_name", ""),
                 imei = new_id.get("imei", ""),
                 iccid = new_id.get("iccid", ""),
-                sw_version = new_id.get("sw_version", ""),
+                sw_version = new_id.get("sw_version", ""), 
                 vendor_id = new_id.get("modem_vendor_id", ""),
                 product_id = new_id.get("modem_product_id", "")
             ) 
@@ -146,9 +147,8 @@ def _initiate_ecm(arg):
         queue.is_ok = True
 
 def _check_internet(arg):
-    
     if queue.sub == 5:
-        queue.set_step(sub=0, base=5, success=5, fail=6, interval=INTERVAL_CHECK_INTERNET, is_ok=False, retry=0)
+        queue.set_step(sub=0, base=5, success=5, fail=6, interval=conf.check_internet_interval, is_ok=False, retry=0)
     elif queue.sub == 8:
         queue.set_step(sub=0, base=8, success=5, fail=9, interval=10, is_ok=False, retry=0)
     elif queue.sub == 10:
@@ -247,7 +247,6 @@ steps = {
     12: _reset_modem_hardly,
     13: _diagnose,
     14: _check_sim_ready,
-
 }
     
 def execute_step(x, arg=None):

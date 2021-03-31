@@ -3,12 +3,12 @@
 import os.path
 import platform 
 
+from helpers.config_parser import conf
+from helpers.logger import logger
 from helpers.commander import send_at_com, shell_command
 from helpers.yamlio import read_yaml_all, write_yaml_all, SYSTEM_PATH
-from helpers.queue import queue
 from helpers.exceptions import ModemNotReachable, ModemNotSupported
 from helpers.modem_support import ModemSupport
-from helpers.config_parser import logger, DEBUG, VERBOSE_MODE
 from __version__ import version
 
 
@@ -48,13 +48,13 @@ def _identify_vendor_name(method=0):
             for vendor in ModemSupport.vendors:
                 if output[0].find(vendor.name) != -1:
                     system_id["modem_vendor"] = vendor.name
-                    step = 0    # Identification is successfull
-                    method = 1  # Identification is successfull
-                    #logger.debug("Modem vendor is detected with method 1!")
+                    step = 0
+                    method = 1
+
 
             if system_id["modem_vendor"] == "":  
                 logger.warning("Modem vendor couldn't be found with method 1!")
-                step = 2    # Try next method
+                step = 2
         else:
             raise RuntimeError("Error occured on lsusb command!")
     
@@ -65,13 +65,12 @@ def _identify_vendor_name(method=0):
             for vendor in ModemSupport.vendors:
                 if output[0].find(vendor.name) != -1:
                     system_id["modem_vendor"] = vendor.name
-                    step = 0    # Identification is successfull
-                    method = 1  # Identification is successfull
-                    #logger.debug("Modem vendor is detected with method 2!")
+                    step = 0
+                    method = 1
 
             if system_id["modem_vendor"] == "":
                 logger.warning("Modem vendor couldn't be found with method 2!")
-                step = 3    # Try next method
+                step = 3
         else:
             raise RuntimeError("Error occured on usb-devices command!")
     
@@ -108,13 +107,13 @@ def _identify_product_name(method=0):
                     product_name = key.split("_")[0]
                     if output[0].find(product_name) != -1:
                         system_id["modem_name"] = str(product_name)
-                        step = 0    # Identification is successfull
-                        method = 1  # Identification is successfull
-                        #logger.debug("Modem name is detected with method 1!")
+                        step = 0
+                        method = 1
+
 
             if system_id["modem_name"] == "":
                 logger.warning("Modem name couldn't be found with method 1!")
-                step = 2    # Try next method
+                step = 2
         else:
             raise RuntimeError("Error occured on usb-devices command!")
     
@@ -127,7 +126,6 @@ def _identify_product_name(method=0):
                     product_name = key.split("_")[0]
                     if output[0].find(product_name) != -1:
                         system_id["modem_name"] = str(product_name)
-                        #logger.debug("Modem name is detected with method 2!")
                     
             if system_id["modem_name"] == "":
                 logger.warning("Modem name couldn't be found with method 2!")
@@ -213,7 +211,6 @@ def _identify_os():
         raise RuntimeError("Error occured while getting OS identification!")
     
 def identify_setup():
-
     # Get old system setup if it is exist
     old_system_id = {}
     if os.path.isfile(SYSTEM_PATH):
@@ -287,7 +284,7 @@ def identify_setup():
         logger.warning("OS identification failed!")
     
     # IDENTIFICATION REPORT
-    if DEBUG == True and VERBOSE_MODE == True:
+    if conf.debug_mode == True and conf.verbose_mode == True:
         print("")
         print("********************************************************************")
         print("[?] IDENTIFICATION REPORT")
