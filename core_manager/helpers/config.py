@@ -29,15 +29,17 @@ default_config = {
         "other_ping_timeout": 3,
         "network_priority": { "eth0" : 1, "wlan0" : 2, "wwan0" : 3, "usb0": 4},
         "cellular_interfaces": ["wwan0", "usb0"],
-        "acceptible_apns": ["super", "de1.super", "sg1.super"],
+        "acceptable_apns": ["super", "de1.super", "sg1.super"],
     }
+
+keys_required_modem_config = ["apn"]
 
 
 class Config(object):
-    
+
     reload_required = False
     config_changed = False
-    
+    modem_config_required = False
 
     def __init__(self):
         self.restore_defaults()
@@ -53,6 +55,7 @@ class Config(object):
         self.other_ping_timeout = new_config.other_ping_timeout
         self.network_priority = new_config.network_priority
         self.cellular_interfaces = new_config.cellular_interfaces
+        self.acceptable_apns = new_config.acceptable_apns
 
 
     def restore_defaults(self):
@@ -65,6 +68,7 @@ class Config(object):
         self.other_ping_timeout = default_config.get("other_ping_timeout")
         self.network_priority = default_config.get("network_priority")
         self.cellular_interfaces = default_config.get("cellular_interfaces")
+        self.acceptable_apns = default_config.get("acceptable_apns")
 
 
     def is_reload_required(self):
@@ -81,7 +85,7 @@ class Config(object):
 
     def set_apn_config(self, value):
         if value:
-            if value in default_config.get("acceptible_apns"):
+            if value in self.acceptable_apns:
                 self.apn = value
             else:
                 self.apn = default_config.get("apn")
@@ -183,7 +187,18 @@ class Config(object):
 
 
     def set_cellular_interfaces_config(self, value):
-        if type(value) is dict:
+        if type(value) is list:
             self.cellular_interfaces = value
         else:
             self.cellular_interfaces = default_config.get("cellular_interfaces")
+
+
+    def get_acceptable_apns_config(self):
+        return self.acceptable_apns
+
+
+    def set_acceptable_apns_config(self, value):
+        if type(value) is list:
+            self.acceptable_apns = value
+        else:
+            self.acceptable_apns = default_config.get("acceptable_apns")

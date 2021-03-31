@@ -5,6 +5,7 @@ import time
 from helpers.yamlio import read_yaml_all, write_yaml_all, CONFIG_FOLDER_PATH, CONFIG_PATH
 from helpers.config_parser import logger, conf, get_configs
 from helpers.commander import shell_command
+from helpers.config import keys_required_modem_config
 
 from cm import queue
 
@@ -24,11 +25,14 @@ def get_actual_configs():
             return actual_configs
     else:
         logger.info("Config file doesn't exist!")
+        return {}
 
 
 def get_requests():
     for file in sorted(glob.glob(CONFIG_REQUEST_PATH + "/config_request*.yaml"), reverse=True):
         waiting_requests.append(file)
+    
+    return waiting_requests
 
 
 def compare_request(request_file):
@@ -58,7 +62,7 @@ def save_configuration():
     num_of_req = len(waiting_requests)
     
     try:
-        get_actual_configs()
+        actual_configs.update(get_actual_configs())
     except Exception as e:
         logger.error(str(e))
         return
@@ -67,13 +71,14 @@ def save_configuration():
         req = waiting_requests[-1] 
         try:
             diff = compare_request(req)
-            print(diff)
         except Exception as e:
             logger.error("compare_request() --> " + str(e))
         else:
             for x in diff:
-                actual_configs[x] = diff[x]
-            
+                actual_configs[x] = diff[x]          
+                # check modem reconfiguration is required
+                if x in keys_required_modem_config:
+                    conf.modem_config_required = True
             try:
                 write_yaml_all(CONFIG_PATH, actual_configs)
             except Exception as e:
@@ -92,10 +97,10 @@ def apply_configs():
                 done = filename + "_done"
 
                 old = os.path.join(CONFIG_REQUEST_PATH, filename)
-                new = os.path.join(CONFIG_REQUEST_PATH, done)         
+                new = os.path.join(CONFIG_REQUEST_PATH, done)
                 os.rename(old, new)
             
-                print(done)
+                logger.info("Request --> " + str(filename) + " is done.")
         except Exception as e:
             logger.error("apply_configs() --> " + str(e))
         else:
@@ -122,34 +127,34 @@ def configure():
 
     for i in range(len(waiting_requests)):
         save_configuration()
-        print("Actual Config: ", actual_configs)
-        #print("Waiting Requests Count: ", len(waiting_requests))
-        #print("Processing Requests Count: ", len(processing_requests))
-        #print("\n")
+        #print("New Actual Config: ", actual_configs)
 
     apply_configs()
 
     if conf.reload_required:
-        print("Reload is required")
         try: 
             conf.update_config(get_configs())
         except Exception as e:
             logger.error("conf.update_config() -->" + str(e))
         else:
-            print("Reloaded")
             conf.reload_required = False
 
     if conf.is_config_changed():
-        print("Config is changed. Go to identification step!")
-        queue.set_step(sub=0, base=1, success=2, fail=13, interval=0.1, is_ok=False, retry=50)
-        conf.config_changed = False
+        logger.info("Configuration is changed.")
+        
+        if conf.modem_config_required:
+            logger.info("Modem configuration will be start soon.")
+            # go to modem configuration step
+            queue.set_step(sub=0, base=2, success=14, fail=13, interval=1, is_ok=False, retry=5)
+            conf.modem_config_required = False
 
+        conf.config_changed = False
+        
     config_report()
 
   
 if __name__ == "__main__":
     while True:
-        config_report()
-        
+        config_report() 
         configure()
         time.sleep(5)

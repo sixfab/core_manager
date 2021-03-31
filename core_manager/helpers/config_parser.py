@@ -36,6 +36,7 @@ def get_configs():
     conf.set_send_monitoring_data_interval_config(config.get("send_monitoring_data_interval"))
     conf.set_network_priority_config(config.get("network_priority"))
     conf.set_cellular_interfaces_config(config.get("cellular_interfaces"))
+    conf.set_acceptable_apns_config(config.get("acceptable_apns"))
     
     conf.config_changed = True
     old_config.update(config)
