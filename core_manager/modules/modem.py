@@ -229,7 +229,7 @@ class Modem(object):
             
             try:
                 ping_latencies = parse_output(output, "min/avg/max/mdev =", "ms")
-                min_latency = float(ping_latencies.split("/")[0])
+                min_latency = int(float(ping_latencies.split("/")[0]))
             except:
                 raise RuntimeError("Error occured while getting ping latency!")
             
