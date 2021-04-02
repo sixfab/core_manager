@@ -12,12 +12,12 @@ from cm import modem
 
 lowest_priority_factor = 100
 
-def parse_output(output, header, end):
+def parse_output(string, header, end):
     header += " "
     header_size = len(header)
-    index_of_data = output[0].find(header) + header_size
-    end_of_data = index_of_data + output[0][index_of_data:].find(end)
-    sig_data = output[0][index_of_data:end_of_data]
+    index_of_data = string.find(header) + header_size
+    end_of_data = index_of_data + string[index_of_data:].find(end)
+    sig_data = string[index_of_data:end_of_data]
     return sig_data
 
 
@@ -80,7 +80,7 @@ class Network(object):
         if output[2] == 0:
             
             try:
-                ping_latencies = parse_output(output, "min/avg/max/mdev =", "ms")
+                ping_latencies = parse_output(output[0], "min/avg/max/mdev =", "ms")
                 min_latency = float(ping_latencies.split("/")[0])
             except:
                 raise RuntimeError("Error occured while getting ping latency!")
@@ -145,6 +145,22 @@ class Network(object):
                     self.monitor[x.name] = [True, latency]
 
 
+    def get_interface_metrics(self):
+        output = shell_command("ip route list")
+
+        if output[2] != 0:
+            raise RuntimeError("Error occured on \"ip route list\" command!")
+
+        for line in output[0].splitlines():
+            for x in self.interfaces:
+                if x.name in line:
+                    try:
+                        metric = parse_output(line, "metric", " ")
+                        x.actual_metric = int(metric)
+                    except Exception as e:
+                        logger.warning("Interface metrics couldn't be read!" + str(e))
+        
+
     def adjust_priorities(self):
         default_metric_factor = 10
 
@@ -168,6 +184,16 @@ class Network(object):
                         logger.error("Error occured changing metric : " + str(iface.name)) 
                     else:
                         iface.last_connection_status = iface.connection_status
+
+            if iface.actual_metric != iface.metric_factor * 100 and iface.actual_metric != None:
+                try:
+                    self.adjust_metric(iface.name, iface.metric_factor)
+                except:
+                    logger.error("Error occured changing metric : " + str(iface.name)) 
+                else:
+                    logger.info(str(iface.name) + " metric changed : " + str(iface.metric_factor * 100))
+                
+
 
        
     def debug_routes(self):   

@@ -10,6 +10,7 @@ network = Network()
 
 def manage_network():
     network.check_interfaces()
+    network.get_interface_metrics()
     network.check_and_create_monitoring()
     
     try:
@@ -18,6 +19,7 @@ def manage_network():
         logger.critical("adjust_priorities() --> " + str(e))
         
     network.debug_routes()
+
 
 if __name__  == "__main__":
     manage_network()
