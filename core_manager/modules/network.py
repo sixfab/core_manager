@@ -87,7 +87,7 @@ class Network(object):
             
             try:
                 ping_latencies = parse_output(output[0], "min/avg/max/mdev =", "ms")
-                min_latency = float(ping_latencies.split("/")[0])
+                min_latency = int(float(ping_latencies.split("/")[0]))
             except:
                 raise RuntimeError("Error occured while getting ping latency!")
             
@@ -144,7 +144,7 @@ class Network(object):
                     latency = self.check_interface_health(x.name)
                 except:
                     x.connection_status = False
-                    self.monitor[x.name] = [False, None]
+                    self.monitor[x.name] = [False, 0]
                 else:
                     x.connection_status = True
                     self.monitor[x.name] = [True, latency]
