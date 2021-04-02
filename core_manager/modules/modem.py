@@ -2,16 +2,24 @@
 
 import time
 from usb.core import find as finddev
+import os.path
 
 from helpers.config_parser import conf
 from helpers.logger import logger
 from helpers.commander import shell_command, send_at_com
-from helpers.yamlio import read_yaml_all, write_yaml_all, DIAG_FOLDER_PATH
+from helpers.yamlio import read_yaml_all, write_yaml_all, DIAG_FOLDER_PATH, MONITOR_PATH
 from helpers.exceptions import *
 
 
 BASE_HAT_DISABLE_PIN = 26 # For raspberry pi
 reset_usb_script = "helpers/reset_usb.py"
+
+
+if os.path.isfile(MONITOR_PATH):
+    try:
+        old_monitor = read_yaml_all(MONITOR_PATH)
+    except Exception as e:
+        logger.warning("Old monitor data in monitor.yaml file couln't be read!")
 
 
 def parse_output(output, header, end):
@@ -37,7 +45,7 @@ class Modem(object):
     monitor = {
         "cellular_connection" : None,
         "cellular_latency" : None,
-        "fixed_incident": 0,
+        "fixed_incident": old_monitor.get("fixed_incident", 0),
     }
 
     # additional properties
