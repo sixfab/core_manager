@@ -15,6 +15,7 @@ BASE_HAT_DISABLE_PIN = 26 # For raspberry pi
 reset_usb_script = "helpers/reset_usb.py"
 
 
+old_monitor = {}
 if os.path.isfile(MONITOR_PATH):
     try:
         old_monitor = read_yaml_all(MONITOR_PATH)
