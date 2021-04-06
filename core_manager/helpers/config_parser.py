@@ -1,59 +1,46 @@
+import os.path
 
-from helpers.yamlio import *
-from helpers.logger import initialize_logger
+from helpers.yamlio import read_yaml_all, CONFIG_PATH
+from helpers.config import Config, default_config
 
-env = {}
+
 config = {}
-connect_dict = {}
+old_config = {}
+conf = Config()
 
-# Check the .env.yaml file exist.
-if os.path.isfile(ENV_PATH):
-    try:
-        env = read_yaml_all(ENV_PATH)
-    except Exception as e:
-        print(e) # debug
+
+def get_configs():
+
+    if os.path.isfile(CONFIG_PATH):
+        try:
+            config.update(read_yaml_all(CONFIG_PATH))
+        except Exception as e:
+            print(str(e))
     else:
-        connect_dict = env.get("core", {})
-else:
-    print(".env.yaml file doesn't exist!")
+        print("Config file doesn't exist! Restoring default configs...")
+        conf.restore_defaults()
+        config.update({})
+        old_config.update(config)
+        return conf
+    
+    if config == old_config:
+        return conf
+    
+    conf.set_verbose_mode_config(config.get("verbose_mode"))
+    conf.set_debug_mode_config(config.get("debug_mode"))
+    conf.set_apn_config(config.get("apn"))
+    conf.set_ping_timeout_config(config.get("ping_timeout"))
+    conf.set_other_ping_timeout_config(config.get("other_ping_timeout"))
+    conf.set_check_internet_interval_config(config.get("check_internet_interval"))
+    conf.set_send_monitoring_data_interval_config(config.get("send_monitoring_data_interval"))
+    conf.set_network_priority_config(config.get("network_priority"))
+    conf.set_cellular_interfaces_config(config.get("cellular_interfaces"))
+    conf.set_acceptable_apns_config(config.get("acceptable_apns"))
+    conf.set_logger_level_config(config.get("logger_level"))
+    
+    conf.config_changed = True
+    old_config.update(config)
+    return conf
 
-# default configurations
-default_config = {
-    "apn" : connect_dict.get("apn", "super"),
-
-    "debug_mode" : True,
-    "verbose_mode" : True,
-
-    "check_internet_interval" : 60,
-    "send_monitoring_data_interval" : 60,
-
-    "ping_timeout" : 9,
-}
-
-# Check the config file exist.
-if os.path.isfile(CONFIG_PATH):
-    pass
-else:
-    print("Config file doesn't exist! Restoring default configs...") # debug
-    try:
-        config = default_config
-        write_yaml_all(CONFIG_PATH, config)
-    except Exception as e:
-        print("Error occured when default config file is creating!") # debug
-
-try:
-    config = read_yaml_all(CONFIG_PATH)
-except Exception as e:
-    print(e) # debug
-
-
-VERBOSE_MODE = config.get("verbose_mode", False)
-DEBUG = config.get("debug_mode", False)
-APN = config.get("apn", "super")
-PING_TIMEOUT = config.get("ping_timeout", 9)
-INTERVAL_CHECK_INTERNET = config.get("check_internet_interval", 60)
-INTERVAL_SEND_MONITOR = config.get("send_monitoring_data_interval", 60)
-
-logger = initialize_logger(DEBUG)
-
-
+conf.update_config(get_configs())
+conf.config_changed = False

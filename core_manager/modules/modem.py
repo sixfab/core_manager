@@ -2,15 +2,35 @@
 
 import time
 from usb.core import find as finddev
+import os.path
 
-from helpers.logger import initialize_logger
+from helpers.config_parser import conf
+from helpers.logger import logger
 from helpers.commander import shell_command, send_at_com
-from helpers.yamlio import *
+from helpers.yamlio import read_yaml_all, write_yaml_all, DIAG_FOLDER_PATH, MONITOR_PATH
 from helpers.exceptions import *
-from helpers.config_parser import *
+
 
 BASE_HAT_DISABLE_PIN = 26 # For raspberry pi
 reset_usb_script = "helpers/reset_usb.py"
+
+
+old_monitor = {}
+if os.path.isfile(MONITOR_PATH):
+    try:
+        old_monitor = read_yaml_all(MONITOR_PATH)
+    except Exception as e:
+        logger.warning("Old monitor data in monitor.yaml file couln't be read!")
+
+
+def parse_output(output, header, end):
+    header += " "
+    header_size = len(header)
+    index_of_data = output[0].find(header) + header_size
+    end_of_data = index_of_data + output[0][index_of_data:].find(end)
+    sig_data = output[0][index_of_data:end_of_data]
+    return sig_data
+
 
 class Modem(object):
     # main properties
@@ -25,12 +45,8 @@ class Modem(object):
     # monitoring properties
     monitor = {
         "cellular_connection" : None,
-        "usable_interfaces" : None,
-        "active_interface" : None,
-        "signal_quality" : None,
-        "roaming_operator" : None,
-        "active_lte_tech": None,
-        "fixed_incident": 0,
+        "cellular_latency" : None,
+        "fixed_incident": old_monitor.get("fixed_incident", 0),
     }
 
     # additional properties
@@ -44,7 +60,6 @@ class Modem(object):
     incident_flag = False
 
     diagnostic = {
-        "con_interface" : True,
         "con_interface" : True,
         "modem_reachable" : True,
         "usb_driver" : True,
@@ -100,16 +115,16 @@ class Modem(object):
 
 
     def configure_apn(self):
-        apn_with_quotes = '\"%s\"' % APN
+        apn_with_quotes = '\"%s\"' % conf.apn
         output = send_at_com("AT+CGDCONT?", apn_with_quotes)
 
         if output[2] == 0:
             logger.info("APN is up-to-date.") 
         else:
-            output = send_at_com("AT+CGDCONT=1,\"IPV4V6\",\"" + APN + "\"","OK")
+            output = send_at_com("AT+CGDCONT=1,\"IPV4V6\",\"" + conf.apn + "\"","OK")
 
             if(output[2] == 0):
-                logger.info("APN is updated succesfully : " + APN)
+                logger.info("APN is updated succesfully : " + conf.apn)
             else:
                 raise ModemNotReachable("APN couldn't be set successfully!")
 
@@ -150,31 +165,25 @@ class Modem(object):
                 except Exception as e:
                     raise e
 
-            
-    def check_network(self):
-        
-        sim_ready = 0
-        network_reg = 0
-        network_ready = 0
 
-        # Check the network is ready
-        logger.info("Checking the network is ready...")
+    def check_sim_ready(self):
+        logger.info("Checking the SIM is ready...")
 
-        # SIM
         output = send_at_com("AT+CPIN?", "CPIN: READY")
         if output[2] == 0:
             logger.info("SIM is ready.")
-            sim_ready = 1
         else:
             logger.error(output[0])
             raise SIMNotReady(output[0])
+            
 
-        # Network Registeration
+    def check_network(self):      
+        logger.info("Checking the network is ready...")
+
         output = send_at_com("AT+CREG?", "OK")
         if (output[2] == 0):
             if(output[0].find("+CREG: 0,1") != -1 or output[0].find("+CREG: 0,5") != -1):
                 logger.info("Network is registered.")
-                network_reg = 1
             else:
                 logger.error(output[0])
                 raise NetworkRegFailed(output[0])
@@ -214,25 +223,41 @@ class Modem(object):
             raise PDPContextFailed("ECM initiation failed!")
 
 
-    def check_internet(self):
-
-        output = shell_command("ping -q -c 1 -s 0 -w "  + str(PING_TIMEOUT) + " -I " + self.interface_name + " 8.8.8.8")
-        #print(output)
+    def check_interface_health(self, interface, timeout):
+        output = shell_command("ping -q -c 1 -s 8 -w "  + str(timeout) + " -I " + str(interface) + " 8.8.8.8")
 
         if output[2] == 0:
-            return 0
+            
+            try:
+                ping_latencies = parse_output(output, "min/avg/max/mdev =", "ms")
+                min_latency = int(float(ping_latencies.split("/")[0]))
+            except:
+                raise RuntimeError("Error occured while getting ping latency!")
+            
+            return min_latency
         else:
             raise NoInternet("No internet!")
 
+
+    def check_internet(self):
+
+        try:
+            latency = self.check_interface_health(self.interface_name, conf.ping_timeout)
+        except:
+            self.monitor["cellular_connection"] = False
+            self.monitor["cellular_latency"] = None
+            raise NoInternet("No internet!")
+        else:
+            self.monitor["cellular_connection"] = True
+            self.monitor["cellular_latency"] = latency
+            
 
     def diagnose(self, diag_type=0):
         
         self.diagnostic = {
             "con_interface" : "",
-            "con_interface" : "",
             "modem_reachable" : "",
             "usb_driver" : "",
-
             "pdp_context" : "",
             "network_reqister" : "",
             "sim_ready" : "",
@@ -305,7 +330,7 @@ class Modem(object):
         
         try:
             self.check_network()
-        except Exception as e:
+        except:
             self.diagnostic["network_reqister"] = False
         else:
             self.diagnostic["network_reqister"] = True
@@ -313,7 +338,7 @@ class Modem(object):
         # 7 - Is the APN OK?
         logger.debug("[7] : Is the APN is OK?")
         
-        apn_with_quotes = '\"%s\"' % APN
+        apn_with_quotes = '\"%s\"' % conf.apn
         output = send_at_com("AT+CGDCONT?", apn_with_quotes)
         if output[2] == 0:
             self.diagnostic["modem_apn"] = True
@@ -355,7 +380,7 @@ class Modem(object):
 
         
 
-        if DEBUG == True and VERBOSE_MODE == True:
+        if conf.debug_mode == True and conf.verbose_mode == True:
             print("")
             print("********************************************************************")
             print("[?] DIAGNOSTIC REPORT")
@@ -529,54 +554,6 @@ class Modem(object):
             raise RuntimeError("Error occured gpio command!")
 
 
-    def get_cellular_status(self):
-        status = self.monitor.get("cellular_connection", None)
-        if isinstance(status,bool):
-            return bool(status)
-        else:
-            return status
-
-
-    def find_usable_interfaces(self):
-        # Supported interfaces
-        interfaces = ["eth0", "wlan0", "usb0", "wwan0"]
-        usable_interafaces = []
-
-        output = shell_command("route -n")
-        
-        if output[2] == 0:
-            for i in interfaces:
-                if output[0].find(i) != -1:
-                    usable_interafaces.append(i)
-        
-        return usable_interafaces
-
-
-    def find_active_interface(self):
-        # Supported interfaces and locations
-        interfaces = {"eth0": 10000, "wlan0": 10000, "usb0": 10000, "wwan0": 10000}
-
-        output = shell_command("route -n")
-        
-        if output[2] == 0:
-            for key in interfaces:
-                location = output[0].find(key)
-                if  location != -1:
-                    interfaces[key] = location
-        else:
-            raise RuntimeError("Error occured on \"route -n\" command!")
-
-        # find interface has highest priority
-        last_location = 10000
-        high = None
-        for key in interfaces:
-            if  interfaces[key] < last_location:
-                last_location = interfaces[key] 
-                high = key
-
-        return high
-
-
     def get_significant_data(self, output, header):
         header += " "
         header_size = len(header)
@@ -590,7 +567,13 @@ class Modem(object):
         output = send_at_com("AT+COPS?", "OK")
         if output[2] == 0:
             data = self.get_significant_data(output, "+COPS:")
-            return data[2]
+            
+            try:
+                operator = data[2]
+            except:
+                operator = None
+            else:
+                return operator
         else:
             raise RuntimeError("Error occured on \"AT+CSQ\" command!")
 
@@ -599,7 +582,13 @@ class Modem(object):
         output = send_at_com("AT+CSQ", "OK")
         if output[2] == 0:
             data = self.get_significant_data(output, "+CSQ:")
-            return int(data[0])
+
+            try:
+                sq = int(data[0])
+            except:
+                sq = None
+            else:
+                return sq
         else:
             raise RuntimeError("Error occured on \"AT+CSQ\" command!")
 
@@ -619,7 +608,13 @@ class Modem(object):
         
         if output[2] == 0:
             data = self.get_significant_data(output, "+COPS:")
-            return techs.get(data[3], "Unknown")
+            
+            try:
+                tech_id = data[3]
+            except:
+                return None
+            else:
+                return techs.get(tech_id, "Unknown")
         else:
             raise RuntimeError("Error occured on \"AT+CSQ\" command!")
 
@@ -630,4 +625,4 @@ class Modem(object):
 
 
     def get_apn(self):
-        return APN
+        return conf.apn

@@ -25,6 +25,4 @@ class Queue(object):
         self.interval = interval
         self.is_ok = is_ok
         self.retry = retry
-    
-queue = Queue()
 

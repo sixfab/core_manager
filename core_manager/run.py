@@ -3,9 +3,14 @@
 import time
 from threading import Thread, Lock
 
+from helpers.config_parser import conf
+from helpers.logger import logger
+
 from cm import manage_connection
+from nm import manage_network
 from monitor import monitor
-from helpers.config_parser import logger, INTERVAL_SEND_MONITOR
+from configurator import configure
+
 
 lock = Lock()
 
@@ -19,15 +24,13 @@ def thread_manage_connection():
 def thread_monitor_and_config():
     while(True):
         with lock:
-            print("")
-            #logger.debug("[Config & Monitor] Other threads are locked!")
-            
-            #logger.debug("<--> Check monitor <-->")
+            logger.debug("Configurator is working...")
+            configure()
+            logger.debug("Network manager is working...")
+            manage_network()
+            logger.debug("Monitor is working...")
             monitor()
-
-            # logger.debug("<--> Check configurations <-->")
-        #logger.debug("[Config & Monitor] Other threads are released!")
-        time.sleep(INTERVAL_SEND_MONITOR)
+        time.sleep(conf.get_send_monitoring_data_interval_config())
 
 def main():
     Thread(target=thread_manage_connection).start()

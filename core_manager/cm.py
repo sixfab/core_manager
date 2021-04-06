@@ -3,17 +3,18 @@
 import time
 import os.path
 
+from helpers.config_parser import conf
+from helpers.logger import logger
 from helpers.commander import send_at_com
-from helpers.yamlio import *
-from helpers.exceptions import *
-from helpers.config_parser import *
-from helpers.queue import queue
+from helpers.yamlio import read_yaml_all, SYSTEM_PATH
+from helpers.exceptions import ModemNotFound, ModemNotSupported
+from helpers.queue import Queue
 
 from modules.identify import identify_setup
 from modules.modem import Modem
 
 system_info = {}
-queue.set_step(0,0,0,0,0,0,0)
+queue = Queue()
 
 logger.info("Core Manager started.")
 
@@ -47,7 +48,7 @@ modem = Modem(
     product_id = system_info.get("modem_product_id", "")
 )
 
-if DEBUG == True and VERBOSE_MODE == True:
+if conf.debug_mode == True and conf.verbose_mode == True:
     print("")
     print("********************************************************************")
     print("[?] MODEM REPORT")
@@ -76,7 +77,7 @@ def _organizer(arg):
 def _identify_setup(arg):
     global modem
     queue.set_step(sub=0, base=1, success=2, fail=13, interval=0.1, is_ok=False, retry=50)
-
+    
     try:
         new_id = identify_setup()
     except Exception as e:
@@ -89,14 +90,14 @@ def _identify_setup(arg):
                 model = new_id.get("modem_name", ""),
                 imei = new_id.get("imei", ""),
                 iccid = new_id.get("iccid", ""),
-                sw_version = new_id.get("sw_version", ""),
+                sw_version = new_id.get("sw_version", ""), 
                 vendor_id = new_id.get("modem_vendor_id", ""),
                 product_id = new_id.get("modem_product_id", "")
             ) 
         queue.is_ok = True
 
 def _configure_modem(arg):
-    queue.set_step(sub=0, base=2, success=3, fail=13, interval=1, is_ok=False, retry=5)
+    queue.set_step(sub=0, base=2, success=14, fail=13, interval=1, is_ok=False, retry=5)
 
     try:
         modem.configure_modem()
@@ -109,6 +110,19 @@ def _configure_modem(arg):
         queue.is_ok = False
     else:
         queue.is_ok = True
+
+
+def _check_sim_ready(arg):
+    queue.set_step(sub=0, base=14, success=3, fail=13, interval=1, is_ok=False, retry=5)
+
+    try:
+        modem.check_sim_ready()
+    except Exception as e:
+        logger.error("check_sim_ready() -> " + str(e))
+        queue.is_ok = False
+    else:
+        queue.is_ok = True
+
 
 def _check_network(arg):
     queue.set_step(sub=0, base=3, success=4, fail=13, interval=5, is_ok=False, retry=120)
@@ -133,9 +147,8 @@ def _initiate_ecm(arg):
         queue.is_ok = True
 
 def _check_internet(arg):
-    
     if queue.sub == 5:
-        queue.set_step(sub=0, base=5, success=5, fail=6, interval=INTERVAL_CHECK_INTERNET, is_ok=False, retry=0)
+        queue.set_step(sub=0, base=5, success=5, fail=6, interval=conf.check_internet_interval, is_ok=False, retry=0)
     elif queue.sub == 8:
         queue.set_step(sub=0, base=8, success=5, fail=9, interval=10, is_ok=False, retry=0)
     elif queue.sub == 10:
@@ -147,9 +160,7 @@ def _check_internet(arg):
         print("") # debug purpose
         logger.error("check_internet() -> " + str(e))
         queue.is_ok = False
-    else:
-        modem.monitor["cellular_connection"] = True
-        
+    else:        
         if modem.incident_flag == True:
             modem.monitor["fixed_incident"] += 1
             modem.incident_flag = False
@@ -235,6 +246,7 @@ steps = {
     11: _reset_modem_softly,
     12: _reset_modem_hardly,
     13: _diagnose,
+    14: _check_sim_ready,
 }
     
 def execute_step(x, arg=None):
