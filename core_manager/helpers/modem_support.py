@@ -23,6 +23,12 @@ class Telit(object):
         "LE910C1-EU_COMP_2" : "1206",
         "LE910C4-EU_COMP_1" : "1201",
         "LE910C4-EU_COMP_2" : "1206",
+        "LE910C1-NF_COMP_1" : "1201",
+        "LE910C1-NF_COMP_2" : "1206",
+        "LE910C4-NF_COMP_1" : "1201",
+        "LE910C4-NF_COMP_2" : "1206",
+        "ME910_COMP_1" : "1101",
+        "ME910_COMP_2" : "1102",
     }  
 
 
