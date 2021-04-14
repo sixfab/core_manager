@@ -1,7 +1,7 @@
 #!/usr/bin/python3
 
 import time
-from usb.core import find as finddev
+import usb.core
 import os.path
 
 from helpers.config_parser import conf
@@ -12,8 +12,6 @@ from helpers.exceptions import *
 
 
 BASE_HAT_DISABLE_PIN = 26 # For raspberry pi
-reset_usb_script = "helpers/reset_usb.py"
-
 
 old_monitor = {}
 if os.path.isfile(MONITOR_PATH):
@@ -420,15 +418,17 @@ class Modem(object):
     def reset_usb_interface(self):
         logger.info("USB interface is reset...")
         
-        output = shell_command("sudo python3 " + reset_usb_script)
+        vendor_id = self.vendor_id
+        product_id = self.product_id
 
-        if output[2] != 0:
-            raise RuntimeError("Message: ", output)
-        else:
-            try:
-               self.wait_until_modem_interface_up()
-            except Exception as e:
-                raise e
+        vendor_id_int = int(vendor_id, 16)
+        product_id_int = int(product_id, 16)
+
+        try:
+            dev = usb.core.find(idVendor=vendor_id_int, idProduct=product_id_int)
+            dev.reset()
+        except Exception as e:
+            raise RuntimeError("Message: ", str(e))
 
 
     def wait_until_modem_turned_off(self):
