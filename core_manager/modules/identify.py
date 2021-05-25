@@ -25,6 +25,7 @@ system_id = {
     "iccid" : "",
     "sw_version" : "",
     "manager_version" : version, 
+    "board" : "",
 }
 
 
@@ -210,6 +211,16 @@ def _identify_os():
     except:
         raise RuntimeError("Error occured while getting OS identification!")
     
+
+def _identify_board(): 
+    output = shell_command("cat /sys/firmware/devicetree/base/model")
+
+    if output[2] == 0:
+        system_id["board"] = output[0]
+    else:
+        raise RuntimeError("Board couldn't be detected!")
+
+
 def identify_setup():
     # Get old system setup if it is exist
     old_system_id = {}
@@ -283,6 +294,13 @@ def identify_setup():
     except Exception as e:
         logger.warning("OS identification failed!")
     
+    # Board (Optional)
+    logger.debug("[+] Board Identification")
+    try:
+        _identify_board()
+    except Exception as e:
+        logger.warning("Board identification failed!")
+
     # IDENTIFICATION REPORT
     if conf.debug_mode == True and conf.verbose_mode == True:
         print("")
