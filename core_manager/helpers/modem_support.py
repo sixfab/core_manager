@@ -10,7 +10,7 @@ class Quectel(object):
         "EC25" : "0125",
         "EG25" : "0125",
         "EC21" : "0121",
-    }  
+    }
 
 
 class Telit(object):

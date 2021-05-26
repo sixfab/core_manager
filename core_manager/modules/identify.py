@@ -65,7 +65,6 @@ def _identify_product_name(method=0):
             for key in vendor.modules:
                 if output[0].find(vendor.modules[key]) != -1:
                     system_id["modem_name"] = key.split("_")[0]
-                    print(system_id["modem_name"])
     else:
         raise RuntimeError("Error occured on lsusb command!")
     
