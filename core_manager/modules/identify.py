@@ -39,115 +39,49 @@ def _turn_off_echo():
 
 def _identify_vendor_name(method=0):
     system_id["modem_vendor"] = ""
-    
-    step = 1 if method == 0 else method
 
-    if method == 0 or step == 1:
-        # [METHOD 1] By using lsusb
-        output = shell_command("lsusb")
-        if output[2] == 0:
-            for vendor in ModemSupport.vendors:
-                if output[0].find(vendor.name) != -1:
-                    system_id["modem_vendor"] = vendor.name
-                    step = 0
-                    method = 1
+    output = shell_command("lsusb")
 
+    if output[2] == 0:
+        for vendor in ModemSupport.vendors:
+            if output[0].find(vendor.vid) != -1:
+                system_id["modem_vendor"] = vendor.name
 
-            if system_id["modem_vendor"] == "":  
-                logger.warning("Modem vendor couldn't be found with method 1!")
-                step = 2
-        else:
-            raise RuntimeError("Error occured on lsusb command!")
-    
-    if method == 0 or step == 2: 
-        # [METHOD 2] By using usb-devices
-        output = shell_command("usb-devices")
-        if output[2] == 0:
-            for vendor in ModemSupport.vendors:
-                if output[0].find(vendor.name) != -1:
-                    system_id["modem_vendor"] = vendor.name
-                    step = 0
-                    method = 1
-
-            if system_id["modem_vendor"] == "":
-                logger.warning("Modem vendor couldn't be found with method 2!")
-                step = 3
-        else:
-            raise RuntimeError("Error occured on usb-devices command!")
-    
-    if method == 0 or step == 3:
-        # [METHOD 3] By using AT+GMI
-        output = send_at_com("AT+GMI", "OK")
-        if output[2] == 0:
-            for vendor in ModemSupport.vendors:
-                if output[0].find(vendor.name) != -1:
-                    system_id["modem_vendor"] = vendor.name
-                
-            if system_id["modem_vendor"] == "":
-                logger.warning("Modem vendor couldn't be found with method 3!")
-        else:
-            logger.warning("Modem vendor couldn't be found with method 3!")
-            raise RuntimeError("Error occured on send_at_com --> AT+GMI command!")
+        if system_id["modem_vendor"] == "":
+            logger.warning("Modem vendor couldn't be found!")
+    else:
+        raise RuntimeError("Modem vendor couldn't be found!")
 
     if system_id["modem_vendor"] == "":
         raise ModemNotSupported("Modem vendor couldn't be found!")
-    else:
-        return system_id["modem_vendor"]
+
 
 def _identify_product_name(method=0):
     system_id["modem_name"] = ""
 
-    step = 1 if method == 0 else method
-
-    if method == 0 or step == 1:
-        # [METHOD 1] By using usb-devices
-        output = shell_command("usb-devices")
-        if output[2] == 0:
-            for vendor in ModemSupport.vendors:
-                for key in vendor.modules:
-                    product_name = key.split("_")[0]
-                    if output[0].find(product_name) != -1:
-                        system_id["modem_name"] = str(product_name)
-                        step = 0
-                        method = 1
-
-
-            if system_id["modem_name"] == "":
-                logger.warning("Modem name couldn't be found with method 1!")
-                step = 2
-        else:
-            raise RuntimeError("Error occured on usb-devices command!")
+    output = shell_command("lsusb")
+    if output[2] == 0:     
+        for vendor in ModemSupport.vendors:
+            for key in vendor.modules:
+                if output[0].find(vendor.modules[key]) != -1:
+                    system_id["modem_name"] = key.split("_")[0]
+                    print(system_id["modem_name"])
+    else:
+        raise RuntimeError("Error occured on lsusb command!")
     
-    if method == 0 or step == 2:
-        # [METHOD 2] By using AT+GMM
-        output = send_at_com("AT+GMM", "OK")
-        if output[2] == 0:
-            for vendor in ModemSupport.vendors:
-                for key in vendor.modules:
-                    product_name = key.split("_")[0]
-                    if output[0].find(product_name) != -1:
-                        system_id["modem_name"] = str(product_name)
-                    
-            if system_id["modem_name"] == "":
-                logger.warning("Modem name couldn't be found with method 2!")
-        else:
-            logger.warning("Modem name couldn't be found with method 2!")
-            raise RuntimeError("Error occured on send_at_com --> AT+GMM command!")
-
     if system_id["modem_name"] == "":
         raise ModemNotSupported("Modem name couldn't be found!")
-    else:
-        return system_id["modem_name"]
+
 
 def _identify_usb_vid_pid():
     system_id["modem_vendor_id"] = ""
     system_id["modem_product_id"] = ""
 
-    output = shell_command("usb-devices")
+    output = shell_command("lsusb")
     if output[2] == 0:
         for vendor in ModemSupport.vendors:
-            if output[0].find(vendor.vendor_id) != -1:
-                system_id["modem_vendor_id"] = vendor.vendor_id
+            if output[0].find(vendor.vid) != -1:
+                system_id["modem_vendor_id"] = vendor.vid
                 
         for vendor in ModemSupport.vendors:
             for key in vendor.modules:
@@ -159,7 +93,7 @@ def _identify_usb_vid_pid():
         else:
             return (system_id["modem_vendor_id"], system_id["modem_product_id"])
     else:
-        raise RuntimeError("Error occured on usb-devices command!")
+        raise RuntimeError("Error occured on lsusb command!")
 
 def _identify_imei():
     output = send_at_com("AT+CGSN","OK")
