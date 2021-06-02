@@ -257,7 +257,14 @@ def manage_connection():
     return queue.interval
 
 if __name__  == "__main__":
-    while True:
-        interval = manage_connection()
-        time.sleep(interval)
+    from helpers.sbc_support import supported_sbcs
+
+    supported_sbcs["rpi4"].gpio_init()
+    supported_sbcs["rpi4"].modem_power_enable()
+    
+    #while True:
+        #interval = manage_connection()
+        #time.sleep(interval)
+
+        
 
