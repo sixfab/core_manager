@@ -81,21 +81,26 @@ class Modem(object):
         if vendor == "Quectel":
             self.interface_name = "usb0"
             self.mode_status_command = "AT+QCFG=\"usbnet\""
-            self.ecm_mode_response = "\"usbnet\",1"
-            self.ecm_mode_setter_command = "AT+QCFG=\"usbnet\",1"
             self.reboot_command = "AT+CFUN=1,1"
             self.pdp_activate_command = "AT"
             self.pdp_status_command = "AT+CGACT?"
-        
+            self.ecm_mode_setter_command = "AT+QCFG=\"usbnet\",1"
+            self.ecm_mode_response = "\"usbnet\",1"
+
         elif vendor == "Telit":
             self.interface_name = "wwan0"
             self.mode_status_command = "AT#USBCFG?"
-            self.ecm_mode_response = "4"
-            self.ecm_mode_setter_command = "AT#USBCFG=4"
             self.reboot_command = "AT#REBOOT"
             self.pdp_activate_command = "AT#ECM=1,0"
             self.pdp_status_command = "AT#ECM?"
-    
+
+            if model == "ME910C1-WW":
+                self.ecm_mode_setter_command = "AT#USBCFG=3"
+                self.ecm_mode_response = "3"
+            else:
+                self.ecm_mode_setter_command = "AT#USBCFG=4"
+                self.ecm_mode_response = "4"
+
 
     def update(self, vendor, model, imei, iccid, sw_version, vendor_id, product_id):
         self.__init__(vendor, model, imei, iccid, sw_version, vendor_id, product_id)
