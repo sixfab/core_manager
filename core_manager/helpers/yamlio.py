@@ -29,7 +29,7 @@ if not os.path.exists(CONFIG_FOLDER_PATH):
 def read_yaml_all(file):
     with open(file) as f:
         data = yaml.safe_load(f)
-        return data
+        return data or {}
 
 def write_yaml_all(file, items, clear = True):
     if clear == True:
