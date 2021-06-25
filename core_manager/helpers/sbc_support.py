@@ -28,20 +28,36 @@ class SBC():
             logger.exception("gpio_init -->")
 
 
+    def gpio_del(self):
+        comm = "echo " + str(self.disable_pin) + " > /sys/class/gpio/unexport"
+        try:
+            check_output(comm, shell=True)
+        except:
+            logger.warning("gpio_del --> unexport gpio")
+
+
     def modem_power_enable(self):
+        self.gpio_init()
+
         comm = "echo 0 > /sys/class/gpio/gpio" + str(self.disable_pin) + "/value"
         try:
             check_output(comm, shell=True)
         except:
             logger.exception("modem_power_enable -->")
 
+        self.gpio_del()
+
 
     def modem_power_disable(self):
+        self.gpio_init()
+        
         comm = "echo 1 > /sys/class/gpio/gpio" + str(self.disable_pin) + "/value"
         try:
             check_output(comm, shell=True)
         except:
             logger.exception("modem_power_disable -->")
+
+        self.gpio_del()
 
 
 rpi4_raspbian = SBC("Raspberry Pi 4", "Raspberry Pi OS (Raspbian)", 26)  # Use BCM on Raspberry Pi
