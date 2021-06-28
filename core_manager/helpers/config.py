@@ -21,6 +21,7 @@ else:
 
 default_config = {
         "apn" : core_env.get("apn", "super"),
+        "sbc" : core_env.get("sbc", "rpi4"),
         "debug_mode": False,
         "verbose_mode": False,
         "check_internet_interval": 60,
@@ -49,6 +50,7 @@ class Config(object):
     
     def update_config(self, new_config ):
         self.apn = new_config.apn
+        self.sbc = new_config.sbc
         self.debug_mode = new_config.debug_mode
         self.verbose_mode = new_config.verbose_mode
         self.check_internet_interval = new_config.check_internet_interval
@@ -63,6 +65,7 @@ class Config(object):
 
     def restore_defaults(self):
         self.apn = default_config.get("apn")
+        self.sbc = default_config.get("sbc")
         self.debug_mode = default_config.get("debug_mode")
         self.verbose_mode = default_config.get("verbose_mode")
         self.check_internet_interval = default_config.get("check_internet_interval")
