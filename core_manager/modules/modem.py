@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+from os import name
 import time
 import usb.core
 import os.path
@@ -9,7 +10,7 @@ from helpers.logger import logger
 from helpers.commander import shell_command, send_at_com
 from helpers.yamlio import read_yaml_all, write_yaml_all, DIAG_FOLDER_PATH, MONITOR_PATH
 from helpers.exceptions import *
-
+from helpers.sbc_support import supported_sbcs
 
 BASE_HAT_DISABLE_PIN = 26 # For raspberry pi
 
@@ -537,26 +538,10 @@ class Modem(object):
     def reset_modem_hardly(self):
         logger.info("Modem is resetting via hardware...")
 
-        # Pin direction
-        output = shell_command("gpio -g mode " + str(BASE_HAT_DISABLE_PIN) + " out")
-        if output[2] == 0:
-            pass
-        else:
-            raise RuntimeError("Error occured gpio command!")
-
-        # Disable power
-        output = shell_command("gpio -g write " + str(BASE_HAT_DISABLE_PIN) + " 1")
-        if output[2] == 0:
-            time.sleep(2)
-        else:
-            raise RuntimeError("Error occured gpio command!")
-
-        # Enable power
-        output = shell_command("gpio -g write " + str(BASE_HAT_DISABLE_PIN) + " 0")
-        if output[2] == 0:
-            time.sleep(2)
-        else:
-            raise RuntimeError("Error occured gpio command!")
+        sbc = supported_sbcs.get(conf.sbc)
+        sbc.modem_power_disable()
+        time.sleep(2)
+        sbc.modem_power_enable()
 
 
     def get_significant_data(self, output, header):

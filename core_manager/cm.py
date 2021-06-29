@@ -257,7 +257,10 @@ def manage_connection():
     return queue.interval
 
 if __name__  == "__main__":
+    
     while True:
         interval = manage_connection()
         time.sleep(interval)
+
+        
 
