@@ -254,9 +254,9 @@ def identify_setup():
 
     if system_id != old_system_id:
         logger.warning("System setup has changed!")
-        return system_id
-    else:
-        return 0
+    
+    return system_id or {}
+
 
 if __name__ == "__main__":
     identify_setup()

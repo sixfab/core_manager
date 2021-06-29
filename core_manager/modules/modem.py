@@ -70,7 +70,8 @@ class Modem(object):
         "modem_apn" : True,
     }
 
-    def __init__(self, vendor, model, imei, iccid, sw_version, vendor_id, product_id):
+
+    def update(self, vendor, model, imei, iccid, sw_version, vendor_id, product_id):
         self.vendor = vendor
         self.model = model
         self.imei = imei
@@ -101,10 +102,6 @@ class Modem(object):
             else:
                 self.ecm_mode_setter_command = "AT#USBCFG=4"
                 self.ecm_mode_response = "4"
-
-
-    def update(self, vendor, model, imei, iccid, sw_version, vendor_id, product_id):
-        self.__init__(vendor, model, imei, iccid, sw_version, vendor_id, product_id)
 
 
     def detect_modem(self):
