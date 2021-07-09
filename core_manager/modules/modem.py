@@ -589,6 +589,8 @@ class Modem(object):
             "5": "UTRAN W/HSUPA",
             "6": "UTRAN W/HSDPA and HSUPA",
             "7": "E-UTRAN",
+            "8": "CAT-M1",
+            "9": "CAT-NB1",
         }
         
         output = send_at_com("AT+COPS?", "OK")
