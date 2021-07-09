@@ -28,6 +28,8 @@ class SBC():
                 check_output(comm, shell=True)
             except:
                 logger.warning("gpio_init --> export gpio")
+
+            time.sleep(0.2)
             
         comm = "echo out > /sys/class/gpio/gpio" + str(pin) + "/direction"
         try:
