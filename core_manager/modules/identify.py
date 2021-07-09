@@ -68,6 +68,13 @@ def _identify_product_name(method=0):
     else:
         raise RuntimeError("Error occured on lsusb command!")
     
+    output = send_at_com("AT+GMM","OK")
+    if output[2] == 0:
+        try:
+            system_id["modem_name"] += " " +  str(output[0].split("\n")[1] or "")
+        except:
+            pass
+        
     if system_id["modem_name"] == "":
         raise ModemNotSupported("Modem name couldn't be found!")
 
@@ -94,6 +101,7 @@ def _identify_usb_vid_pid():
     else:
         raise RuntimeError("Error occured on lsusb command!")
 
+
 def _identify_imei():
     output = send_at_com("AT+CGSN","OK")
     raw_imei = output[0] if output[2] == 0 else "" 
@@ -105,6 +113,7 @@ def _identify_imei():
     else: 
         raise ModemNotReachable("IMEI couldn't be detected!")
 
+
 def _identify_fw_version():
     output = send_at_com("AT+CGMR","OK")
     system_id["sw_version"] = output[0].split("\n")[1] if output[2] == 0 else ""
@@ -113,6 +122,7 @@ def _identify_fw_version():
         return system_id["sw_version"]
     else: 
         raise ModemNotReachable("Firmware Ver. couldn't be detected!")
+
 
 def _identify_iccid():
     output = send_at_com("AT+ICCID","OK")
@@ -124,6 +134,7 @@ def _identify_iccid():
         return system_id["iccid"]
     else: 
         raise ModemNotReachable("ICCID couldn't be detected!")
+
 
 def _identify_os():
     try:
