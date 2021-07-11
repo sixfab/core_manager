@@ -13,20 +13,15 @@ from __version__ import version
 
 
 system_id = {
-    "platform" : "",
-    "arc" : "",
-    "machine": "",
-    "kernel" : "",
-    "host_name" : "",
-    "modem_vendor" : "",
-    "modem_vendor_id" : "",
-    "modem_product_id" : "",
-    "imei" : "",
-    "iccid" : "",
-    "sw_version" : "",
     "manager_version" : version, 
-    "board" : "",
 }
+
+# Save ID's to file
+try:
+    write_yaml_all(SYSTEM_PATH, system_id)
+except Exception as e:
+    logger.error(e)
+    raise e
 
 
 def _turn_off_echo():
