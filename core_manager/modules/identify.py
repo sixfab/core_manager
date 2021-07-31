@@ -13,20 +13,15 @@ from __version__ import version
 
 
 system_id = {
-    "platform" : "",
-    "arc" : "",
-    "machine": "",
-    "kernel" : "",
-    "host_name" : "",
-    "modem_vendor" : "",
-    "modem_vendor_id" : "",
-    "modem_product_id" : "",
-    "imei" : "",
-    "iccid" : "",
-    "sw_version" : "",
     "manager_version" : version, 
-    "board" : "",
 }
+
+# Save ID's to file
+try:
+    write_yaml_all(SYSTEM_PATH, system_id)
+except Exception as e:
+    logger.error(e)
+    raise e
 
 
 def _turn_off_echo():
@@ -68,6 +63,13 @@ def _identify_product_name(method=0):
     else:
         raise RuntimeError("Error occured on lsusb command!")
     
+    output = send_at_com("AT+GMM","OK")
+    if output[2] == 0:
+        try:
+            system_id["modem_name"] += " " +  str(output[0].split("\n")[1] or "")
+        except:
+            pass
+        
     if system_id["modem_name"] == "":
         raise ModemNotSupported("Modem name couldn't be found!")
 
@@ -94,6 +96,7 @@ def _identify_usb_vid_pid():
     else:
         raise RuntimeError("Error occured on lsusb command!")
 
+
 def _identify_imei():
     output = send_at_com("AT+CGSN","OK")
     raw_imei = output[0] if output[2] == 0 else "" 
@@ -105,6 +108,7 @@ def _identify_imei():
     else: 
         raise ModemNotReachable("IMEI couldn't be detected!")
 
+
 def _identify_fw_version():
     output = send_at_com("AT+CGMR","OK")
     system_id["sw_version"] = output[0].split("\n")[1] if output[2] == 0 else ""
@@ -113,6 +117,7 @@ def _identify_fw_version():
         return system_id["sw_version"]
     else: 
         raise ModemNotReachable("Firmware Ver. couldn't be detected!")
+
 
 def _identify_iccid():
     output = send_at_com("AT+ICCID","OK")
@@ -124,6 +129,7 @@ def _identify_iccid():
         return system_id["iccid"]
     else: 
         raise ModemNotReachable("ICCID couldn't be detected!")
+
 
 def _identify_os():
     try:
@@ -254,9 +260,9 @@ def identify_setup():
 
     if system_id != old_system_id:
         logger.warning("System setup has changed!")
-        return system_id
-    else:
-        return 0
+    
+    return system_id or {}
+
 
 if __name__ == "__main__":
     identify_setup()

@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+from os import name
 import time
 import usb.core
 import os.path
@@ -9,7 +10,7 @@ from helpers.logger import logger
 from helpers.commander import shell_command, send_at_com
 from helpers.yamlio import read_yaml_all, write_yaml_all, DIAG_FOLDER_PATH, MONITOR_PATH
 from helpers.exceptions import *
-
+from helpers.sbc_support import supported_sbcs
 
 BASE_HAT_DISABLE_PIN = 26 # For raspberry pi
 
@@ -69,7 +70,8 @@ class Modem(object):
         "modem_apn" : True,
     }
 
-    def __init__(self, vendor, model, imei, iccid, sw_version, vendor_id, product_id):
+
+    def update(self, vendor, model, imei, iccid, sw_version, vendor_id, product_id):
         self.vendor = vendor
         self.model = model
         self.imei = imei
@@ -100,10 +102,6 @@ class Modem(object):
             else:
                 self.ecm_mode_setter_command = "AT#USBCFG=4"
                 self.ecm_mode_response = "4"
-
-
-    def update(self, vendor, model, imei, iccid, sw_version, vendor_id, product_id):
-        self.__init__(vendor, model, imei, iccid, sw_version, vendor_id, product_id)
 
 
     def detect_modem(self):
@@ -537,26 +535,10 @@ class Modem(object):
     def reset_modem_hardly(self):
         logger.info("Modem is resetting via hardware...")
 
-        # Pin direction
-        output = shell_command("gpio -g mode " + str(BASE_HAT_DISABLE_PIN) + " out")
-        if output[2] == 0:
-            pass
-        else:
-            raise RuntimeError("Error occured gpio command!")
-
-        # Disable power
-        output = shell_command("gpio -g write " + str(BASE_HAT_DISABLE_PIN) + " 1")
-        if output[2] == 0:
-            time.sleep(2)
-        else:
-            raise RuntimeError("Error occured gpio command!")
-
-        # Enable power
-        output = shell_command("gpio -g write " + str(BASE_HAT_DISABLE_PIN) + " 0")
-        if output[2] == 0:
-            time.sleep(2)
-        else:
-            raise RuntimeError("Error occured gpio command!")
+        sbc = supported_sbcs.get(conf.sbc)
+        sbc.modem_power_disable()
+        time.sleep(2)
+        sbc.modem_power_enable()
 
 
     def get_significant_data(self, output, header):
@@ -607,6 +589,8 @@ class Modem(object):
             "5": "UTRAN W/HSUPA",
             "6": "UTRAN W/HSDPA and HSUPA",
             "7": "E-UTRAN",
+            "8": "CAT-M1",
+            "9": "CAT-NB1",
         }
         
         output = send_at_com("AT+COPS?", "OK")
