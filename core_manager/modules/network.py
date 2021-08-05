@@ -84,14 +84,14 @@ class Network(object):
         output = shell_command("ping -q -c 1 -s 8 -w "  + str(conf.other_ping_timeout) + " -I " + str(interface) + " 8.8.8.8")
 
         if output[2] == 0:
-            
-            try:
-                ping_latencies = parse_output(output[0], "min/avg/max/mdev =", "ms")
-                min_latency = int(float(ping_latencies.split("/")[0]))
-            except:
-                raise RuntimeError("Error occured while getting ping latency!")
-            
-            return min_latency
+            pass
+            #try:
+            #    ping_latencies = parse_output(output[0], "min/avg/max/mdev =", "ms")
+            #    min_latency = int(float(ping_latencies.split("/")[0]))
+            #except:
+            #    raise RuntimeError("Error occured while getting ping latency!")
+            #
+            #return min_latency
         else:
             raise NoInternet("No internet!")
     
@@ -141,13 +141,13 @@ class Network(object):
                 self.monitor[x.name] = [x.connection_status, modem.monitor.get("cellular_latency")]
             else:
                 try:
-                    latency = self.check_interface_health(x.name)
+                    self.check_interface_health(x.name)
                 except:
                     x.connection_status = False
                     self.monitor[x.name] = [False, 0]
                 else:
                     x.connection_status = True
-                    self.monitor[x.name] = [True, latency]
+                    self.monitor[x.name] = [True, 0]
         
 
     def get_interface_metrics(self):

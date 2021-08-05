@@ -228,14 +228,14 @@ class Modem(object):
         output = shell_command("ping -q -c 1 -s 8 -w "  + str(timeout) + " -I " + str(interface) + " 8.8.8.8")
 
         if output[2] == 0:
-            
-            try:
-                ping_latencies = parse_output(output, "min/avg/max/mdev =", "ms")
-                min_latency = int(float(ping_latencies.split("/")[0]))
-            except:
-                raise RuntimeError("Error occured while getting ping latency!")
-            
-            return min_latency
+            pass
+            #try:
+            #    ping_latencies = parse_output(output, "min/avg/max/mdev =", "ms")
+            #    min_latency = int(float(ping_latencies.split("/")[0]))
+            #except:
+            #    raise RuntimeError("Error occured while getting ping latency!")
+            #
+            #return min_latency
         else:
             raise NoInternet("No internet!")
 
@@ -243,14 +243,14 @@ class Modem(object):
     def check_internet(self):
 
         try:
-            latency = self.check_interface_health(self.interface_name, conf.ping_timeout)
+            self.check_interface_health(self.interface_name, conf.ping_timeout)
         except:
             self.monitor["cellular_connection"] = False
-            self.monitor["cellular_latency"] = None
+            self.monitor["cellular_latency"] = 0
             raise NoInternet("No internet!")
         else:
             self.monitor["cellular_connection"] = True
-            self.monitor["cellular_latency"] = latency
+            self.monitor["cellular_latency"] = 0
             
 
     def diagnose(self, diag_type=0):
