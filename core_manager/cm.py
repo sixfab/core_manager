@@ -36,7 +36,7 @@ def _organizer(arg):
                 queue.sub = queue.fail
                 queue.clear_counter()
                 #print("***Do not wait if last retry***")
-                queue.interval = 0.1
+                queue.interval = NO_WAIT_INTERVAL
             else:
                 queue.sub = queue.base
                 queue.counter_tick()
