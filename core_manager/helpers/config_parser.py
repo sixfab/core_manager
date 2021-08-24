@@ -28,6 +28,7 @@ def get_configs():
     
     conf.set_verbose_mode_config(config.get("verbose_mode"))
     conf.set_debug_mode_config(config.get("debug_mode"))
+    conf.set_acceptable_apns_config(config.get("acceptable_apns"))
     conf.set_apn_config(config.get("apn"))
     conf.set_ping_timeout_config(config.get("ping_timeout"))
     conf.set_other_ping_timeout_config(config.get("other_ping_timeout"))
@@ -35,7 +36,6 @@ def get_configs():
     conf.set_send_monitoring_data_interval_config(config.get("send_monitoring_data_interval"))
     conf.set_network_priority_config(config.get("network_priority"))
     conf.set_cellular_interfaces_config(config.get("cellular_interfaces"))
-    conf.set_acceptable_apns_config(config.get("acceptable_apns"))
     conf.set_logger_level_config(config.get("logger_level"))
     
     conf.config_changed = True
