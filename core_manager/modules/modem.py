@@ -12,7 +12,6 @@ from helpers.yamlio import read_yaml_all, write_yaml_all, DIAG_FOLDER_PATH, MONI
 from helpers.exceptions import *
 from helpers.sbc_support import supported_sbcs
 
-BASE_HAT_DISABLE_PIN = 26 # For raspberry pi
 
 old_monitor = {}
 if os.path.isfile(MONITOR_PATH):

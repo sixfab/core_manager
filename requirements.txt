@@ -1,3 +1,2 @@
-atcom >= 0.1.13
 pyyaml == 5.3.1
-pyusb == 1.1.0
+pyusb == 1.2.1
