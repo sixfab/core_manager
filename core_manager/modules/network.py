@@ -158,7 +158,7 @@ class Network(object):
 
         for line in output[0].splitlines():
             for x in self.interfaces:
-                if x.name and "default" in line:
+                if x.name in line and "default" in line:
                     try:
                         metric = parse_output(line, "metric", " ")
                         x.actual_metric = int(metric)
