@@ -160,8 +160,6 @@ class Network(object):
                 cellular_interfaces = conf.cellular_interfaces
         except:
             cellular_interfaces = conf.cellular_interfaces
-        finally:
-            print(cellular_interfaces)
 
         for x in self.interfaces:
             if x.name in cellular_interfaces:
