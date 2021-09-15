@@ -79,7 +79,24 @@ class Network(object):
                     if y.name == x:
                         self.removeInterface(y)
     
+
+    def get_cellular_interface_name(self):
+        cellular_interfaces=[]
+        output = shell_command("lshw -C Network")
+
+        if output[2] == 0:
+            networks= output[0].split("*-network:")
+
+            for x in networks:
+                if x.find("driver=cdc_ether") >= 0:
+                    if_name = parse_output(x, "logical name:","\n")
+                    cellular_interfaces.append(if_name)
             
+            return cellular_interfaces
+        else:
+            return []
+
+
     def check_interface_health(self, interface):
         output = shell_command("ping -q -c 1 -s 8 -w "  + str(conf.other_ping_timeout) + " -I " + str(interface) + " 8.8.8.8")
 
@@ -134,9 +151,20 @@ class Network(object):
 
     def check_and_create_monitoring(self):
         self.monitor.clear()
+        cellular_interfaces = []
+
+        try:
+            cellular_interfaces = self.get_cellular_interface_name()
+
+            if cellular_interfaces == []:
+                cellular_interfaces = conf.cellular_interfaces
+        except:
+            cellular_interfaces = conf.cellular_interfaces
+        finally:
+            print(cellular_interfaces)
 
         for x in self.interfaces:
-            if x.name in conf.cellular_interfaces:
+            if x.name in cellular_interfaces:
                 x.connection_status = modem.monitor.get("cellular_connection")
                 self.monitor[x.name] = [x.connection_status, modem.monitor.get("cellular_latency")]
             else:
