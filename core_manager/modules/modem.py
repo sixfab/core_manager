@@ -12,7 +12,6 @@ from helpers.yamlio import read_yaml_all, write_yaml_all, DIAG_FOLDER_PATH, MONI
 from helpers.exceptions import *
 from helpers.sbc_support import supported_sbcs
 
-
 old_monitor = {}
 if os.path.isfile(MONITOR_PATH):
     try:
@@ -228,28 +227,18 @@ class Modem(object):
 
         if output[2] == 0:
             pass
-            #try:
-            #    ping_latencies = parse_output(output, "min/avg/max/mdev =", "ms")
-            #    min_latency = int(float(ping_latencies.split("/")[0]))
-            #except:
-            #    raise RuntimeError("Error occured while getting ping latency!")
-            #
-            #return min_latency
         else:
             raise NoInternet("No internet!")
 
 
     def check_internet(self):
-
         try:
             self.check_interface_health(self.interface_name, conf.ping_timeout)
         except:
             self.monitor["cellular_connection"] = False
-            self.monitor["cellular_latency"] = 0
             raise NoInternet("No internet!")
         else:
             self.monitor["cellular_connection"] = True
-            self.monitor["cellular_latency"] = 0
             
 
     def diagnose(self, diag_type=0):
