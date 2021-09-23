@@ -188,7 +188,7 @@ def _reset_connection_interface(arg):
 
     try:
         pass
-        #modem.reset_connection_interface()
+        modem.reset_connection_interface()
     except Exception as e:
         logger.error("reset_connection_interface() -> " + str(e))
         queue.is_ok = False
