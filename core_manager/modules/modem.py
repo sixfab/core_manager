@@ -204,7 +204,7 @@ class Modem(object):
         output = send_at_com(self.pdp_activate_command,"OK")
             
         if output[2] == 0:
-            for i in range(60):
+            for i in range(2):
                 output = send_at_com(self.pdp_status_command, "OK")
 
                 if output[2] == 0:
@@ -213,9 +213,9 @@ class Modem(object):
                         time.sleep(10)
                         return 0
                     else:
-                        time.sleep(1)
+                        time.sleep(5)
                 else:
-                    time.sleep(1)
+                    time.sleep(2)
             
             raise PDPContextFailed("ECM initiation timeout!")       
         else:
