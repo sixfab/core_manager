@@ -105,8 +105,8 @@ class Modem(object):
     def detect_modem(self):
         output = shell_command("lsusb")
         if output[2] == 0:
-            if output[0].find(self.vendor) != -1:
-                return self.vendor
+            if output[0].find(self.vendor_id) != -1:
+                return self.vendor_id
             else:
                 raise ModemNotFound("Modem couldn't be detected!")
         else:
@@ -274,7 +274,7 @@ class Modem(object):
 
         output = shell_command("lsusb")
         if output[2] == 0:
-            if output[0].find(self.vendor) != -1:
+            if output[0].find(self.vendor_id) != -1:
                 self.diagnostic["usb_interface"] = True
             else: 
                 self.diagnostic["usb_interface"] = False
@@ -426,12 +426,10 @@ class Modem(object):
         counter = 0
         for i in range(20):
             output = shell_command("lsusb")   
-            if output[0].find(self.vendor) != -1:
+            if output[0].find(self.vendor_id) != -1:
                 time.sleep(1)
                 counter += 1
-                print(str(counter) + " - ", end="", flush=True)  # debug
             else:
-                print("") # debug
                 logger.debug("Modem turned off.")
                 counter = 0
                 return 0
@@ -444,8 +442,7 @@ class Modem(object):
         # Check modem USB interface
         for i in range(120):
             output = shell_command("lsusb")   
-            if output[0].find(self.vendor) != -1:
-                print("") # debug
+            if output[0].find(self.vendor_id) != -1:
                 logger.debug("Modem USB interface detected.")
                 counter = 0
                 result += 1
@@ -453,13 +450,11 @@ class Modem(object):
             else:
                 time.sleep(1)
                 counter += 1
-                print(str(counter) + " + ", end="", flush=True)  # debug
 
         # Check modem AT FW
         for i in range(10):
             output = send_at_com("AT", "OK")   
             if output[2] == 0:
-                print("") # debug
                 logger.debug("Modem AT FW is working.")
                 counter = 0
                 result += 1
@@ -467,13 +462,11 @@ class Modem(object):
             else:
                 time.sleep(1)
                 counter += 1
-                print(str(counter) + " * ", end="", flush=True)  # debug
 
         # Check modem connection interface
         for i in range(20):
             output = shell_command("route -n")   
             if output[0].find(self.interface_name) != -1:
-                print("") # debug
                 logger.info("Modem started.")
                 counter = 0
                 result += 1
@@ -481,7 +474,6 @@ class Modem(object):
             else:
                 time.sleep(1)
                 counter += 1
-                print(str(counter) + " : ", end="", flush=True)  # debug
 
         if result != 3:
             raise ModemNotFound("Modem couldn't be started!")
@@ -494,14 +486,12 @@ class Modem(object):
         for i in range(20):
             output = shell_command("route -n")   
             if output[0].find(self.interface_name) != -1:
-                print("") # debug
                 logger.info("Modem interface is detected.")
                 counter = 0
                 break
             else:
                 time.sleep(1)
                 counter += 1
-                print(str(counter) + " : ", end="", flush=True)  # debug
 
         if counter != 0:
             raise ModemNotFound("Modem interface couln't be detected.")
