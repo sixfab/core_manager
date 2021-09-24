@@ -31,6 +31,11 @@ def monitor():
             logger.warning("Old monitor data in monitor.yaml file couln't be read!")
 
     try:
+        monitor_data["last_update"] = int(time.time())
+    except Exception as e:
+        logger.error("monitor() timestamp -> " + str(e))
+
+    try:
         monitor_data["cellular_connection"] = modem.monitor.get("cellular_connection")
         monitor_data["cellular_latency"] = modem.monitor.get("cellular_latency")
         monitor_data["active_lte_tech"] = modem.get_active_lte_tech()

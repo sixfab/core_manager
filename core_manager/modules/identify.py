@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import time
 import os.path
 import platform 
 
@@ -13,8 +14,14 @@ from __version__ import version
 
 
 system_id = {
-    "manager_version" : version, 
+    "manager_version" : version,
 }
+
+try:
+    system_id["last_update"] = int(time.time())
+except Exception as e:
+    logger.error("identify() timestamp -> " + str(e))
+
 
 # Save ID's to file
 try:
