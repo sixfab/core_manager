@@ -16,10 +16,14 @@ from modules.modem import Modem
 queue = Queue()
 modem = Modem()
 
+NO_WAIT_INTERVAL = 0.1
+SECOND_CHECK_INTERVAL = 10
+
 logger.info("Core Manager started.")
 
 
 def _organizer(arg):
+    #print("Organizer")
     if queue.base == 0:
         queue.sub = 1
     else:    
@@ -27,12 +31,20 @@ def _organizer(arg):
             queue.sub = queue.success
             queue.is_ok = False    
         else:
+            #print("Q_Counter: ", queue.counter, " Q_Retry: ", queue.retry)
             if queue.counter >= queue.retry:
                 queue.sub = queue.fail
                 queue.clear_counter()
+                #print("***Do not wait if last retry***")
+                queue.interval = NO_WAIT_INTERVAL
             else:
                 queue.sub = queue.base
                 queue.counter_tick()
+
+                # Exception for the second chance of internet control
+                if queue.base == 5:
+                    #print("***Second check activated!***")
+                    queue.interval = SECOND_CHECK_INTERVAL
 
 
 def _identify_setup(arg):
@@ -121,12 +133,16 @@ def _initiate_ecm(arg):
 
 
 def _check_internet(arg):
+    #print("***Check Internet***")
     if queue.sub == 5:
         queue.set_step(sub=0, base=5, success=5, fail=6, interval=conf.check_internet_interval, is_ok=False, retry=1)
+        #print("Check 1")
     elif queue.sub == 8:
         queue.set_step(sub=0, base=8, success=5, fail=9, interval=10, is_ok=False, retry=0)
+        #print("Check 2")
     elif queue.sub == 10:
         queue.set_step(sub=0, base=10, success=5, fail=11, interval=10, is_ok=False, retry=0)
+        #print("Check 3")
 
     try:
         modem.check_internet()
@@ -171,6 +187,7 @@ def _reset_connection_interface(arg):
     queue.set_step(sub=0, base=7, success=8, fail=9, interval=1, is_ok=False, retry=2)
 
     try:
+        pass
         modem.reset_connection_interface()
     except Exception as e:
         logger.error("reset_connection_interface() -> " + str(e))
@@ -239,8 +256,16 @@ def execute_step(x, arg=None):
 
 
 def manage_connection():
+    # main execution of step
+    if queue.sub == 0:
+        execute_step(queue.sub)
+        #print("ZeroSub: ", queue.sub, " Base: ", queue.base, " Interval: ", queue.interval)
+        return queue.interval
+
+    # organiser step
     execute_step(queue.sub)
-    return queue.interval
+    #print("Sub: ", queue.sub, " Base: ", queue.base, " Interval: ", queue.interval)
+    return NO_WAIT_INTERVAL
 
 
 if __name__  == "__main__":
