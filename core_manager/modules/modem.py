@@ -101,6 +101,15 @@ class Modem(object):
                 self.ecm_mode_setter_command = "AT#USBCFG=4"
                 self.ecm_mode_response = "4"
 
+        elif vendor == "Thales/Cinterion":
+            self.interface_name = "eth1"
+            self.mode_status_command = "AT^SSRVSET=\"actSrvSet\""
+            self.reboot_command = "AT+CFUN=1,1"
+            self.pdp_activate_command = "AT^SWWAN=1,1"
+            self.pdp_status_command = "AT^SWWAN?"
+            self.ecm_mode_setter_command = "AT^SSRVSET=\"actSrvSet\",1"
+            self.ecm_mode_response = "^SSRVSET: 1\n"
+
 
     def detect_modem(self):
         output = shell_command("lsusb")
@@ -145,17 +154,22 @@ class Modem(object):
             output = send_at_com(self.ecm_mode_setter_command, "OK")
             
             if output[2] == 0:
-                logger.info("ECM mode is activated.")
+                logger.info("ECM mode is activating...")
                 logger.info("The modem will reboot to apply changes.")
             else:
                 raise ModemNotReachable("Error occured while setting mode configuration! " + output[0])
 
             try:
-                time.sleep(20)
-                self.wait_until_modem_started()
+                self.wait_until_modem_turned_off()
             except Exception as e:
-                logger.warning("wait_until_modem_started() -> " + str(e))
+                logger.warning("wait_until_modem_turned_off() -> " + str(e))
                 force_reset = 1
+            else:
+                try:
+                    self.wait_until_modem_started()
+                except Exception as e:
+                    logger.warning("wait_until_modem_started() -> " + str(e))
+                    force_reset = 2
             
             if force_reset == 1:
                 force_reset = 0
@@ -163,6 +177,22 @@ class Modem(object):
                     self.reset_modem_softly()
                 except Exception as e:
                     raise e
+
+            elif force_reset == 2:
+                force_reset = 0
+                try:
+                    self.reset_modem_hardly()
+                except Exception as e:
+                    raise e
+
+            logger.info("Re-checking the mode of modem...")
+            output = send_at_com(self.mode_status_command, self.ecm_mode_response)
+
+            if output[2] != 0:
+                logger.error("Activation of ECM mode is failed!")
+                raise RuntimeError
+            else:
+                logger.info("ECM mode activation is successful.")
 
 
     def check_sim_ready(self):
@@ -463,19 +493,7 @@ class Modem(object):
                 time.sleep(1)
                 counter += 1
 
-        # Check modem connection interface
-        for i in range(20):
-            output = shell_command("route -n")   
-            if output[0].find(self.interface_name) != -1:
-                logger.info("Modem started.")
-                counter = 0
-                result += 1
-                break
-            else:
-                time.sleep(1)
-                counter += 1
-
-        if result != 3:
+        if result != 2:
             raise ModemNotFound("Modem couldn't be started!")
 
 
