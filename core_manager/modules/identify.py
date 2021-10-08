@@ -9,7 +9,7 @@ from helpers.logger import logger
 from helpers.commander import send_at_com, shell_command
 from helpers.yamlio import read_yaml_all, write_yaml_all, SYSTEM_PATH
 from helpers.exceptions import ModemNotReachable, ModemNotSupported
-from helpers.modem_support import ModemSupport
+from helpers.modem_support import modules, default_modules
 from __version__ import version
 
 
@@ -31,6 +31,38 @@ except Exception as e:
     raise e
 
 
+def identify_modem():
+    system_id["modem_vendor"] = ""
+    system_id["modem_name"] = ""
+    system_id["modem_vendor_id"] = ""
+    system_id["modem_product_id"] = ""
+
+    output = shell_command("lsusb")
+
+    if output[2] == 0:
+        for module in modules:
+            if output[0].find(module.pid) != -1:
+                system_id["modem_vendor"] = module.name
+                system_id["modem_name"] = module.product_name
+                system_id["modem_vendor_id"] = module.vid
+                system_id["modem_product_id"] = module.pid
+                return module
+        
+        logger.warning("Modem don't exist in list of supported modems!")
+
+        for module in modules:
+            if output[0].find(module.vid) != -1:
+                system_id["modem_vendor"] = module.name
+                system_id["modem_name"] = default_modules.get(str(module.vid)).product_name
+                system_id["modem_vendor_id"] = module.vid
+                system_id["modem_product_id"] = default_modules.get(str(module.vid)).pid
+                return default_modules.get(str(module.vid))
+
+        logger.warning("Modem vendor couldn't be found!")
+    else:
+        raise RuntimeError("Modem vendor couldn't be found!")
+
+
 def _turn_off_echo():
     output = send_at_com("ATE0", "OK")
 
@@ -39,37 +71,8 @@ def _turn_off_echo():
     else:
         raise ModemNotReachable("Error occured turning of AT echo : send_at_com -> ATE0")
 
-def _identify_vendor_name(method=0):
-    system_id["modem_vendor"] = ""
 
-    output = shell_command("lsusb")
-
-    if output[2] == 0:
-        for vendor in ModemSupport.vendors:
-            if output[0].find(vendor.vid) != -1:
-                system_id["modem_vendor"] = vendor.name
-
-        if system_id["modem_vendor"] == "":
-            logger.warning("Modem vendor couldn't be found!")
-    else:
-        raise RuntimeError("Modem vendor couldn't be found!")
-
-    if system_id["modem_vendor"] == "":
-        raise ModemNotSupported("Modem vendor couldn't be found!")
-
-
-def _identify_product_name(method=0):
-    system_id["modem_name"] = ""
-
-    output = shell_command("lsusb")
-    if output[2] == 0:     
-        for vendor in ModemSupport.vendors:
-            for key in vendor.modules:
-                if output[0].find(vendor.modules[key]) != -1:
-                    system_id["modem_name"] = key.split("_")[0]
-    else:
-        raise RuntimeError("Error occured on lsusb command!")
-    
+def _identify_product_name():
     output = send_at_com("AT+GMM","OK")
     if output[2] == 0:
         try:
@@ -79,29 +82,6 @@ def _identify_product_name(method=0):
         
     if system_id["modem_name"] == "":
         raise ModemNotSupported("Modem name couldn't be found!")
-
-
-def _identify_usb_vid_pid():
-    system_id["modem_vendor_id"] = ""
-    system_id["modem_product_id"] = ""
-
-    output = shell_command("lsusb")
-    if output[2] == 0:
-        for vendor in ModemSupport.vendors:
-            if output[0].find(vendor.vid) != -1:
-                system_id["modem_vendor_id"] = vendor.vid
-                
-        for vendor in ModemSupport.vendors:
-            for key in vendor.modules:
-                if output[0].find(vendor.modules[key]) != -1:
-                    system_id["modem_product_id"] = str(vendor.modules[key])
-            
-        if system_id["modem_vendor_id"] == "" or system_id["modem_product_id"] == "":
-            raise ModemNotSupported("Modem is not supported!")
-        else:
-            return (system_id["modem_vendor_id"], system_id["modem_product_id"])
-    else:
-        raise RuntimeError("Error occured on lsusb command!")
 
 
 def _identify_imei():
@@ -178,14 +158,6 @@ def identify_setup():
 
     logger.info("[?] System identifying...")
     
-    # Modem vendor name (Required)
-    logger.debug("[+] Modem vendor name")
-    try:
-        _identify_vendor_name()
-    except Exception as e:
-        logger.critical("Modem vendor identification failed!")
-        raise ModemNotSupported("Modem is not supported!")
-
     # Turn off AT command echo (Required)
     logger.debug("[+] Turning off AT command echo")
     try:
@@ -200,14 +172,6 @@ def identify_setup():
     except Exception as e:
         logger.warning("Modem name identification failed!")
         system_id["modem_name"] = "Unknown"
-
-    # Vendor ID & Product ID (Required)
-    logger.debug("[+] Modem USB VID and PID")
-    try:
-        _identify_usb_vid_pid()
-    except Exception as e:
-        logger.warning("Modem VID PID identification failed!")
-        raise ModemNotSupported("Modem is not supported!")
 
     # IMEI (Optional)
     logger.debug("[+] IMEI")
