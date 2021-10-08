@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-from os import name
 import time
 import usb.core
 import os.path
@@ -11,6 +10,7 @@ from helpers.commander import shell_command, send_at_com
 from helpers.yamlio import read_yaml_all, write_yaml_all, DIAG_FOLDER_PATH, MONITOR_PATH
 from helpers.exceptions import *
 from helpers.sbc_support import supported_sbcs
+from helpers.modem_support.modem_support import DefaultModule
 
 old_monitor = {}
 if os.path.isfile(MONITOR_PATH):
@@ -29,32 +29,18 @@ def parse_output(output, header, end):
     return sig_data
 
 
-class Modem(object):
-    # main properties
-    vendor = ""
-    vendor_id = ""
-    model = ""
-    product_id = ""
+class Modem(DefaultModule):
     imei = ""
     iccid = ""
     sw_version = ""
+    incident_flag = False
+    
 
-    # monitoring properties
     monitor = {
         "cellular_connection" : None,
         "cellular_latency" : None,
         "fixed_incident": old_monitor.get("fixed_incident", 0),
     }
-
-    # additional properties
-    interface_name = ""
-    mode_status_command = ""
-    ecm_mode_response = ""
-    ecm_mode_setter_command = ""
-    reboot_command = ""
-    pdp_activate_command = ""
-    pdp_status_command = ""
-    incident_flag = False
 
     diagnostic = {
         "con_interface" : True,
@@ -69,53 +55,26 @@ class Modem(object):
     }
 
 
-    def update(self, vendor, model, imei, iccid, sw_version, vendor_id, product_id):
-        self.vendor = vendor
-        self.model = model
-        self.imei = imei
-        self.iccid = iccid
-        self.sw_version = sw_version
-        self.vendor_id = vendor_id
-        self.product_id = product_id
-
-        if vendor == "Quectel":
-            self.interface_name = "usb0"
-            self.mode_status_command = "AT+QCFG=\"usbnet\""
-            self.reboot_command = "AT+CFUN=1,1"
-            self.pdp_activate_command = "AT"
-            self.pdp_status_command = "AT+CGACT?"
-            self.ecm_mode_setter_command = "AT+QCFG=\"usbnet\",1"
-            self.ecm_mode_response = "\"usbnet\",1"
-
-        elif vendor == "Telit":
-            self.interface_name = "wwan0"
-            self.mode_status_command = "AT#USBCFG?"
-            self.reboot_command = "AT#REBOOT"
-            self.pdp_activate_command = "AT#ECM=1,0"
-            self.pdp_status_command = "AT#ECM?"
-
-            if model == "ME910C1-WW":
-                self.ecm_mode_setter_command = "AT#USBCFG=3"
-                self.ecm_mode_response = "3"
-            else:
-                self.ecm_mode_setter_command = "AT#USBCFG=4"
-                self.ecm_mode_response = "4"
-
-        elif vendor == "Thales/Cinterion":
-            self.interface_name = "eth1"
-            self.mode_status_command = "AT^SSRVSET=\"actSrvSet\""
-            self.reboot_command = "AT+CFUN=1,1"
-            self.pdp_activate_command = "AT^SWWAN=1,1"
-            self.pdp_status_command = "AT^SWWAN?"
-            self.ecm_mode_setter_command = "AT^SSRVSET=\"actSrvSet\",1"
-            self.ecm_mode_response = "^SSRVSET: 1\n"
+    def update(self, productObject):
+        self.vendor_name = productObject.vendor_name
+        self.module_name = productObject.module_name
+        self.vid = productObject.vid
+        self.pid = productObject.pid
+        self.interface_name = productObject.interface_name
+        self.mode_status_command = productObject.mode_status_command
+        self.ecm_mode_setter_command = productObject.ecm_mode_setter_command
+        self.ecm_mode_response = productObject.ecm_mode_response
+        self.reboot_command = productObject.reboot_command
+        self.pdp_activate_command = productObject.pdp_activate_command
+        self.pdp_status_command = productObject.pdp_status_command
+        self.ccid_command = productObject.ccid_command
 
 
     def detect_modem(self):
         output = shell_command("lsusb")
         if output[2] == 0:
-            if output[0].find(self.vendor_id) != -1:
-                return self.vendor_id
+            if output[0].find(self.vid) != -1:
+                return self.vid
             else:
                 raise ModemNotFound("Modem couldn't be detected!")
         else:
@@ -304,7 +263,7 @@ class Modem(object):
 
         output = shell_command("lsusb")
         if output[2] == 0:
-            if output[0].find(self.vendor_id) != -1:
+            if output[0].find(self.vid) != -1:
                 self.diagnostic["usb_interface"] = True
             else: 
                 self.diagnostic["usb_interface"] = False
@@ -439,8 +398,8 @@ class Modem(object):
     def reset_usb_interface(self):
         logger.info("USB interface is reset...")
         
-        vendor_id = self.vendor_id
-        product_id = self.product_id
+        vendor_id = self.vid
+        product_id = self.pid
 
         vendor_id_int = int(vendor_id, 16)
         product_id_int = int(product_id, 16)
@@ -456,7 +415,7 @@ class Modem(object):
         counter = 0
         for i in range(20):
             output = shell_command("lsusb")   
-            if output[0].find(self.vendor_id) != -1:
+            if output[0].find(self.vid) != -1:
                 time.sleep(1)
                 counter += 1
             else:
@@ -472,7 +431,7 @@ class Modem(object):
         # Check modem USB interface
         for i in range(120):
             output = shell_command("lsusb")   
-            if output[0].find(self.vendor_id) != -1:
+            if output[0].find(self.vid) != -1:
                 logger.debug("Modem USB interface detected.")
                 counter = 0
                 result += 1

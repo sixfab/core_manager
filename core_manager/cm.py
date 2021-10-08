@@ -1,16 +1,13 @@
 #!/usr/bin/python3
 
 import time
-import os.path
 
 from helpers.config_parser import conf
 from helpers.logger import logger
-from helpers.commander import send_at_com
-from helpers.yamlio import read_yaml_all, SYSTEM_PATH
 from helpers.exceptions import ModemNotFound, ModemNotSupported
 from helpers.queue import Queue
 
-from modules.identify import identify_setup
+from modules.identify import identify_setup, identify_modem
 from modules.modem import Modem
 
 queue = Queue()
@@ -25,7 +22,7 @@ logger.info("Core Manager started.")
 def _organizer(arg):
     #print("Organizer")
     if queue.base == 0:
-        queue.sub = 1
+        queue.sub = 16
     else:    
         if queue.is_ok == True:
             queue.sub = queue.success
@@ -46,6 +43,27 @@ def _organizer(arg):
                     #print("***Second check activated!***")
                     queue.interval = SECOND_CHECK_INTERVAL
 
+def _identify_modem(arg):
+    global modem
+    queue.set_step(sub=0, base=16, success=1, fail=15, interval=2, is_ok=False, retry=20)
+
+    try:
+        module = identify_modem()
+    except Exception as e:
+        logger.error("identify_modem -> " + str(e))
+        queue.is_ok = False
+    else:
+        modem.update(module)
+        queue.is_ok = True
+        print("")
+        print("********************************************************************")
+        print("[?] FIRST MODEM REPORT")
+        print("-------------------------")
+        attrs = vars(modem)
+        print('\n'.join("[+] %s : %s" % item for item in attrs.items()))
+        print("********************************************************************")
+        print("")
+
 
 def _identify_setup(arg):
     global modem
@@ -58,15 +76,9 @@ def _identify_setup(arg):
         queue.is_ok = False
     else:
         if new_id != {}:
-            modem.update(
-                vendor = new_id.get("modem_vendor", ""),
-                model = new_id.get("modem_name", ""),
-                imei = new_id.get("imei", ""),
-                iccid = new_id.get("iccid", ""),
-                sw_version = new_id.get("sw_version", ""), 
-                vendor_id = new_id.get("modem_vendor_id", ""),
-                product_id = new_id.get("modem_product_id", "")
-            ) 
+            modem.imei = new_id.get("imei", ""),
+            modem.iccid = new_id.get("iccid", ""),
+            modem.sw_version = new_id.get("sw_version", ""), 
         queue.is_ok = True
 
         if conf.debug_mode == True and conf.verbose_mode == True:
@@ -248,6 +260,7 @@ steps = {
     13: _diagnose,
     14: _check_sim_ready,
     15: _diagnose,
+    16: _identify_modem,
 }
 
   

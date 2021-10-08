@@ -9,7 +9,7 @@ from helpers.logger import logger
 from helpers.commander import send_at_com, shell_command
 from helpers.yamlio import read_yaml_all, write_yaml_all, SYSTEM_PATH
 from helpers.exceptions import ModemNotReachable, ModemNotSupported
-from helpers.modem_support import modules, default_modules
+from helpers.modem_support.modem_support import modules, default_modules
 from __version__ import version
 
 
@@ -42,8 +42,8 @@ def identify_modem():
     if output[2] == 0:
         for module in modules:
             if output[0].find(module.pid) != -1:
-                system_id["modem_vendor"] = module.name
-                system_id["modem_name"] = module.product_name
+                system_id["modem_vendor"] = module.vendor_name
+                system_id["modem_name"] = module.module_name
                 system_id["modem_vendor_id"] = module.vid
                 system_id["modem_product_id"] = module.pid
                 return module
@@ -52,8 +52,8 @@ def identify_modem():
 
         for module in modules:
             if output[0].find(module.vid) != -1:
-                system_id["modem_vendor"] = module.name
-                system_id["modem_name"] = default_modules.get(str(module.vid)).product_name
+                system_id["modem_vendor"] = module.vendor_name
+                system_id["modem_name"] = default_modules.get(str(module.vid)).module_name
                 system_id["modem_vendor_id"] = module.vid
                 system_id["modem_product_id"] = default_modules.get(str(module.vid)).pid
                 return default_modules.get(str(module.vid))
@@ -234,8 +234,5 @@ def identify_setup():
     
     return system_id or {}
 
-
-if __name__ == "__main__":
-    identify_setup()
 
     
