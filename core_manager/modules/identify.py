@@ -12,6 +12,7 @@ from helpers.exceptions import ModemNotReachable, ModemNotSupported
 from helpers.modem_support.modem_support import modules, default_modules
 from __version__ import version
 
+identified_module = None
 
 system_id = {
     "manager_version" : version,
@@ -32,6 +33,7 @@ except Exception as e:
 
 
 def identify_modem():
+    global identified_module
     system_id["modem_vendor"] = ""
     system_id["modem_name"] = ""
     system_id["modem_vendor_id"] = ""
@@ -46,8 +48,8 @@ def identify_modem():
                 system_id["modem_name"] = module.module_name
                 system_id["modem_vendor_id"] = module.vid
                 system_id["modem_product_id"] = module.pid
-                return module
-        
+                identified_module = module
+                return identified_module
         logger.warning("Modem don't exist in list of supported modems!")
 
         for module in modules:
@@ -56,9 +58,11 @@ def identify_modem():
                 system_id["modem_name"] = default_modules.get(str(module.vid)).module_name
                 system_id["modem_vendor_id"] = module.vid
                 system_id["modem_product_id"] = default_modules.get(str(module.vid)).pid
-                return default_modules.get(str(module.vid))
-
+                identified_module = default_modules.get(str(module.vid))
+                return identified_module
         logger.warning("Modem vendor couldn't be found!")
+
+        raise RuntimeError("Modem vendor couldn't be found!")
     else:
         raise RuntimeError("Modem vendor couldn't be found!")
 
@@ -79,7 +83,7 @@ def _identify_product_name():
             system_id["modem_name"] += " " +  str(output[0].split("\n")[1] or "")
         except:
             pass
-        
+
     if system_id["modem_name"] == "":
         raise ModemNotSupported("Modem name couldn't be found!")
 
@@ -87,7 +91,7 @@ def _identify_product_name():
 def _identify_imei():
     output = send_at_com("AT+CGSN","OK")
     raw_imei = output[0] if output[2] == 0 else "" 
-    
+
     if raw_imei != "":
         imei_filter = filter(str.isdigit, raw_imei)
         system_id["imei"] = "".join(imei_filter)
@@ -98,16 +102,22 @@ def _identify_imei():
 
 def _identify_fw_version():
     output = send_at_com("AT+CGMR","OK")
-    system_id["sw_version"] = output[0].split("\n")[1] if output[2] == 0 else ""
-    
-    if system_id["sw_version"] != "":
-        return system_id["sw_version"]
-    else: 
+    if output[2] == 0:
+        raw = output[0].split("\n")
+
+        for i in range(len(raw)):
+            if raw[i] != "":
+                system_id["sw_version"] = raw[i]
+                break
+
+        if system_id["sw_version"] != "":
+            return system_id["sw_version"]
+    else:
         raise ModemNotReachable("Firmware Ver. couldn't be detected!")
 
 
 def _identify_iccid():
-    output = send_at_com("AT+ICCID","OK")
+    output = send_at_com(identified_module.ccid_command, "OK")
     raw_iccid = output[0] if output[2] == 0 else ""
 
     if raw_iccid != "":
@@ -122,21 +132,21 @@ def _identify_os():
     try:
         logger.debug("[+] OS artchitecture")
         system_id["arc"] = str(platform.architecture()[0])
-        
+
         logger.debug("[+] OS machine")
         system_id["machine"] = str(platform.machine())
 
         logger.debug("[+] Kernel version")
         system_id["kernel"] = str(platform.release())
-        
+
         logger.debug("[+] Host name")
         system_id["host_name"] = str(platform.node())
-        
+
         logger.debug("[+] OS platform")
         system_id["platform"] = str(platform.platform())
     except:
         raise RuntimeError("Error occured while getting OS identification!")
-    
+
 
 def _identify_board(): 
     output = shell_command("cat /sys/firmware/devicetree/base/model")
@@ -157,14 +167,14 @@ def identify_setup():
             logger.warning("Old system_id in system.yaml file couln't be read!")
 
     logger.info("[?] System identifying...")
-    
+
     # Turn off AT command echo (Required)
     logger.debug("[+] Turning off AT command echo")
     try:
         _turn_off_echo()
     except Exception as e:
         raise e
-    
+
     # Product Name (Optional)
     logger.debug("[+] Product Name")
     try:
@@ -180,7 +190,7 @@ def identify_setup():
     except Exception as e:
         logger.warning("IMEI identification failed!")
         system_id["imei"] = "Unknown"
-    
+
     # SW version (Optional)
     logger.debug("[+] Modem firmware revision")
     try:
@@ -203,7 +213,7 @@ def identify_setup():
         _identify_os()
     except Exception as e:
         logger.warning("OS identification failed!")
-    
+
     # Board (Optional)
     logger.debug("[+] Board Identification")
     try:
@@ -231,8 +241,6 @@ def identify_setup():
 
     if system_id != old_system_id:
         logger.warning("System setup has changed!")
-    
+
     return system_id or {}
-
-
     

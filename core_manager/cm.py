@@ -23,10 +23,10 @@ def _organizer(arg):
     #print("Organizer")
     if queue.base == 0:
         queue.sub = 16
-    else:    
+    else:
         if queue.is_ok == True:
             queue.sub = queue.success
-            queue.is_ok = False    
+            queue.is_ok = False
         else:
             #print("Q_Counter: ", queue.counter, " Q_Retry: ", queue.retry)
             if queue.counter >= queue.retry:
