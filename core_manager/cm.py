@@ -221,7 +221,7 @@ def _reset_usb_interface(arg):
 
 
 def _reset_modem_softly(arg):
-    queue.set_step(sub=0, base=11, success=1, fail=12, interval=1, is_ok=False, retry=1)
+    queue.set_step(sub=0, base=11, success=16, fail=12, interval=1, is_ok=False, retry=1)
 
     try:
         modem.reset_modem_softly()
@@ -233,7 +233,7 @@ def _reset_modem_softly(arg):
 
 
 def _reset_modem_hardly(arg):
-    queue.set_step(sub=0, base=12, success=1, fail=1, interval=1, is_ok=False, retry=1)
+    queue.set_step(sub=0, base=12, success=16, fail=16, interval=1, is_ok=False, retry=1)
 
     try:
         modem.reset_modem_hardly()
@@ -263,7 +263,7 @@ steps = {
     16: _identify_modem,
 }
 
-  
+
 def execute_step(x, arg=None):
     steps.get(x)(arg)
 
@@ -282,10 +282,7 @@ def manage_connection():
 
 
 if __name__  == "__main__":
-    
+
     while True:
         interval = manage_connection()
         time.sleep(interval)
-
-        
-
