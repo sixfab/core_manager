@@ -1,7 +1,7 @@
 import os.path
 
-from helpers.yamlio import read_yaml_all, CONFIG_PATH
-from helpers.config import Config, default_config
+from helpers.yamlio import read_yaml_all, write_yaml_all, CONFIG_PATH
+from helpers.config import Config
 
 
 config = {}
@@ -21,6 +21,18 @@ def get_configs():
         conf.restore_defaults()
         config.update({})
         old_config.update(config)
+
+        try:
+            print("Creating config.yaml with default configs...")
+            
+            default_conf = {}
+            for item in vars(conf):
+                default_conf[item] = conf.__getattribute__(item)
+
+            write_yaml_all(CONFIG_PATH, default_conf)
+        except Exception as e:
+            print(str(e))
+
         return conf
     
     if config == old_config:
