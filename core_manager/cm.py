@@ -65,9 +65,9 @@ def _identify_setup():
         queue.is_ok = False
     else:
         if new_id != {}:
-            modem.imei = (new_id.get("imei", ""),)
-            modem.iccid = (new_id.get("iccid", ""),)
-            modem.sw_version = (new_id.get("sw_version", ""),)
+            modem.imei = new_id.get("imei", "")
+            modem.iccid = new_id.get("iccid", "")
+            modem.sw_version = new_id.get("sw_version", "")
         queue.is_ok = True
 
         if conf.debug_mode and conf.verbose_mode:
