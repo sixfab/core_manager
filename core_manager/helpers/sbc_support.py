@@ -15,12 +15,12 @@ class SBC:
         self.disable_pin = disable_pin
 
     def gpio_init(self, pin):
-        pin_name = "gpio" + str(pin)
+        pin_name = f"gpio{pin}"
 
-        status = getstatusoutput("ls /sys/class/gpio/" + pin_name)[0]
+        status = getstatusoutput(f"ls /sys/class/gpio/{pin_name}")[0]
 
         if status != 0:
-            comm = "echo " + str(pin) + " > /sys/class/gpio/export"
+            comm = f"echo {pin} > /sys/class/gpio/export"
 
             try:
                 check_output(comm, shell=True)
@@ -29,7 +29,7 @@ class SBC:
 
             time.sleep(0.2)
 
-        comm = "echo out > /sys/class/gpio/gpio" + str(pin) + "/direction"
+        comm = f"echo out > /sys/class/gpio/gpio{pin}/direction"
         try:
             check_output(comm, shell=True)
         except:
@@ -38,7 +38,7 @@ class SBC:
         time.sleep(0.1)
 
     def gpio_del(self):
-        comm = "echo " + str(self.disable_pin) + " > /sys/class/gpio/unexport"
+        comm = f"echo {self.disable_pin} > /sys/class/gpio/unexport"
         try:
             check_output(comm, shell=True)
         except:
@@ -47,7 +47,7 @@ class SBC:
     def modem_power_enable(self):
         self.gpio_init(self.disable_pin)
 
-        comm = "echo 0 > /sys/class/gpio/gpio" + str(self.disable_pin) + "/value"
+        comm = f"echo 0 > /sys/class/gpio/gpio{self.disable_pin}/value"
         try:
             check_output(comm, shell=True)
         except:
@@ -56,7 +56,7 @@ class SBC:
     def modem_power_disable(self):
         self.gpio_init(self.disable_pin)
 
-        comm = "echo 1 > /sys/class/gpio/gpio" + str(self.disable_pin) + "/value"
+        comm = f"echo 1 > /sys/class/gpio/gpio{self.disable_pin}/value"
         try:
             check_output(comm, shell=True)
         except:

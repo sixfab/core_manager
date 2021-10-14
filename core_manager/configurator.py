@@ -137,7 +137,6 @@ def configure():
 
     for _ in range(len(waiting_requests)):
         save_configuration()
-        # print("New Actual Config: ", actual_configs)
 
     apply_configs()
 

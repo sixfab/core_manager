@@ -21,15 +21,14 @@ system_id = {
 try:
     system_id["last_update"] = int(time.time())
 except Exception as error:
-    logger.error("identify() timestamp -> %s", str(error))
+    logger.error("identify() timestamp -> %s", error)
 
 
 # Save ID's to file
 try:
     write_yaml_all(SYSTEM_PATH, system_id)
 except Exception as error:
-    logger.error(str(error))
-    raise error
+    raise RuntimeError("Save ID's to file") from error
 
 
 def identify_modem():
@@ -228,7 +227,7 @@ def identify_setup():
         print("[?] IDENTIFICATION REPORT")
         print("-------------------------")
         for item in system_id.items():
-            print(str("[+] " + item[0]) + " --> " + str(item[1]))
+            print(f"[+] {item[0]} --> {item[1]}")
         print("********************************************************************")
         print("")
 
@@ -236,7 +235,6 @@ def identify_setup():
     try:
         write_yaml_all(SYSTEM_PATH, system_id)
     except Exception as error:
-        logger.error(str(error))
         raise error
 
     if system_id != old_system_id:

@@ -11,7 +11,7 @@ def shell_command(command):
             com, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
         )
     except Exception as error:
-        logger.error('Message: %s', str(error))
+        logger.error("Message: %s", error)
         return ("", "", 1)
     else:
         return (cp.stdout, cp.stderr, cp.returncode)
@@ -26,7 +26,7 @@ def send_at_com(command, desired):
             stderr=subprocess.PIPE,
         )
     except Exception as error:
-        logger.error('Message: %s', str(error))
+        logger.error("Message: %s", error)
         return ("", "", 1)
     else:
         if cp.returncode == 0:

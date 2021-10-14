@@ -66,15 +66,15 @@ class Network(object):
         for interface in self.interfaces:
             actual.append(interface.name)
 
-        for x in usables:
-            if x not in actual:
-                self.create_interface(x)
+        for usable_if in usables:
+            if usable_if not in actual:
+                self.create_interface(usable_if)
 
-        for x in actual:
-            if x not in usables:
-                for y in self.interfaces:
-                    if y.name == x:
-                        self.remove_interface(y)
+        for actual_if in actual:
+            if actual_if not in usables:
+                for self_if in self.interfaces:
+                    if self_if.name == actual_if:
+                        self.remove_interface(self_if)
 
     def get_cellular_interface_name(self):
         output = shell_command("lshw -C Network")
@@ -82,9 +82,9 @@ class Network(object):
         if output[2] == 0:
             networks = output[0].split("*-network:")
 
-            for x in networks:
-                if x.find("driver=cdc_ether") >= 0:
-                    if_name = parse_output(x, "logical name:", "\n")
+            for network in networks:
+                if network.find("driver=cdc_ether") >= 0:
+                    if_name = parse_output(network, "logical name:", "\n")
                     self.cellular_interfaces.append(if_name)
 
             return self.cellular_interfaces
@@ -104,8 +104,8 @@ class Network(object):
     def find_active_interface(self):
         interfaces = {}
 
-        for x in self.interfaces:
-            interfaces[x.name] = 10000
+        for ifs in self.interfaces:
+            interfaces[ifs.name] = 10000
 
         output = shell_command("route -n")
 
@@ -128,7 +128,7 @@ class Network(object):
         return high
 
     def adjust_metric(self, interface, metric):
-        output = shell_command("sudo ifmetric " + str(interface) + " " + str(metric))
+        output = shell_command(f"sudo ifmetric {interface} {metric}")
 
         if output[2] == 0:
             return 0
@@ -150,19 +150,22 @@ class Network(object):
         if modem.interface_name not in cellular_interfaces:
             modem.interface_name = cellular_interfaces[0]
 
-        for x in self.interfaces:
-            if x.name in cellular_interfaces:
-                x.connection_status = modem.monitor.get("cellular_connection")
-                self.monitor[x.name] = [x.connection_status, modem.monitor.get("cellular_latency")]
+        for ifs in self.interfaces:
+            if ifs.name in cellular_interfaces:
+                ifs.connection_status = modem.monitor.get("cellular_connection")
+                self.monitor[ifs.name] = [
+                    ifs.connection_status,
+                    modem.monitor.get("cellular_latency"),
+                ]
             else:
                 try:
-                    self.check_interface_health(x.name)
+                    self.check_interface_health(ifs.name)
                 except:
-                    x.connection_status = False
-                    self.monitor[x.name] = [False, 0]
+                    ifs.connection_status = False
+                    self.monitor[ifs.name] = [False, 0]
                 else:
-                    x.connection_status = True
-                    self.monitor[x.name] = [True, 0]
+                    ifs.connection_status = True
+                    self.monitor[ifs.name] = [True, 0]
 
     def get_interface_metrics(self):
         output = shell_command("ip route list")
@@ -171,19 +174,19 @@ class Network(object):
             raise RuntimeError('Error occured on "ip route list" command!')
 
         for line in output[0].splitlines():
-            for x in self.interfaces:
-                if x.name in line and "default" in line:
+            for ifs in self.interfaces:
+                if ifs.name in line and "default" in line:
                     try:
                         metric = parse_output(line, "metric", " ")
-                        x.actual_metric = int(metric)
+                        ifs.actual_metric = int(metric)
                     except Exception as error:
                         logger.warning("Interface metrics couldn't be read! %s", error)
 
     def adjust_priorities(self):
         default_metric_factor = 10
 
-        for x in self.interfaces:
-            x.metric_factor = conf.network_priority.get(x.name, default_metric_factor)
+        for ifs in self.interfaces:
+            ifs.metric_factor = conf.network_priority.get(ifs.name, default_metric_factor)
 
         for iface in self.interfaces:
             # action when connection status changes

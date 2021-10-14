@@ -77,7 +77,7 @@ def monitor():
                 print("[?] MONITOR REPORT")
                 print("-------------------------")
                 for item in monitor_data.items():
-                    print(str("[+] " + item[0]) + " --> " + str(item[1]))
+                    print(f"[+] {item[0]} --> {item[1]}")
                 print("********************************************************************")
                 print("")
             # END OF MONITOR REPORT

@@ -52,14 +52,6 @@ def _identify_modem():
     else:
         modem.update(module)
         queue.is_ok = True
-        print("")
-        print("********************************************************************")
-        print("[?] FIRST MODEM REPORT")
-        print("-------------------------")
-        attrs = vars(modem)
-        print("\n".join("[+] %s : %s" % item for item in attrs.items()))
-        print("********************************************************************")
-        print("")
 
 
 def _identify_setup():

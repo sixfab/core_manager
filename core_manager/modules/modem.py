@@ -16,7 +16,7 @@ old_monitor = {}
 if os.path.isfile(MONITOR_PATH):
     try:
         old_monitor = read_yaml_all(MONITOR_PATH)
-    except Exception as error:
+    except:
         logger.warning("Old monitor data in monitor.yaml file couln't be read!")
 
 
@@ -84,7 +84,7 @@ class Modem(DefaultModule):
         if output[2] == 0:
             logger.info("APN is up-to-date.")
         else:
-            output = send_at_com('AT+CGDCONT=1,"IPV4V6","' + conf.apn + '"', "OK")
+            output = send_at_com(f'AT+CGDCONT=1,"IPV4V6","{conf.apn}"', "OK")
 
             if output[2] == 0:
                 logger.info("APN is updated succesfully : %s", conf.apn)
@@ -111,20 +111,18 @@ class Modem(DefaultModule):
                 logger.info("ECM mode is activating...")
                 logger.info("The modem will reboot to apply changes.")
             else:
-                raise ModemNotReachable(
-                    "Error occured while setting mode configuration! " + output[0]
-                )
+                raise ModemNotReachable("Error occured while setting mode configuration!")
 
             try:
                 self.wait_until_modem_turned_off()
             except Exception as error:
-                logger.warning("wait_until_modem_turned_off() -> %s", str(error))
+                logger.warning("wait_until_modem_turned_off() -> %s", error)
                 force_reset = 1
             else:
                 try:
                     self.wait_until_modem_started()
                 except Exception as error:
-                    logger.warning("wait_until_modem_started() -> %s", str(error))
+                    logger.warning("wait_until_modem_started() -> %s", error)
                     force_reset = 2
 
             if force_reset == 1:
@@ -205,9 +203,7 @@ class Modem(DefaultModule):
             raise PDPContextFailed("ECM initiation failed!")
 
     def check_interface_health(self, interface, timeout):
-        output = shell_command(
-            "ping -q -c 1 -s 8 -w " + str(timeout) + " -I " + str(interface) + " 8.8.8.8"
-        )
+        output = shell_command(f"ping -q -c 1 -s 8 -w {timeout} -I {interface} 8.8.8.8")
 
         if output[2] == 0:
             pass
@@ -340,12 +336,12 @@ class Modem(DefaultModule):
         if diag_type == 0:
             diag_file_name = "cm-diag_" + str(timestamp) + ".yaml"
             diag_file_path = DIAG_FOLDER_PATH + diag_file_name
-            logger.info("Creating diagnostic report on --> %s", str(diag_file_path))
+            logger.info("Creating diagnostic report on --> %s", diag_file_path)
             write_yaml_all(diag_file_path, self.diagnostic)
         else:
             diag_file_name = "cm-diag-repeated.yaml"
             diag_file_path = DIAG_FOLDER_PATH + diag_file_name
-            logger.info("Creating diagnostic report on --> %s", str(diag_file_path))
+            logger.info("Creating diagnostic report on --> %s", diag_file_path)
             write_yaml_all(diag_file_path, self.diagnostic)
 
         if conf.debug_mode and conf.verbose_mode:
@@ -354,19 +350,19 @@ class Modem(DefaultModule):
             print("[?] DIAGNOSTIC REPORT")
             print("---------------------")
             for item in self.diagnostic.items():
-                print("[+] ", item[0], " --> ", item[1])
+                print(f"[+] {item[0]} --> {item[1]}")
             print("********************************************************************")
             print("")
 
     def reset_connection_interface(self):
-        down_command = "sudo ifconfig " + str(self.interface_name) + " down"
-        up_command = "sudo ifconfig " + str(self.interface_name) + " up"
+        down_command = f"sudo ifconfig {self.interface_name} down"
+        up_command = f"sudo ifconfig {self.interface_name} up"
 
         logger.info("Connection interface is reset...")
 
         output = shell_command(down_command)
         if output[2] == 0:
-            logger.info("Interface %s is down.", str(self.interface_name))
+            logger.info("Interface %s is down.", self.interface_name)
         else:
             raise RuntimeError("Error occured while interface getting down!")
 
@@ -374,7 +370,7 @@ class Modem(DefaultModule):
 
         output = shell_command(up_command)
         if output[2] == 0:
-            logger.info("Interface %s is up.", str(self.interface_name))
+            logger.info("Interface %s is up.", self.interface_name)
         else:
             raise RuntimeError("Error occured while interface getting up!")
 
@@ -396,7 +392,7 @@ class Modem(DefaultModule):
             dev = usb.core.find(idVendor=vendor_id_int, idProduct=product_id_int)
             dev.reset()
         except Exception as error:
-            raise RuntimeError("Message: {}".format(str(error))) from error
+            raise error
 
     def wait_until_modem_turned_off(self):
         counter = 0
@@ -443,7 +439,7 @@ class Modem(DefaultModule):
 
     def wait_until_modem_interface_up(self):
         counter = 0
-        logger.debug("Interface Name: %s", str(self.interface_name))
+        logger.debug("Interface Name: %s", self.interface_name)
         # Check modem connection interface
         for _ in range(20):
             output = shell_command("route -n")
