@@ -1,6 +1,5 @@
 #!/usr/bin/python3
 
-import time
 from threading import Thread, Lock, Event
 
 from helpers.config_parser import conf
@@ -15,15 +14,17 @@ from configurator import configure
 lock = Lock()
 event = Event()
 
-def thread_manage_connection(event):
+
+def thread_manage_connection(event_object):
     interval = 0
-    while(True):
+    while True:
         with lock:
             interval = manage_connection()
-        event.wait(interval)
+        event_object.wait(interval)
 
-def thread_monitor_and_config(event):
-    while(True):
+
+def thread_monitor_and_config(event_object):
+    while True:
         with lock:
             logger.debug("Configurator is working...")
             configure()
@@ -31,13 +32,13 @@ def thread_monitor_and_config(event):
             manage_network()
             logger.debug("Monitor is working...")
             monitor()
-        event.wait(conf.get_send_monitoring_data_interval_config())
+        event_object.wait(conf.get_send_monitoring_data_interval_config())
+
 
 def main():
     Thread(target=thread_manage_connection, args=(event,)).start()
     Thread(target=thread_monitor_and_config, args=(event,)).start()
 
+
 if __name__ == "__main__":
     main()
-
-

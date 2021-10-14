@@ -1,10 +1,7 @@
-#!/usr/bin/python3
-
-class NetInterface(object):
+class NetInterface:
     name = None
     actual_metric = None
     desired_metric = None
-    metric_factor = None 
+    metric_factor = None
     status = None
     connection_status = None
-

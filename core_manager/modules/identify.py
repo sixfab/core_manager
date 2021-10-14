@@ -2,7 +2,7 @@
 
 import time
 import os.path
-import platform 
+import platform
 
 from helpers.config_parser import conf
 from helpers.logger import logger
@@ -15,21 +15,20 @@ from __version__ import version
 identified_module = None
 
 system_id = {
-    "manager_version" : version,
+    "manager_version": version,
 }
 
 try:
     system_id["last_update"] = int(time.time())
-except Exception as e:
-    logger.error("identify() timestamp -> " + str(e))
+except Exception as error:
+    logger.error("identify() timestamp -> %s", error)
 
 
 # Save ID's to file
 try:
     write_yaml_all(SYSTEM_PATH, system_id)
-except Exception as e:
-    logger.error(e)
-    raise e
+except Exception as error:
+    raise RuntimeError("Save ID's to file") from error
 
 
 def identify_modem():
@@ -77,10 +76,10 @@ def _turn_off_echo():
 
 
 def _identify_product_name():
-    output = send_at_com("AT+GMM","OK")
+    output = send_at_com("AT+GMM", "OK")
     if output[2] == 0:
         try:
-            system_id["modem_name"] += " " +  str(output[0].split("\n")[1] or "")
+            system_id["modem_name"] += " " + str(output[0].split("\n")[1] or "")
         except:
             pass
 
@@ -89,25 +88,25 @@ def _identify_product_name():
 
 
 def _identify_imei():
-    output = send_at_com("AT+CGSN","OK")
-    raw_imei = output[0] if output[2] == 0 else "" 
+    output = send_at_com("AT+CGSN", "OK")
+    raw_imei = output[0] if output[2] == 0 else ""
 
     if raw_imei != "":
         imei_filter = filter(str.isdigit, raw_imei)
         system_id["imei"] = "".join(imei_filter)
         return system_id["imei"]
-    else: 
+    else:
         raise ModemNotReachable("IMEI couldn't be detected!")
 
 
 def _identify_fw_version():
-    output = send_at_com("AT+CGMR","OK")
+    output = send_at_com("AT+CGMR", "OK")
     if output[2] == 0:
         raw = output[0].split("\n")
 
-        for i in range(len(raw)):
-            if raw[i] != "":
-                system_id["sw_version"] = raw[i]
+        for _, value in enumerate(raw):
+            if value != "":
+                system_id["sw_version"] = value
                 break
 
         if system_id["sw_version"] != "":
@@ -124,7 +123,7 @@ def _identify_iccid():
         iccid_filter = filter(str.isdigit, raw_iccid)
         system_id["iccid"] = "".join(iccid_filter)
         return system_id["iccid"]
-    else: 
+    else:
         raise ModemNotReachable("ICCID couldn't be detected!")
 
 
@@ -144,11 +143,11 @@ def _identify_os():
 
         logger.debug("[+] OS platform")
         system_id["platform"] = str(platform.platform())
-    except:
-        raise RuntimeError("Error occured while getting OS identification!")
+    except Exception as error:
+        raise RuntimeError("Error occured while getting OS identification!") from error
 
 
-def _identify_board(): 
+def _identify_board():
     output = shell_command("cat /sys/firmware/devicetree/base/model")
 
     if output[2] == 0:
@@ -163,7 +162,7 @@ def identify_setup():
     if os.path.isfile(SYSTEM_PATH):
         try:
             old_system_id = read_yaml_all(SYSTEM_PATH)
-        except Exception as e:
+        except Exception as error:
             logger.warning("Old system_id in system.yaml file couln't be read!")
 
     logger.info("[?] System identifying...")
@@ -172,14 +171,14 @@ def identify_setup():
     logger.debug("[+] Turning off AT command echo")
     try:
         _turn_off_echo()
-    except Exception as e:
-        raise e
+    except Exception as error:
+        raise error
 
     # Product Name (Optional)
     logger.debug("[+] Product Name")
     try:
         _identify_product_name()
-    except Exception as e:
+    except Exception as error:
         logger.warning("Modem name identification failed!")
         system_id["modem_name"] = "Unknown"
 
@@ -187,7 +186,7 @@ def identify_setup():
     logger.debug("[+] IMEI")
     try:
         _identify_imei()
-    except Exception as e:
+    except Exception as error:
         logger.warning("IMEI identification failed!")
         system_id["imei"] = "Unknown"
 
@@ -195,7 +194,7 @@ def identify_setup():
     logger.debug("[+] Modem firmware revision")
     try:
         _identify_fw_version()
-    except Exception as e:
+    except Exception as error:
         logger.warning("Modem firmware ver. identification failed!")
         system_id["sw_version"] = "Unknown"
 
@@ -203,7 +202,7 @@ def identify_setup():
     logger.debug("[+] SIM ICCID")
     try:
         _identify_iccid()
-    except Exception as e:
+    except Exception as error:
         logger.warning("SIM ICCID identification failed!")
         system_id["iccid"] = "Unknown"
 
@@ -211,36 +210,34 @@ def identify_setup():
     logger.debug("[>] OS Identification")
     try:
         _identify_os()
-    except Exception as e:
+    except Exception as error:
         logger.warning("OS identification failed!")
 
     # Board (Optional)
     logger.debug("[+] Board Identification")
     try:
         _identify_board()
-    except Exception as e:
+    except Exception as error:
         logger.warning("Board identification failed!")
 
     # IDENTIFICATION REPORT
-    if conf.debug_mode == True and conf.verbose_mode == True:
+    if conf.debug_mode and conf.verbose_mode:
         print("")
         print("********************************************************************")
         print("[?] IDENTIFICATION REPORT")
         print("-------------------------")
-        for x in system_id.items():
-            print(str("[+] " + x[0]) + " --> " + str(x[1]))
+        for item in system_id.items():
+            print(f"[+] {item[0]} --> {item[1]}")
         print("********************************************************************")
         print("")
 
     # Save ID's to file
     try:
         write_yaml_all(SYSTEM_PATH, system_id)
-    except Exception as e:
-        logger.error(e)
-        raise e
+    except Exception as error:
+        raise error
 
     if system_id != old_system_id:
         logger.warning("System setup has changed!")
 
     return system_id or {}
-    
