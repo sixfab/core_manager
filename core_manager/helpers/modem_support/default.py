@@ -1,5 +1,8 @@
+class DefaultVendor:
+    """
+    Default class for modem vendors
+    """
 
-class DefaultVendor(object):
     vendor_name = "default"
     vid = "ffff"
 
@@ -14,6 +17,10 @@ class DefaultVendor(object):
 
 
 class DefaultModule(DefaultVendor):
+    """
+    Default module class that contains default parameters
+    """
+
     product_name = "default"
     pid = "ffff"
 

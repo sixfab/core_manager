@@ -1,7 +1,13 @@
 from helpers.modem_support.default import DefaultVendor
 
+
 class Telit(DefaultVendor):
-    vendor_name ="Telit"
+    """
+    Telit vendor class that contains default parameters
+    and methods of Telit modules.
+    """
+
+    vendor_name = "Telit"
     vid = "1bc7"
 
     interface_name = "wwan0"
