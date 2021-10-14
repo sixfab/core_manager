@@ -1,6 +1,4 @@
-#!/usr/bin/python3
-
-class Queue(object):
+class Queue:
 
     sub = 0
     base = 0
@@ -17,7 +15,7 @@ class Queue(object):
     def counter_tick(self):
         self.counter += 1
 
-    def set_step(self, sub, base, success, fail, interval = 0, is_ok = False, retry = 0):
+    def set_step(self, sub, base, success, fail, interval=0, is_ok=False, retry=0):
         self.sub = sub
         self.base = base
         self.success = success
@@ -25,4 +23,3 @@ class Queue(object):
         self.interval = interval
         self.is_ok = is_ok
         self.retry = retry
-

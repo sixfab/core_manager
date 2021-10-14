@@ -14,8 +14,8 @@ def get_configs():
     if os.path.isfile(CONFIG_PATH):
         try:
             config.update(read_yaml_all(CONFIG_PATH))
-        except Exception as e:
-            print(str(e))
+        except Exception as error:
+            print(str(error))
     else:
         print("Config file doesn't exist! Restoring default configs...")
         conf.restore_defaults()
@@ -24,20 +24,20 @@ def get_configs():
 
         try:
             print("Creating config.yaml with default configs...")
-            
+
             default_conf = {}
             for item in vars(conf):
                 default_conf[item] = conf.__getattribute__(item)
 
             write_yaml_all(CONFIG_PATH, default_conf)
-        except Exception as e:
-            print(str(e))
+        except Exception as error:
+            print(str(error))
 
         return conf
-    
+
     if config == old_config:
         return conf
-    
+
     conf.set_verbose_mode_config(config.get("verbose_mode"))
     conf.set_debug_mode_config(config.get("debug_mode"))
     conf.set_acceptable_apns_config(config.get("acceptable_apns"))
@@ -49,10 +49,11 @@ def get_configs():
     conf.set_network_priority_config(config.get("network_priority"))
     conf.set_cellular_interfaces_config(config.get("cellular_interfaces"))
     conf.set_logger_level_config(config.get("logger_level"))
-    
+
     conf.config_changed = True
     old_config.update(config)
     return conf
+
 
 conf.update_config(get_configs())
 conf.config_changed = False
