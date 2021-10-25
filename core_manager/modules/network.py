@@ -88,6 +88,7 @@ class Network(object):
                         if network.find("Ethernet interface") >= 0:
                             if network.find("driver=cdc_ether") >= 0:
                                 interface.if_type="C"   # cellular
+                                modem.interface_name = interface.name
                             else:
                                 interface.if_type="E"   # ethernet
                         elif network.find("Wireless interface") >= 0:
