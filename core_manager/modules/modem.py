@@ -492,9 +492,11 @@ class Modem(DefaultModule):
             except:
                 operator = None
             else:
+                operator = operator.replace("Twillio", "")
+                operator = operator.replace("twillio", "")
                 return operator
         else:
-            raise RuntimeError('Error occured on "AT+CSQ" command!')
+            raise RuntimeError('Error occured on --> get_roaming_operator')
 
     def get_signal_quality(self):
         output = send_at_com("AT+CSQ", "OK")
@@ -508,7 +510,7 @@ class Modem(DefaultModule):
             else:
                 return signal_quality
         else:
-            raise RuntimeError('Error occured on "AT+CSQ" command!')
+            raise RuntimeError('Error occured on --> get_signal_quality')
 
     def get_active_lte_tech(self):
         techs = {
@@ -535,7 +537,7 @@ class Modem(DefaultModule):
             else:
                 return techs.get(tech_id, "Unknown")
         else:
-            raise RuntimeError('Error occured on "AT+CSQ" command!')
+            raise RuntimeError('Error occured on --> get_active_lte_tech')
 
     def get_fixed_incident_count(self):
         count = self.monitor.get("fixed_incident", 0)

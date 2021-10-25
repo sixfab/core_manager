@@ -18,11 +18,6 @@ system_id = {
     "manager_version": version,
 }
 
-try:
-    system_id["last_update"] = int(time.time())
-except Exception as error:
-    logger.error("identify() timestamp -> %s", error)
-
 
 # Save ID's to file
 try:
@@ -33,6 +28,15 @@ except Exception as error:
 
 def identify_modem():
     global identified_module
+
+    # Get old system setup if it is exist
+    old_system_id = {}
+    if os.path.isfile(SYSTEM_PATH):
+        try:
+            old_system_id = read_yaml_all(SYSTEM_PATH)
+        except Exception as error:
+            logger.warning("Old system_id in system.yaml file couln't be read!")
+
     system_id["modem_vendor"] = ""
     system_id["modem_name"] = ""
     system_id["modem_vendor_id"] = ""
@@ -61,9 +65,24 @@ def identify_modem():
                 return identified_module
         logger.warning("Modem vendor couldn't be found!")
 
+        # clear modem identification data
+        system_id["modem_vendor"] = None
+        system_id["modem_name"] = None
+        system_id["modem_vendor_id"] = None
+        system_id["modem_product_id"] = None
+        system_id["iccid"] = None
+        system_id["imei"] = None
+        system_id["sw_version"] = None
+
+        if old_system_id.get("modem_vendor") is not None:
+            try:
+                write_yaml_all(SYSTEM_PATH, system_id)
+            except Exception as error:
+                raise RuntimeError("Save ID's to file") from error
+
         raise RuntimeError("Modem vendor couldn't be found!")
     else:
-        raise RuntimeError("Modem vendor couldn't be found!")
+        raise RuntimeError("lsusb command error!")
 
 
 def _turn_off_echo():
@@ -78,10 +97,13 @@ def _turn_off_echo():
 def _identify_product_name():
     output = send_at_com("AT+GMM", "OK")
     if output[2] == 0:
-        try:
-            system_id["modem_name"] += " " + str(output[0].split("\n")[1] or "")
-        except:
-            pass
+        raw = output[0].split("\n")
+
+        for _, value in enumerate(raw):
+            if value != "":
+                system_id["modem_name"] += " " + value
+                print(value)
+                break
 
     if system_id["modem_name"] == "":
         raise ModemNotSupported("Modem name couldn't be found!")
@@ -157,6 +179,7 @@ def _identify_board():
 
 
 def identify_setup():
+
     # Get old system setup if it is exist
     old_system_id = {}
     if os.path.isfile(SYSTEM_PATH):
@@ -219,6 +242,11 @@ def identify_setup():
         _identify_board()
     except Exception as error:
         logger.warning("Board identification failed!")
+
+    try:
+        system_id["last_update"] = int(time.time())
+    except Exception as error:
+        logger.error("identify() timestamp -> %s", error)
 
     # IDENTIFICATION REPORT
     if conf.debug_mode and conf.verbose_mode:
