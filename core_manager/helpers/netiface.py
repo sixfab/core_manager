@@ -5,3 +5,5 @@ class NetInterface:
     metric_factor = None
     status = None
     connection_status = None
+    if_type = None
+    

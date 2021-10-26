@@ -35,12 +35,9 @@ def monitor():
     except Exception as error:
         logger.error("monitor() timestamp -> %s", error)
 
+    # Modem Manager monitoring data
     try:
         monitor_data["cellular_connection"] = modem.monitor.get("cellular_connection")
-        monitor_data["cellular_latency"] = modem.monitor.get("cellular_latency")
-        monitor_data["active_lte_tech"] = modem.get_active_lte_tech()
-        monitor_data["roaming_operator"] = modem.get_roaming_operator()
-        monitor_data["signal_quality"] = modem.get_signal_quality()
         monitor_data["selected_apn"] = modem.get_apn()
 
         incident_count = monitor_data.get("fixed_incident", 0)
@@ -54,6 +51,22 @@ def monitor():
     except Exception as error:
         logger.error("monitor() @modem -> %s", error)
 
+    try:
+        monitor_data["signal_quality"] = modem.get_signal_quality()
+    except Exception as error:
+        logger.error("monitor() @modem -> %s", error)
+
+    try:
+        monitor_data["roaming_operator"] = modem.get_roaming_operator()
+    except Exception as error:
+        logger.error("monitor() @modem -> %s", error)
+
+    try:
+        monitor_data["active_lte_tech"] = modem.get_active_lte_tech()
+    except Exception as error:
+        logger.error("monitor() @modem -> %s", error)
+
+    # Network Manager monitoring data
     try:
         monitor_data["usable_interfaces"] = network.find_usable_interfaces()
         monitor_data["active_interface"] = network.find_active_interface()

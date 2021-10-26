@@ -76,20 +76,25 @@ class Network(object):
                     if self_if.name == actual_if:
                         self.remove_interface(self_if)
 
-    def get_cellular_interface_name(self):
+    def get_interface_type(self):
         output = shell_command("lshw -C Network")
 
         if output[2] == 0:
             networks = output[0].split("*-network:")
 
             for network in networks:
-                if network.find("driver=cdc_ether") >= 0:
-                    if_name = parse_output(network, "logical name:", "\n")
-                    self.cellular_interfaces.append(if_name)
-
-            return self.cellular_interfaces
+                for interface in self.interfaces:
+                    if network.find(interface.name) >= 0:
+                        if network.find("Ethernet interface") >= 0:
+                            if network.find("driver=cdc_ether") >= 0:
+                                interface.if_type="C"   # cellular
+                                modem.interface_name = interface.name
+                            else:
+                                interface.if_type="E"   # ethernet
+                        elif network.find("Wireless interface") >= 0:
+                            interface.if_type="W"       # wifi
         else:
-            return []
+            logger.warning("Error occured on --> get_interface_type")
 
     def check_interface_health(self, interface):
 
@@ -137,35 +142,21 @@ class Network(object):
 
     def check_and_create_monitoring(self):
         self.monitor.clear()
-        cellular_interfaces = []
-
-        try:
-            cellular_interfaces = self.get_cellular_interface_name()
-
-            if cellular_interfaces == []:
-                cellular_interfaces = conf.cellular_interfaces
-        except:
-            cellular_interfaces = conf.cellular_interfaces
-
-        if modem.interface_name not in cellular_interfaces:
-            modem.interface_name = cellular_interfaces[0]
+        self.get_interface_type()
 
         for ifs in self.interfaces:
-            if ifs.name in cellular_interfaces:
+            if ifs.if_type == "Cellular":
                 ifs.connection_status = modem.monitor.get("cellular_connection")
-                self.monitor[ifs.name] = [
-                    ifs.connection_status,
-                    modem.monitor.get("cellular_latency"),
-                ]
+                self.monitor[ifs.name] = [ifs.connection_status, ifs.if_type]
             else:
                 try:
                     self.check_interface_health(ifs.name)
                 except:
                     ifs.connection_status = False
-                    self.monitor[ifs.name] = [False, 0]
+                    self.monitor[ifs.name] = [False, ifs.if_type]
                 else:
                     ifs.connection_status = True
-                    self.monitor[ifs.name] = [True, 0]
+                    self.monitor[ifs.name] = [True, ifs.if_type]
 
     def get_interface_metrics(self):
         output = shell_command("ip route list")
