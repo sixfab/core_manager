@@ -14,6 +14,14 @@ telit_default = DefaultModule("Unknown-Telit-Modem", "ffff", Telit())
 le910cx_comp_1 = DefaultModule("LE910CX-Series", "1201", Telit())
 le910cx_comp_2 = DefaultModule("LE910CX-Series", "1206", Telit())
 
+le910cx_wwx_comp0 = DefaultModule("LE910CX-Series", "1031", Telit())
+le910cx_wwx_comp0.ecm_mode_setter_command = "AT#USBCFG=1"
+le910cx_wwx_comp0.ecm_mode_response = "1"
+
+le910cx_wwx_comp1 = DefaultModule("LE910CX-Series", "1033", Telit())
+le910cx_wwx_comp1.ecm_mode_setter_command = "AT#USBCFG=1"
+le910cx_wwx_comp1.ecm_mode_response = "1"
+
 me910c1_ww_comp_1 = DefaultModule("ME910C1-WW", "1101", Telit())
 me910c1_ww_comp_1.ecm_mode_setter_command = "AT#USBCFG=3"
 me910c1_ww_comp_1.ecm_mode_response = "3"
@@ -42,6 +50,8 @@ modules = {
     ec21,
     le910cx_comp_1,
     le910cx_comp_2,
+    le910cx_wwx_comp0,
+    le910cx_wwx_comp1,
     me910c1_ww_comp_1,
     me910c1_ww_comp_2,
     plsx3_comp_1,
