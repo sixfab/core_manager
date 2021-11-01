@@ -18,6 +18,11 @@ else:
     print(".env.yaml file doesn't exist!")
 
 
+configs_showed_at_frontend = [
+    "apn",
+    "network_priority"
+]
+
 default_config = {
     "apn": core_env.get("apn", "super"),
     "sbc": core_env.get("sbc", "rpi4"),
@@ -30,7 +35,7 @@ default_config = {
     "network_priority": {"eth0": 1, "wlan0": 2, "wwan0": 3, "usb0": 4},
     "cellular_interfaces": ["wwan0", "usb0"],
     "acceptable_apns": ["super", "de1.super", "sg1.super"],
-    "logger_level": "debug",
+    "logger_level": "info",
 }
 
 keys_required_modem_config = ["apn"]

@@ -102,7 +102,6 @@ def _identify_product_name():
         for _, value in enumerate(raw):
             if value != "":
                 system_id["modem_name"] += " " + value
-                print(value)
                 break
 
     if system_id["modem_name"] == "":

@@ -16,6 +16,8 @@ modem = Modem()
 NO_WAIT_INTERVAL = 0.1
 SECOND_CHECK_INTERVAL = 10
 
+first_connection_flag = False
+
 logger.info("Core Manager started.")
 
 
@@ -134,6 +136,8 @@ def _initiate_ecm():
 
 
 def _check_internet():
+    global first_connection_flag
+
     if queue.sub == 5:
         queue.set_step(
             sub=0,
@@ -153,15 +157,19 @@ def _check_internet():
     try:
         modem.check_internet()
     except Exception as error:
-        print("")  # debug purpose
         logger.error("check_internet() -> %s", error)
         queue.is_ok = False
     else:
+
+        if not first_connection_flag:
+            logger.info("Internet connection is established")
+            first_connection_flag = True
+
         if modem.incident_flag:
             modem.monitor["fixed_incident"] += 1
             modem.incident_flag = False
+            logger.info("Internet connection is restored")
 
-        print(".", end="", flush=True)  # debug purpose
         queue.is_ok = True
 
 
