@@ -81,7 +81,7 @@ def monitor():
         except Exception as error:
             logger.error("write_yaml_all(MONITOR_PATH, modem.monitor) -> %s", error)
         else:
-            logger.debug("Monitoring data updated with changes.")
+            logger.info("Monitoring data updated with changes.")
 
             # MONITOR REPORT
             if conf.debug_mode and conf.verbose_mode:

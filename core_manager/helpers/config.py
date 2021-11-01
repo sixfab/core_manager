@@ -30,7 +30,7 @@ default_config = {
     "network_priority": {"eth0": 1, "wlan0": 2, "wwan0": 3, "usb0": 4},
     "cellular_interfaces": ["wwan0", "usb0"],
     "acceptable_apns": ["super", "de1.super", "sg1.super"],
-    "logger_level": "debug",
+    "logger_level": "info",
 }
 
 keys_required_modem_config = ["apn"]
