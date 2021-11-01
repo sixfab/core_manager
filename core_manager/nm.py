@@ -14,7 +14,7 @@ def manage_network():
     try:
         network.adjust_priorities()
     except Exception as error:
-        logger.critical("adjust_priorities() --> %s", error)
+        logger.error("adjust_priorities() --> %s", error)
 
     network.debug_routes()
 
