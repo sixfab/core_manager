@@ -1,7 +1,7 @@
 import os.path
 
 from helpers.yamlio import read_yaml_all, write_yaml_all, CONFIG_PATH
-from helpers.config import Config
+from helpers.config import Config, configs_showed_at_frontend
 
 
 config = {}
@@ -27,7 +27,8 @@ def get_configs():
 
             default_conf = {}
             for item in vars(conf):
-                default_conf[item] = conf.__getattribute__(item)
+                if item in configs_showed_at_frontend:
+                    default_conf[item] = conf.__getattribute__(item)
 
             write_yaml_all(CONFIG_PATH, default_conf)
         except Exception as error:

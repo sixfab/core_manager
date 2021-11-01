@@ -18,6 +18,11 @@ else:
     print(".env.yaml file doesn't exist!")
 
 
+configs_showed_at_frontend = [
+    "apn",
+    "network_priority"
+]
+
 default_config = {
     "apn": core_env.get("apn", "super"),
     "sbc": core_env.get("sbc", "rpi4"),
