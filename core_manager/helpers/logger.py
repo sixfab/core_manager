@@ -44,9 +44,10 @@ def initialize_logger():
         logger_object.setLevel(logging.CRITICAL)
 
     formatter = logging.Formatter(LOG_FORMAT)
-    log_file_handler = logging.handlers.RotatingFileHandler(
-        filename=LOG_PATH + "cm-log", maxBytes=10 * 1024 * 1024, backupCount=3
+    log_file_handler = logging.handlers.TimedRotatingFileHandler(
+        filename=LOG_PATH+"cm-log", when="midnight", backupCount=6
     )
+
 
     log_file_handler.setFormatter(formatter)
     log_file_handler.set_name("log_handler")
