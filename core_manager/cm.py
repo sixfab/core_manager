@@ -153,15 +153,18 @@ def _check_internet():
     try:
         modem.check_internet()
     except Exception as error:
-        print("")  # debug purpose
         logger.error("check_internet() -> %s", error)
         queue.is_ok = False
     else:
+
+        if queue.sub == 5:
+            logger.info("Internet connection is OK")
+
         if modem.incident_flag:
             modem.monitor["fixed_incident"] += 1
             modem.incident_flag = False
+            logger.info("Internet connection is restored")
 
-        print(".", end="", flush=True)  # debug purpose
         queue.is_ok = True
 
 

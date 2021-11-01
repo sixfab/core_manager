@@ -207,6 +207,5 @@ class Network(object):
                 print(output[0])
                 print("*****************************************************************")
                 print("")
-                return 0
             else:
                 raise RuntimeError('Error occured on "route -n" command!')
