@@ -30,10 +30,7 @@ def monitor():
         except:
             logger.warning("Old monitor data in monitor.yaml file couln't be read!")
 
-    try:
-        monitor_data["last_update"] = int(time.time())
-    except Exception as error:
-        logger.error("monitor() timestamp -> %s", error)
+    monitor_data["last_update"] = old_monitor.get("last_update", int(time.time()))
 
     # Modem Manager monitoring data
     try:
@@ -75,6 +72,9 @@ def monitor():
         logger.error("monitor() @network -> %s", error)
 
     if monitor_data != old_monitor:
+
+        monitor_data["last_update"] = int(time.time())
+
         # Save ID's to file
         try:
             write_yaml_all(MONITOR_PATH, monitor_data)
