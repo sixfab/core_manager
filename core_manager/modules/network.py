@@ -80,7 +80,7 @@ class Network(object):
         output = shell_command("lshw -C Network")
 
         if output[2] == 0:
-            networks = output[0].split("*-network:")
+            networks = output[0].split("*-network")
 
             for network in networks:
                 for interface in self.interfaces:
