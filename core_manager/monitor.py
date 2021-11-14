@@ -73,10 +73,7 @@ def monitor():
 
     if monitor_data != old_monitor:
 
-        try:
-            monitor_data["last_update"] = int(time.time())
-        except Exception as error:
-            logger.error("monitor() timestamp -> %s", error)
+        monitor_data["last_update"] = int(time.time())
 
         # Save ID's to file
         try:
