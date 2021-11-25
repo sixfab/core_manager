@@ -96,6 +96,19 @@ class Network(object):
         else:
             logger.warning("Error occured on --> get_interface_type")
 
+    def get_interface_priority(self):
+        try:
+            usables = self.find_usable_interfaces()
+        except Exception as error:
+            logger.error("find_usable_interfaces() --> %s", error)
+
+        for if_name in usables:
+            for interface in self.interfaces:
+                if if_name == interface.name:
+                    priority = usables.index(if_name)+1
+                    interface.priority = priority
+        
+
     def check_interface_health(self, interface):
 
         health_check = f"ping -q -c 1 -s 8 -w {conf.other_ping_timeout} -I {interface} 8.8.8.8"
@@ -143,20 +156,21 @@ class Network(object):
     def check_and_create_monitoring(self):
         self.monitor.clear()
         self.get_interface_type()
+        self.get_interface_priority()
 
         for ifs in self.interfaces:
             if ifs.if_type == "Cellular":
                 ifs.connection_status = modem.monitor.get("cellular_connection")
-                self.monitor[ifs.name] = [ifs.connection_status, ifs.if_type]
+                self.monitor[ifs.name] = [ifs.connection_status, ifs.if_type, ifs.priority]
             else:
                 try:
                     self.check_interface_health(ifs.name)
                 except:
                     ifs.connection_status = False
-                    self.monitor[ifs.name] = [False, ifs.if_type]
+                    self.monitor[ifs.name] = [False, ifs.if_type, ifs.priority]
                 else:
                     ifs.connection_status = True
-                    self.monitor[ifs.name] = [True, ifs.if_type]
+                    self.monitor[ifs.name] = [True, ifs.if_type, ifs.priority]
 
     def get_interface_metrics(self):
         output = shell_command("ip route list")
