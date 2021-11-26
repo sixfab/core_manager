@@ -66,6 +66,9 @@ class Modem(DefaultModule):
         self.pdp_activate_command = product_object.pdp_activate_command
         self.pdp_status_command = product_object.pdp_status_command
         self.ccid_command = product_object.ccid_command
+        self.eps_mode_status_command = product_object.eps_mode_status_command
+        self.eps_mode_setter_command = product_object.eps_mode_setter_command
+        self.eps_data_centric_response = product_object.eps_data_centric_response
 
     def detect_modem(self):
         output = shell_command("lsusb")
