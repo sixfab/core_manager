@@ -107,7 +107,6 @@ class Network(object):
                 if if_name == interface.name:
                     priority = usables.index(if_name)+1
                     interface.priority = priority
-        
 
     def check_interface_health(self, interface):
 

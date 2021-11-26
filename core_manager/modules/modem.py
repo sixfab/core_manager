@@ -100,6 +100,11 @@ class Modem(DefaultModule):
         except Exception as error:
             raise error
 
+        try:
+            self.set_modem_eps_data_centric()
+        except Exception as error:
+            raise error
+
         logger.info("Checking the mode of modem...")
         output = send_at_com(self.mode_status_command, self.ecm_mode_response)
 
@@ -545,3 +550,16 @@ class Modem(DefaultModule):
 
     def get_apn(self):
         return conf.apn
+
+    def set_modem_eps_data_centric(self):
+        output = send_at_com(self.eps_mode_status_command, self.eps_data_centric_response)
+
+        if output[2] == 0:
+            logger.info("Modem mode for EPS is OK")
+        else:
+            output = send_at_com(self.eps_mode_setter_command, "OK")
+
+            if output[2] == 0:
+                logger.info("Modem mode for EPS updated succesfully")
+            else:
+                raise ModemNotReachable("Modem mode for EPS couldn't be set successfully!")

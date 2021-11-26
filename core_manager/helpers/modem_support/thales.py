@@ -18,3 +18,6 @@ class Thales(DefaultVendor):
     ecm_mode_setter_command = 'AT^SSRVSET="actSrvSet",1'
     ecm_mode_response = "^SSRVSET: 1\n"
     ccid_command = "AT+CCID"
+    eps_mode_status_command="AT+CEMODE?"
+    eps_mode_setter_command="AT+CEMODE=2"
+    eps_data_centric_response="2"
