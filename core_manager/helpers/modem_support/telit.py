@@ -18,3 +18,6 @@ class Telit(DefaultVendor):
     ecm_mode_setter_command = "AT#USBCFG=4"
     ecm_mode_response = "4"
     ccid_command = "AT+ICCID"
+    eps_mode_status_command="AT+CEMODE?"
+    eps_mode_setter_command="AT+CEMODE=2"
+    eps_data_centric_response="2"

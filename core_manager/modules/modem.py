@@ -66,6 +66,9 @@ class Modem(DefaultModule):
         self.pdp_activate_command = product_object.pdp_activate_command
         self.pdp_status_command = product_object.pdp_status_command
         self.ccid_command = product_object.ccid_command
+        self.eps_mode_status_command = product_object.eps_mode_status_command
+        self.eps_mode_setter_command = product_object.eps_mode_setter_command
+        self.eps_data_centric_response = product_object.eps_data_centric_response
 
     def detect_modem(self):
         output = shell_command("lsusb")
@@ -97,6 +100,11 @@ class Modem(DefaultModule):
 
         try:
             self.configure_apn()
+        except Exception as error:
+            raise error
+
+        try:
+            self.set_modem_eps_data_centric()
         except Exception as error:
             raise error
 
@@ -545,3 +553,16 @@ class Modem(DefaultModule):
 
     def get_apn(self):
         return conf.apn
+
+    def set_modem_eps_data_centric(self):
+        output = send_at_com(self.eps_mode_status_command, self.eps_data_centric_response)
+
+        if output[2] == 0:
+            logger.info("Modem mode for EPS is OK")
+        else:
+            output = send_at_com(self.eps_mode_setter_command, "OK")
+
+            if output[2] == 0:
+                logger.info("Modem mode for EPS updated succesfully")
+            else:
+                raise ModemNotReachable("Modem mode for EPS couldn't be set successfully!")

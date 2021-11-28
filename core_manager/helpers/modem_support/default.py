@@ -14,6 +14,9 @@ class DefaultVendor:
     pdp_activate_command = ""
     pdp_status_command = ""
     ccid_command = ""
+    eps_mode_status_command=""
+    eps_mode_setter_command=""
+    eps_data_centric_response=""
 
 
 class DefaultModule(DefaultVendor):
@@ -37,3 +40,6 @@ class DefaultModule(DefaultVendor):
         self.pdp_activate_command = vendor_object.pdp_activate_command
         self.pdp_status_command = vendor_object.pdp_status_command
         self.ccid_command = vendor_object.ccid_command
+        self.eps_mode_status_command = vendor_object.eps_mode_status_command
+        self.eps_mode_setter_command = vendor_object.eps_mode_setter_command
+        self.eps_data_centric_response = vendor_object.eps_data_centric_response
