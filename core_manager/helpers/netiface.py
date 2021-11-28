@@ -6,4 +6,5 @@ class NetInterface:
     status = None
     connection_status = None
     if_type = None
+    priority = None
     
