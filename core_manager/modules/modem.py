@@ -500,8 +500,8 @@ class Modem(DefaultModule):
             except:
                 operator = None
             else:
-                operator = operator.replace("Twillio", "")
-                operator = operator.replace("twillio", "")
+                operator = operator.replace("Twilio", "")
+                operator = operator.replace("twilio", "")
                 return operator
         else:
             raise RuntimeError('Error occured on --> get_roaming_operator')
