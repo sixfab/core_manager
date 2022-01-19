@@ -1,7 +1,7 @@
-from helpers.modem_support.default import DefaultVendor
+from helpers.modem_support.default import BaseModule
 
 
-class Thales(DefaultVendor):
+class Thales(BaseModule):
     """
     Thales vendor class that contains default parameters
     and methods of Thales modules.

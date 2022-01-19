@@ -22,6 +22,7 @@ monitor_data = {
 
 
 def monitor():
+    modem.read_geoloc_data()
     # Get old system setup if it is exist
     old_monitor = {}
     if os.path.isfile(MONITOR_PATH):
@@ -100,4 +101,7 @@ def monitor():
 
 
 if __name__ == "__main__":
-    monitor()
+    #monitor()
+    while True:
+        modem.read_geoloc_data()
+        time.sleep(10)

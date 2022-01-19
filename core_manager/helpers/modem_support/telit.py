@@ -1,7 +1,7 @@
-from helpers.modem_support.default import DefaultVendor
+from helpers.modem_support.default import BaseModule
 
 
-class Telit(DefaultVendor):
+class Telit(BaseModule):
     """
     Telit vendor class that contains default parameters
     and methods of Telit modules.

@@ -33,3 +33,12 @@ def send_at_com(command, desired):
             return (cp.stdout, cp.stderr, cp.returncode)
         else:
             return ("", "", 1)
+
+
+def parse_output(output, header, end):
+    header += " "
+    header_size = len(header)
+    index_of_data = output[0].find(header) + header_size
+    end_of_data = index_of_data + output[0][index_of_data:].find(end)
+    sig_data = output[0][index_of_data:end_of_data]
+    return sig_data

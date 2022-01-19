@@ -8,10 +8,10 @@ from helpers.exceptions import ModemNotFound, ModemNotSupported
 from helpers.queue import Queue
 
 from modules.identify import identify_setup, identify_modem
-from modules.modem import Modem
+from helpers.modem_support.default import BaseModule
 
 queue = Queue()
-modem = Modem()
+modem = BaseModule()
 
 NO_WAIT_INTERVAL = 0.1
 SECOND_CHECK_INTERVAL = 10
@@ -52,7 +52,7 @@ def _identify_modem():
         logger.error("identify_modem -> %s", error)
         queue.is_ok = False
     else:
-        modem.update(module)
+        modem = module
         queue.is_ok = True
 
 
@@ -81,6 +81,7 @@ def _identify_setup():
             print("\n".join("[+] %s : %s" % item for item in attrs.items()))
             print("********************************************************************")
             print("")
+            exit(0)
 
 
 def _configure_modem():
