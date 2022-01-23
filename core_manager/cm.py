@@ -6,9 +6,9 @@ from helpers.config_parser import conf
 from helpers.logger import logger
 from helpers.exceptions import ModemNotFound, ModemNotSupported
 from helpers.queue import Queue
-
-from modules.identify import identify_setup, identify_modem
 from helpers.modem_support.default import BaseModule
+from modules.identify import identify_setup, identify_modem
+
 
 queue = Queue()
 modem = BaseModule()
@@ -54,6 +54,9 @@ def _identify_modem():
     else:
         modem = module
         queue.is_ok = True
+        modem.read_geoloc_data()
+        print(modem.geolocation)
+        exit(0)
 
 
 def _identify_setup():
@@ -81,7 +84,6 @@ def _identify_setup():
             print("\n".join("[+] %s : %s" % item for item in attrs.items()))
             print("********************************************************************")
             print("")
-            exit(0)
 
 
 def _configure_modem():

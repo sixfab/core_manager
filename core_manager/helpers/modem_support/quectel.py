@@ -25,7 +25,7 @@ class Quectel(BaseModule):
 
     # +QENG: "servingcell" response map for different technologies
     serving_cell_response_map = {
-        "nr5g-sa": {
+        "nr5g": {
             "radio_type": 2,
             "mcc": 4,
             "mnc": 5,
@@ -41,7 +41,7 @@ class Quectel(BaseModule):
             "cid": 6,
             "psc": 7,
         },
-        "wcdma": {
+        "wcdma/umtc": {
             "radio_type": 2,
             "mcc": 3,
             "mnc": 4,
@@ -58,17 +58,25 @@ class Quectel(BaseModule):
             "ta": 19,
         }
     }
-    
+
 
     def read_geoloc_data(self):
         """
         Reads required data from modem in order to use at geolocation API
         """
         logger.info("Getting raw geolocation data...")
-        print("OKKKKKKKKKKKKKKKKKKK")
+        radio_type_id = 2
 
         output = send_at_com('AT+QENG="servingcell"', "OK")
         if output[2] == 0:
-            print(output[0])
+            data = output[0].split(",")
+            radio_type = data[radio_type_id].casefold().replace('"','')
+
+            for key in self.serving_cell_response_map:
+                if key.find(radio_type) != -1:
+                    temp = self.serving_cell_response_map.get(key, {})
+
+            for key in temp:
+                self.geolocation[key] = data[temp[key]].replace('"','')
         else:
             raise RuntimeError(output[0])

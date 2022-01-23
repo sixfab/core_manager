@@ -56,6 +56,9 @@ class BaseModule:
         "modem_apn": True,
     }
 
+    geolocation = {}
+
+
     def __init__(self, module_name="default", pid="ffff"):
         self.module_name = module_name
         self.pid = pid
@@ -562,5 +565,5 @@ class BaseModule:
         """
         Reads required data from modem in order to use at geolocation API
         """
-        # Overrite it on module classes
+        pass # Overrite it on module classes
         print("Overrite it on module classes")
