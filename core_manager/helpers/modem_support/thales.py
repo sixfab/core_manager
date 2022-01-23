@@ -37,3 +37,4 @@ class Thales(BaseModule):
             print(output[0])
         else:
             raise RuntimeError(output[0])
+            

@@ -565,5 +565,4 @@ class BaseModule:
         """
         Reads required data from modem in order to use at geolocation API
         """
-        pass # Overrite it on module classes
-        print("Overrite it on module classes")
+        # Overrite it on module classes

@@ -80,7 +80,10 @@ class Telit(BaseModule):
         """
         Reads required data from modem in order to use at geolocation API
         """
-        old_geolocation = self.geolocation
+        old_geolocation = {}
+
+        for key in self.geolocation:
+            old_geolocation[key] = self.geolocation[key]
 
         logger.info("Getting raw geolocation data...")
         radio_type_id = 3
@@ -132,7 +135,7 @@ class Telit(BaseModule):
         else:
             raise RuntimeError(output[0])
 
-        # hex/int conversation
+        # str/hex/int conversation
         try:
             for key in self.geolocation:
                 if key in ["tac", "lac", "psc", "cid"]:
@@ -140,8 +143,13 @@ class Telit(BaseModule):
         except:
             raise ValueError("read_geoloc_data --> error occured converting hex to int")
 
-        if self.geolocation != old_geolocation:
-            self.geolocation["last_update"] == int(time.time())
+        if "last_update" in self.geolocation:
+            without_ts = self.geolocation.pop("last_update")
+        else:
+            without_ts = self.geolocation
+
+        if without_ts != old_geolocation:
+            self.geolocation["last_update"] = int(time.time())
 
 
 # Module Classes
