@@ -43,7 +43,7 @@ class Quectel(BaseModule):
             "cid": 6,
             "psc": 7,
         },
-        "wcdma/umtc": {
+        "wcdma": {
             "radio_type": 2,
             "mcc": 3,
             "mnc": 4,
@@ -73,12 +73,15 @@ class Quectel(BaseModule):
             data = output[0].split(",")
             radio_type = data[radio_type_id].replace('"','').casefold()
 
-            for key in self.serving_cell_response_map:
-                if key.find(radio_type) != -1:
-                    temp = self.serving_cell_response_map.get(key, {})
+            try:
+                for key in self.serving_cell_response_map:
+                    if key.find(radio_type) != -1:
+                        temp = self.serving_cell_response_map.get(key, {})
 
-            for key in temp:
-                self.geolocation[key] = data[temp[key]].replace('"','').casefold()
+                for key in temp:
+                    self.geolocation[key] = data[temp[key]].replace('"','').casefold()
+            except:
+                raise ValueError("Geolocation data is broken")
         else:
             raise RuntimeError(output[0])
 

@@ -285,5 +285,10 @@ def manage_connection():
 
 if __name__ == "__main__":
     while True:
-        interval = manage_connection()
+        res = manage_connection()
+        if not isinstance(res, tuple):
+            interval = res
+        else:
+            interval = res[0]
+            modem = res[1]
         time.sleep(interval)
