@@ -1,5 +1,3 @@
-import time
-
 from helpers.modem_support.default import BaseModule
 from helpers.logger import logger
 from helpers.commander import send_at_com, parse_output
@@ -80,11 +78,6 @@ class Telit(BaseModule):
         """
         Reads required data from modem in order to use at geolocation API
         """
-        old_geolocation = {}
-
-        for key in self.geolocation:
-            old_geolocation[key] = self.geolocation[key]
-
         logger.info("Getting raw geolocation data...")
         radio_type_id = 3
         radio_type = None
@@ -142,14 +135,6 @@ class Telit(BaseModule):
                     self.geolocation[key] = int(self.geolocation[key], 16)
         except:
             raise ValueError("read_geoloc_data --> error occured converting hex to int")
-
-        if "last_update" in self.geolocation:
-            without_ts = self.geolocation.pop("last_update")
-        else:
-            without_ts = self.geolocation
-
-        if without_ts != old_geolocation:
-            self.geolocation["last_update"] = int(time.time())
 
 
 # Module Classes

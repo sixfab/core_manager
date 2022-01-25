@@ -54,9 +54,6 @@ def _identify_modem():
     else:
         modem = module
         queue.is_ok = True
-        modem.read_geoloc_data()
-        print(modem.geolocation)
-        exit(0)
 
 
 def _identify_setup():
@@ -82,6 +79,8 @@ def _identify_setup():
             print("-------------------------")
             attrs = vars(modem)
             print("\n".join("[+] %s : %s" % item for item in attrs.items()))
+            print(modem.ecm_mode_setter_command)
+            print(modem.ecm_mode_response)
             print("********************************************************************")
             print("")
 
@@ -278,14 +277,15 @@ def manage_connection():
     if queue.sub == 0:
         execute_step(queue.sub)
         return queue.interval
-
+    elif queue.sub == 1:# modem identification is OK.
+        execute_step(queue.sub)
+        return (queue.interval, modem)
     # organiser step
     execute_step(queue.sub)
     return NO_WAIT_INTERVAL
 
 
 if __name__ == "__main__":
-
     while True:
         interval = manage_connection()
         time.sleep(interval)
