@@ -28,7 +28,6 @@ def thread_manage_connection(event_object):
             else:
                 interval = res[0]
                 modem = res[1]
-                print(interval, modem)
         event_object.wait(interval)
 
 

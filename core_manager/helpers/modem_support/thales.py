@@ -30,11 +30,5 @@ class Thales(BaseModule):
         Reads required data from modem in order to use at geolocation API
         """
         logger.info("Getting raw geolocation data...")
-        print("Thales Geolocation!")
-
-        output = send_at_com('AT', "OK")
-        if output[2] == 0:
-            print(output[0])
-        else:
-            raise RuntimeError(output[0])
+        
             

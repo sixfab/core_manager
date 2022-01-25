@@ -79,8 +79,6 @@ def _identify_setup():
             print("-------------------------")
             attrs = vars(modem)
             print("\n".join("[+] %s : %s" % item for item in attrs.items()))
-            print(modem.ecm_mode_setter_command)
-            print(modem.ecm_mode_response)
             print("********************************************************************")
             print("")
 
