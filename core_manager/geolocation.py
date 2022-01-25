@@ -1,4 +1,3 @@
-from ctypes import addressof
 import time
 import os.path
 

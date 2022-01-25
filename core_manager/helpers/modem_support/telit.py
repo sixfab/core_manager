@@ -27,7 +27,7 @@ class Telit(BaseModule):
 
     radio_type_table = {
         0 : "gsm",
-        2 : "wcdma/umtc",
+        2 : "wcdma",
         7 : "lte",
         12 : "ng-ran",
         13 : "e-ultra-nr dual"
@@ -38,26 +38,21 @@ class Telit(BaseModule):
             "mcc-mnc": 0,
             "tac": 5,
             "cid": 11,
-            "operator" : 13,
         },
         "lte": {
             "mcc-mnc": 0,
             "tac": 5,
             "cid": 10,
-            "operator" : 12,
         },
-        "wcdma/umtc": {
+        "wcdma": {
             "mcc-mnc": 0,
             "lac": 6,
             "cid": 14,
-            "operator" : 16,
         },
         "gsm": {
             "mcc-mnc": 0,
             "lac": 3,
             "cid": 9,
-            "ta": 19,
-            "operator" : 11,
         }
     }
 
@@ -68,9 +63,10 @@ class Telit(BaseModule):
         "lte": {
             "psc" : 4,
         },
-        "wcdma/umtc": {
+        "wcdma": {
             "psc" : 4,
-        }
+        },
+        "gsm": {},
     }
 
 
@@ -88,6 +84,7 @@ class Telit(BaseModule):
                 data = parse_output(output, "COPS:", "\n").split(",")
                 radio_type_index = int(data[radio_type_id])
                 radio_type = self.radio_type_table.get(radio_type_index)
+                self.geolocation["radio_type"] = radio_type
             except:
                 raise ValueError("read_geoloc_data --> error occured parsing radio type data")
         else:

@@ -57,7 +57,6 @@ class Quectel(BaseModule):
             "mnc": 4,
             "lac": 5,
             "cid": 6,
-            "ta": 19,
         }
     }
 
@@ -72,14 +71,14 @@ class Quectel(BaseModule):
         output = send_at_com('AT+QENG="servingcell"', "OK")
         if output[2] == 0:
             data = output[0].split(",")
-            radio_type = data[radio_type_id].casefold().replace('"','')
+            radio_type = data[radio_type_id].replace('"','').casefold()
 
             for key in self.serving_cell_response_map:
                 if key.find(radio_type) != -1:
                     temp = self.serving_cell_response_map.get(key, {})
 
             for key in temp:
-                self.geolocation[key] = data[temp[key]].replace('"','')
+                self.geolocation[key] = data[temp[key]].replace('"','').casefold()
         else:
             raise RuntimeError(output[0])
 
@@ -88,5 +87,7 @@ class Quectel(BaseModule):
             for key in self.geolocation:
                 if key in ["tac", "lac", "psc", "cid"]:
                     self.geolocation[key] = int(self.geolocation[key], 16)
+                elif key in ["mcc", "mnc"]:
+                    self.geolocation[key] = int(self.geolocation[key])
         except:
             raise ValueError("read_geoloc_data --> error occured converting hex to int")

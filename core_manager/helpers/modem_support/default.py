@@ -41,7 +41,7 @@ class BaseModule:
     monitor = {
         "cellular_connection": None,
         "cellular_latency": None,
-        "fixed_incident": None,
+        "fixed_incident": 0,
     }
 
     diagnostic = {
