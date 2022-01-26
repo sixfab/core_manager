@@ -501,6 +501,13 @@ class BaseModule:
             raise RuntimeError('Error occured on --> get_roaming_operator')
 
     def get_signal_quality(self):
+        sq_lables = {
+            0 : range(0,7),
+            1 : range(7,12),
+            2 : range(12,20),
+            3 : range(20,33)
+        }
+
         output = send_at_com("AT+CSQ", "OK")
         if output[2] == 0:
             data = self.get_significant_data(output, "+CSQ:")
@@ -510,6 +517,10 @@ class BaseModule:
             except:
                 signal_quality = None
             else:
+                for key in sq_lables:
+                    if signal_quality in sq_lables[key]:
+                        signal_quality = key
+                        break
                 return signal_quality
         else:
             raise RuntimeError('Error occured on --> get_signal_quality')
