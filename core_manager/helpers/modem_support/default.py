@@ -502,10 +502,10 @@ class BaseModule:
 
     def get_signal_quality(self):
         sq_lables = {
-            0 : range(0,7),
-            1 : range(7,12),
-            2 : range(12,20),
-            3 : range(20,33)
+            (0, "poor") : range(0,7),
+            (1, "fair") : range(7,12),
+            (2, "good") : range(12,20),
+            (3, "excellent") : range(20,33)
         }
 
         output = send_at_com("AT+CSQ", "OK")
@@ -521,6 +521,8 @@ class BaseModule:
                     if signal_quality in sq_lables[key]:
                         signal_quality = key
                         break
+                print(signal_quality)
+                exit(1)
                 return signal_quality
         else:
             raise RuntimeError('Error occured on --> get_signal_quality')
