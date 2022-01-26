@@ -521,6 +521,8 @@ class BaseModule:
                     if signal_quality in sq_lables[key]:
                         signal_quality = key
                         break
+                    else:
+                        signal_quality = "unknown"
                 return signal_quality
         else:
             raise RuntimeError('Error occured on --> get_signal_quality')
