@@ -517,12 +517,12 @@ class BaseModule:
             except:
                 signal_quality = None
             else:
-                for key in sq_lables:
-                    if signal_quality in sq_lables[key]:
+                for key, value in sq_lables.items():
+                    if signal_quality in value:
                         signal_quality = key
                         break
-                    else:
-                        signal_quality = "unknown"
+                else:
+                    signal_quality = "unknown"
                 return signal_quality
         else:
             raise RuntimeError('Error occured on --> get_signal_quality')
