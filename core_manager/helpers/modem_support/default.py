@@ -91,6 +91,10 @@ class BaseModule:
     def configure_modem(self):
         force_reset = 0
         logger.info("Modem configuration started.")
+        try:
+            self.enable_auto_network_registeration()
+        except Exception as error:
+            raise error
 
         try:
             self.configure_apn()
@@ -579,6 +583,18 @@ class BaseModule:
         Reads required data from modem in order to use at geolocation API
         """
         # Overrite it on module classes
+
+    def enable_auto_network_registeration(self):
+        """
+        Enable network auto-registering
+        """
+        output = send_at_com("AT+COPS=0", "OK")
+
+        if output[2] == 0:
+            logger.info("Modem network auto-registering is enabled")
+            time.sleep(2)
+        else:
+            raise RuntimeError("Network auto-registering is failed!")
 
     def deregister_network(self):
         """
