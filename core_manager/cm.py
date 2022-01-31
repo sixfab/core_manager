@@ -8,7 +8,7 @@ from helpers.exceptions import ModemNotFound, ModemNotSupported
 from helpers.queue import Queue
 from helpers.modem_support.default import BaseModule
 from modules.identify import identify_setup, identify_modem
-
+from modules.diagnostic import Diagnostic
 
 queue = Queue()
 modem = BaseModule()
@@ -240,6 +240,7 @@ def _diagnose():
     modem.monitor["cellular_connection"] = False
     modem.incident_flag = True
     diag_type = 0
+    diag = Diagnostic(modem)
 
     if queue.sub == "diagnose_base":
         queue.set_step(
@@ -276,7 +277,7 @@ def _diagnose():
         diag_type = 1
 
     try:
-        modem.diagnose(diag_type)
+        diag.diagnose(diag_type)
     except Exception as error:
         logger.error("diagnose() -> %s", error)
         queue.is_ok = False
