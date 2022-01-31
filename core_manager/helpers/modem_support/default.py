@@ -141,6 +141,7 @@ class BaseModule:
                 except Exception as error:
                     raise error
 
+            time.sleep(10) # delay until modem being functional
             logger.info("Re-checking the mode of modem...")
             output = send_at_com(self.mode_status_command, self.ecm_mode_response)
 
@@ -162,7 +163,6 @@ class BaseModule:
 
     def check_network(self):
         logger.info("Checking the network is ready...")
-
         output = send_at_com("AT+CREG?", "OK")
         if output[2] == 0:
             if output[0].find("+CREG: 0,1") != -1 or output[0].find("+CREG: 0,5") != -1:
@@ -458,6 +458,7 @@ class BaseModule:
 
     def reset_modem_softly(self):
         logger.info("Modem is resetting softly...")
+        self.deregister_network()
         output = send_at_com(self.reboot_command, "OK")
         if output[2] == 0:
             try:
@@ -470,7 +471,6 @@ class BaseModule:
 
     def reset_modem_hardly(self):
         logger.info("Modem is resetting via hardware...")
-
         sbc = supported_sbcs.get(conf.sbc)
         sbc.modem_power_disable()
         time.sleep(2)
@@ -579,3 +579,16 @@ class BaseModule:
         Reads required data from modem in order to use at geolocation API
         """
         # Overrite it on module classes
+
+    def deregister_network(self):
+        """
+        Deregister from network and disable auto-registering
+        """
+        output = send_at_com("AT+COPS=2", "OK")
+
+        if output[2] == 0:
+            logger.info("Modem deregistered from network")
+            time.sleep(2)
+        else:
+            raise RuntimeError("Network deregistering is failed!")
+     
