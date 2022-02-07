@@ -26,6 +26,10 @@ except Exception as error:
     raise RuntimeError("Save ID's to file") from error
 
 
+def check_new_modem_is_existed():
+    pass
+
+
 def identify_modem():
     global identified_module
 

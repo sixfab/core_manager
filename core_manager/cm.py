@@ -6,12 +6,12 @@ from helpers.config_parser import conf
 from helpers.logger import logger
 from helpers.exceptions import ModemNotFound, ModemNotSupported
 from helpers.queue import Queue
-
+from helpers.modem_support.default import BaseModule
 from modules.identify import identify_setup, identify_modem
-from modules.modem import Modem
+
 
 queue = Queue()
-modem = Modem()
+modem = BaseModule()
 
 NO_WAIT_INTERVAL = 0.1
 SECOND_CHECK_INTERVAL = 10
@@ -52,7 +52,7 @@ def _identify_modem():
         logger.error("identify_modem -> %s", error)
         queue.is_ok = False
     else:
-        modem.update(module)
+        modem = module
         queue.is_ok = True
 
 
@@ -275,14 +275,20 @@ def manage_connection():
     if queue.sub == 0:
         execute_step(queue.sub)
         return queue.interval
-
+    elif queue.sub == 1:# modem identification is OK.
+        execute_step(queue.sub)
+        return (queue.interval, modem)
     # organiser step
     execute_step(queue.sub)
     return NO_WAIT_INTERVAL
 
 
 if __name__ == "__main__":
-
     while True:
-        interval = manage_connection()
+        res = manage_connection()
+        if not isinstance(res, tuple):
+            interval = res
+        else:
+            interval = res[0]
+            modem = res[1]
         time.sleep(interval)
