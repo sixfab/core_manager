@@ -11,6 +11,7 @@ CONFIG_FOLDER_PATH = CONNECT_FOLDER_PATH + "configs/"
 CONFIG_PATH = CONFIG_FOLDER_PATH + "config.yaml"
 SYSTEM_PATH = CONNECT_FOLDER_PATH + "system.yaml"
 MONITOR_PATH = CONNECT_FOLDER_PATH + "monitor.yaml"
+GEOLOCATION_PATH = CONNECT_FOLDER_PATH + "geolocation.yaml"
 
 if not os.path.exists(TEMP_FOLDER_PATH):
     os.mkdir(TEMP_FOLDER_PATH)

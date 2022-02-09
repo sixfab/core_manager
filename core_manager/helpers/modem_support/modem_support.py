@@ -1,40 +1,26 @@
-from helpers.modem_support.default import DefaultModule
 from helpers.modem_support.quectel import Quectel
-from helpers.modem_support.telit import Telit
+from helpers.modem_support.telit import Telit, LE910CXThreadX, ME910C1WW
 from helpers.modem_support.thales import Thales
 
 # Products
 # Vendor: Quectel
-quectel_default = DefaultModule("Unknown-Quectel-Modem", "ffff", Quectel())
-ec25 = DefaultModule("EC25", "0125", Quectel())
-ec21 = DefaultModule("EC21", "0121", Quectel())
+quectel_default = Quectel("Unknown-Quectel-Modem", "ffff")
+ec25 = Quectel("EC25", "0125")
+ec21 = Quectel("EC21", "0121")
 
 # Vendor: Telit
-telit_default = DefaultModule("Unknown-Telit-Modem", "ffff", Telit())
-le910cx_comp_1 = DefaultModule("LE910CX-Series", "1201", Telit())
-le910cx_comp_2 = DefaultModule("LE910CX-Series", "1206", Telit())
-
-le910cx_wwx_comp0 = DefaultModule("LE910CX-Series", "1031", Telit())
-le910cx_wwx_comp0.ecm_mode_setter_command = "AT#USBCFG=1"
-le910cx_wwx_comp0.ecm_mode_response = "1"
-
-le910cx_wwx_comp1 = DefaultModule("LE910CX-Series", "1033", Telit())
-le910cx_wwx_comp1.ecm_mode_setter_command = "AT#USBCFG=1"
-le910cx_wwx_comp1.ecm_mode_response = "1"
-
-me910c1_ww_comp_1 = DefaultModule("ME910C1-WW", "1101", Telit())
-me910c1_ww_comp_1.ecm_mode_setter_command = "AT#USBCFG=3"
-me910c1_ww_comp_1.ecm_mode_response = "3"
-
-me910c1_ww_comp_2 = DefaultModule("ME910C1-WW", "1102", Telit())
-me910c1_ww_comp_2.ecm_mode_setter_command = "AT#USBCFG=3"
-me910c1_ww_comp_2.ecm_mode_response = "3"
+telit_default = Telit("Unknown-Telit-Modem", "ffff")
+le910cx_comp_1 = Telit("LE910CX", "1201")
+le910cx_comp_2 = Telit("LE910CX", "1206")
+le910cx_wwx_comp0 = LE910CXThreadX("LE910CX-ThreadX", "1031")
+le910cx_wwx_comp1 = LE910CXThreadX("LE910CX-ThreadX", "1033")
+me910c1_ww_comp_1 = ME910C1WW("ME910C1-WW", "1101")
+me910c1_ww_comp_2 = ME910C1WW("ME910C1-WW", "1102")
 
 # Vendor: Thales
-thales_default = DefaultModule("Unknown-Thales-Modem", "ffff", Thales())
-plsx3_comp_1 = DefaultModule("PLSX3-Series", "0069", Thales())
-plsx3_comp_2 = DefaultModule("PLSX3-Series", "006f", Thales())
-
+thales_default = Thales("Unknown-Thales-Modem", "ffff")
+plsx3_comp_1 = Thales("PLSX3-Series", "0069")
+plsx3_comp_2 = Thales("PLSX3-Series", "006f")
 
 # default modules for vendors
 default_modules = {
@@ -43,9 +29,8 @@ default_modules = {
     "1e2d" : thales_default,
 }
 
-
 # Supported modules
-modules = {
+modules = [
     ec25,
     ec21,
     le910cx_comp_1,
@@ -56,4 +41,4 @@ modules = {
     me910c1_ww_comp_2,
     plsx3_comp_1,
     plsx3_comp_2,
-}
+]

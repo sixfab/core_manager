@@ -5,8 +5,6 @@ from helpers.logger import logger
 from helpers.commander import shell_command
 from helpers.exceptions import NoInternet
 from helpers.netiface import NetInterface
-from cm import modem
-
 
 LOWEST_PRIORTY_FACTOR = 100
 
@@ -25,15 +23,15 @@ def parse_output(string, header, end):
     return sig_data
 
 
-class Network(object):
+class Network():
 
     # monitoring properties
     monitor = {}
     interfaces = []
     cellular_interfaces = []
 
-    def __init__(self):
-        pass
+    def __init__(self, modem):
+        self.modem = modem
 
     def find_usable_interfaces(self):
         ifs = []
@@ -90,6 +88,7 @@ class Network(object):
                         if network.find("Ethernet interface") >= 0:
                             if network.find("driver=cdc_ether") >= 0:
                                 interface.if_type=InterfaceTypes.CELLULAR
+                                self.modem.interface_name = interface.name
                             else:
                                 interface.if_type=InterfaceTypes.ETHERNET
                         elif network.find("Wireless interface") >= 0:
@@ -160,7 +159,8 @@ class Network(object):
 
         for ifs in self.interfaces:
             if ifs.if_type == InterfaceTypes.CELLULAR:
-                ifs.connection_status = modem.monitor.get("cellular_connection")
+                ifs.connection_status = self.modem.monitor.get("cellular_connection")
+
                 self.monitor[ifs.name] = [ifs.connection_status, ifs.if_type, ifs.priority]
             else:
                 try:

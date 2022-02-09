@@ -6,8 +6,6 @@ from helpers.config_parser import conf
 from helpers.logger import logger
 from helpers.yamlio import read_yaml_all, write_yaml_all, MONITOR_PATH
 
-from cm import modem
-from nm import network
 
 # monitoring properties
 monitor_data = {
@@ -21,7 +19,7 @@ monitor_data = {
 }
 
 
-def monitor():
+def monitor(modem, network):
     # Get old system setup if it is exist
     old_monitor = {}
     if os.path.isfile(MONITOR_PATH):
@@ -97,7 +95,3 @@ def monitor():
     else:
         # logger.debug("No change on monitoring data.")
         pass
-
-
-if __name__ == "__main__":
-    monitor()
