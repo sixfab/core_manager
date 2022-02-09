@@ -174,7 +174,7 @@ class Modem(DefaultModule):
             if output[0].find("+CREG: 0,1") != -1 or output[0].find("+CREG: 0,5") != -1:
                 logger.info("Network is registered.")
             else:
-                logger.error(output[0])
+                logger.error("Network not registered: {}".format(output[0]))
                 raise NetworkRegFailed(output[0])
         else:
             logger.error(output[0])
@@ -213,12 +213,25 @@ class Modem(DefaultModule):
     def check_interface_health(self, interface, timeout):
         output = shell_command(f"ping -q -c 1 -s 8 -w {timeout} -I {interface} 8.8.8.8")
 
-        if output[2] == 0:
-            pass
-        else:
+        if output[2] != 0:
             raise NoInternet("No internet!")
 
+    def update_cellular_interface_name(self):
+        output = shell_command("lshw -C Network")
+
+        if output[2] == 0:
+            networks = output[0].split("*-network")
+
+            for network in networks:
+                if network.find("driver=cdc_ether") >= 0:
+                    for line in network.splitlines():
+                        line = line.lstrip()
+                        vals = line.split(': ')
+                        if len(vals) >= 2 and vals[0] == "logical name":
+                            self.interface_name = vals[1]
+
     def check_internet(self):
+        self.update_cellular_interface_name()
         try:
             self.check_interface_health(self.interface_name, conf.ping_timeout)
         except Exception as error:
