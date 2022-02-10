@@ -166,9 +166,9 @@ class BaseModule:
         output = send_at_com("AT+CREG?", "OK")
         if output[2] == 0:
             if output[0].find("+CREG: 0,1") != -1 or output[0].find("+CREG: 0,5") != -1:
-                logger.error("Network not registered: {}".format(output[0]))
+                logger.info("Network is registered")
             else:
-                logger.error(output[0])
+                logger.error("Network not registered: %s", output)
                 raise NetworkRegFailed(output[0])
         else:
             logger.error(output[0])
