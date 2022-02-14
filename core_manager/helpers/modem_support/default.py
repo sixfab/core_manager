@@ -169,9 +169,9 @@ class BaseModule:
         output = send_at_com("AT+CREG?", "OK")
         if output[2] == 0:
             if output[0].find("+CREG: 0,1") != -1 or output[0].find("+CREG: 0,5") != -1:
-                logger.info("Network is registered.")
+                logger.info("Network is registered")
             else:
-                logger.error(output[0])
+                logger.error("Network not registered: %s", output)
                 raise NetworkRegFailed(output[0])
         else:
             logger.error(output[0])
@@ -210,9 +210,7 @@ class BaseModule:
     def check_interface_health(self, interface, timeout):
         output = shell_command(f"ping -q -c 1 -s 8 -w {timeout} -I {interface} 8.8.8.8")
 
-        if output[2] == 0:
-            pass
-        else:
+        if output[2] != 0:
             raise NoInternet("No internet!")
 
     def check_internet(self):
