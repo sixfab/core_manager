@@ -4,7 +4,6 @@ import usb.core
 from helpers.config_parser import conf
 from helpers.logger import logger
 from helpers.commander import shell_command, send_at_com
-from helpers.yamlio import write_yaml_all, DIAG_FOLDER_PATH
 from helpers.exceptions import *
 from helpers.sbc_support import supported_sbcs
 
@@ -91,6 +90,10 @@ class BaseModule:
     def configure_modem(self):
         force_reset = 0
         logger.info("Modem configuration started.")
+        try:
+            self.enable_auto_network_registeration()
+        except Exception as error:
+            raise error
 
         try:
             self.configure_apn()
@@ -141,6 +144,7 @@ class BaseModule:
                 except Exception as error:
                     raise error
 
+            time.sleep(10) # delay until modem being functional
             logger.info("Re-checking the mode of modem...")
             output = send_at_com(self.mode_status_command, self.ecm_mode_response)
 
@@ -162,7 +166,6 @@ class BaseModule:
 
     def check_network(self):
         logger.info("Checking the network is ready...")
-
         output = send_at_com("AT+CREG?", "OK")
         if output[2] == 0:
             if output[0].find("+CREG: 0,1") != -1 or output[0].find("+CREG: 0,5") != -1:
@@ -218,141 +221,6 @@ class BaseModule:
             raise NoInternet("No internet!") from error
         else:
             self.monitor["cellular_connection"] = True
-
-    def diagnose(self, diag_type=0):
-
-        self.diagnostic = {
-            "con_interface": "",
-            "modem_reachable": "",
-            "usb_driver": "",
-            "pdp_context": "",
-            "network_reqister": "",
-            "sim_ready": "",
-            "modem_mode": "",
-            "modem_apn": "",
-            "timestamp": "",
-        }
-
-        logger.info("Diagnostic is working...")
-
-        # 1 - Is connection interface exist?
-        logger.debug("[1] : Is connection interface exist?")
-
-        output = shell_command("route -n")
-        if output[2] == 0:
-            if output[0].find(self.interface_name) != -1:
-                self.diagnostic["con_interface"] = True
-            else:
-                self.diagnostic["con_interface"] = False
-        else:
-            raise RuntimeError("Error occured processing shell command!")
-
-        # 2 - Is USB interface exist?
-        logger.debug("[2] : Is USB interface exist?")
-
-        output = shell_command("lsusb")
-        if output[2] == 0:
-            if output[0].find(self.vid) != -1:
-                self.diagnostic["usb_interface"] = True
-            else:
-                self.diagnostic["usb_interface"] = False
-        else:
-            raise RuntimeError("Error occured processing shell command!")
-
-        # 3 - Is USB driver exist?
-        logger.debug("[3] : Is USB driver exist?")
-
-        output = shell_command("usb-devices")
-        if output[2] == 0:
-            if output[0].find("cdc_ether") != -1:
-                if output[0].count("cdc_ether") >= 2:
-                    self.diagnostic["usb_driver"] = True
-                else:
-                    self.diagnostic["usb_driver"] = False
-            else:
-                self.diagnostic["usb_driver"] = False
-        else:
-            raise RuntimeError("Error occured processing shell command!")
-
-        # 4 - Is modem reachable?
-        logger.debug("[4] : Is modem reachable?")
-
-        output = send_at_com("AT", "OK")
-        if output[2] == 0:
-            self.diagnostic["modem_reachable"] = True
-        else:
-            self.diagnostic["modem_reachable"] = False
-
-        # 5 - Is ECM PDP Context active?
-        logger.debug("[5] : Is ECM PDP Context is active?")
-
-        output = send_at_com(self.pdp_status_command, "1,1")
-        if output[2] == 0:
-            self.diagnostic["pdp_context"] = True
-        else:
-            self.diagnostic["pdp_context"] = False
-
-        # 6 - Is the network registered?
-        logger.debug("[6] : Is the network is registered?")
-
-        try:
-            self.check_network()
-        except:
-            self.diagnostic["network_reqister"] = False
-        else:
-            self.diagnostic["network_reqister"] = True
-
-        # 7 - Is the APN OK?
-        logger.debug("[7] : Is the APN is OK?")
-
-        apn_with_quotes = '"%s"' % conf.apn
-        output = send_at_com("AT+CGDCONT?", apn_with_quotes)
-        if output[2] == 0:
-            self.diagnostic["modem_apn"] = True
-        else:
-            self.diagnostic["modem_apn"] = False
-
-        # 8 - Is the modem mode OK?
-        logger.debug("[8] : Is the modem mode OK?")
-
-        output = send_at_com(self.mode_status_command, self.ecm_mode_response)
-        if output[2] == 0:
-            self.diagnostic["modem_mode"] = True
-        else:
-            self.diagnostic["modem_mode"] = False
-
-        # 9 - Is the SIM ready?
-        logger.debug("[9] : Is the SIM ready?")
-
-        output = send_at_com("AT+CPIN?", "READY")
-        if output[2] == 0:
-            self.diagnostic["sim_ready"] = True
-        else:
-            self.diagnostic["sim_ready"] = False
-
-        timestamp = time.strftime("%Y-%m-%d_%H:%M:%S")
-        self.diagnostic["timestamp"] = timestamp
-
-        if diag_type == 0:
-            diag_file_name = "cm-diag_" + str(timestamp) + ".yaml"
-            diag_file_path = DIAG_FOLDER_PATH + diag_file_name
-            logger.info("Creating diagnostic report on --> %s", diag_file_path)
-            write_yaml_all(diag_file_path, self.diagnostic)
-        else:
-            diag_file_name = "cm-diag-repeated.yaml"
-            diag_file_path = DIAG_FOLDER_PATH + diag_file_name
-            logger.info("Creating diagnostic report on --> %s", diag_file_path)
-            write_yaml_all(diag_file_path, self.diagnostic)
-
-        if conf.debug_mode and conf.verbose_mode:
-            print("")
-            print("********************************************************************")
-            print("[?] DIAGNOSTIC REPORT")
-            print("---------------------")
-            for item in self.diagnostic.items():
-                print(f"[+] {item[0]} --> {item[1]}")
-            print("********************************************************************")
-            print("")
 
     def reset_connection_interface(self):
         down_command = f"sudo ifconfig {self.interface_name} down"
@@ -456,6 +324,7 @@ class BaseModule:
 
     def reset_modem_softly(self):
         logger.info("Modem is resetting softly...")
+        self.deregister_network()
         output = send_at_com(self.reboot_command, "OK")
         if output[2] == 0:
             try:
@@ -468,7 +337,6 @@ class BaseModule:
 
     def reset_modem_hardly(self):
         logger.info("Modem is resetting via hardware...")
-
         sbc = supported_sbcs.get(conf.sbc)
         sbc.modem_power_disable()
         time.sleep(2)
@@ -577,3 +445,28 @@ class BaseModule:
         Reads required data from modem in order to use at geolocation API
         """
         # Overrite it on module classes
+
+    def enable_auto_network_registeration(self):
+        """
+        Enable network auto-registering
+        """
+        output = send_at_com("AT+COPS=0", "OK")
+
+        if output[2] == 0:
+            logger.info("Modem network auto-registering is enabled")
+            time.sleep(2)
+        else:
+            raise RuntimeError("Network auto-registering is failed!")
+
+    def deregister_network(self):
+        """
+        Deregister from network and disable auto-registering
+        """
+        output = send_at_com("AT+COPS=2", "OK")
+
+        if output[2] == 0:
+            logger.info("Modem deregistered from network")
+            time.sleep(2)
+        else:
+            raise RuntimeError("Network deregistering is failed!")
+     

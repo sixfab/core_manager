@@ -8,7 +8,7 @@ from helpers.exceptions import ModemNotFound, ModemNotSupported
 from helpers.queue import Queue
 from helpers.modem_support.default import BaseModule
 from modules.identify import identify_setup, identify_modem
-
+from modules.diagnostic import Diagnostic
 
 queue = Queue()
 modem = BaseModule()
@@ -22,8 +22,8 @@ logger.info("Core Manager started.")
 
 
 def _organizer():
-    if queue.base == 0:
-        queue.sub = 16
+    if queue.base == "organizer":
+        queue.sub = "identify_modem"
     else:
         if queue.is_ok:
             queue.sub = queue.success
@@ -38,13 +38,21 @@ def _organizer():
                 queue.counter_tick()
 
                 # Exception for the second chance of internet control
-                if queue.base == 5:
+                if queue.base == "check_internet_base":
                     queue.interval = SECOND_CHECK_INTERVAL
 
 
 def _identify_modem():
     global modem
-    queue.set_step(sub=0, base=16, success=1, fail=15, interval=2, is_ok=False, retry=20)
+    queue.set_step(
+        sub="organizer",
+        base="identify_modem",
+        success="identify_setup",
+        fail="diagnose_last_exit",
+        interval=2,
+        is_ok=False,
+        retry=20,
+    )
 
     try:
         module = identify_modem()
@@ -58,7 +66,15 @@ def _identify_modem():
 
 def _identify_setup():
     global modem
-    queue.set_step(sub=0, base=1, success=2, fail=15, interval=2, is_ok=False, retry=20)
+    queue.set_step(
+        sub="organizer",
+        base="identify_setup",
+        success="configure_modem",
+        fail="diagnose_last_exit",
+        interval=2,
+        is_ok=False,
+        retry=20,
+    )
 
     try:
         new_id = identify_setup()
@@ -84,7 +100,15 @@ def _identify_setup():
 
 
 def _configure_modem():
-    queue.set_step(sub=0, base=2, success=14, fail=13, interval=1, is_ok=False, retry=5)
+    queue.set_step(
+        sub="organizer",
+        base="configure_modem",
+        success="check_sim_ready",
+        fail="diagnose_repeated",
+        interval=1,
+        is_ok=False,
+        retry=5,
+    )
 
     try:
         modem.configure_modem()
@@ -100,7 +124,15 @@ def _configure_modem():
 
 
 def _check_sim_ready():
-    queue.set_step(sub=0, base=14, success=3, fail=13, interval=1, is_ok=False, retry=5)
+    queue.set_step(
+        sub="organizer",
+        base="check_sim_ready",
+        success="check_network",
+        fail="diagnose_repeated",
+        interval=1,
+        is_ok=False,
+        retry=5,
+    )
 
     try:
         modem.check_sim_ready()
@@ -112,7 +144,15 @@ def _check_sim_ready():
 
 
 def _check_network():
-    queue.set_step(sub=0, base=3, success=4, fail=13, interval=5, is_ok=False, retry=120)
+    queue.set_step(
+        sub="organizer",
+        base="check_network",
+        success="initiate_ecm",
+        fail="diagnose_repeated",
+        interval=5,
+        is_ok=False,
+        retry=120,
+    )
 
     try:
         modem.check_network()
@@ -124,7 +164,15 @@ def _check_network():
 
 
 def _initiate_ecm():
-    queue.set_step(sub=0, base=4, success=5, fail=13, interval=0.1, is_ok=False, retry=5)
+    queue.set_step(
+        sub="organizer",
+        base="initiate_ecm",
+        success="check_internet_base",
+        fail="diagnose_repeated",
+        interval=0.1,
+        is_ok=False,
+        retry=5,
+    )
 
     try:
         modem.initiate_ecm()
@@ -138,21 +186,36 @@ def _initiate_ecm():
 def _check_internet():
     global first_connection_flag
 
-    if queue.sub == 5:
+    if queue.sub == "check_internet_base":
         queue.set_step(
-            sub=0,
-            base=5,
-            success=5,
-            fail=6,
+            sub="organizer",
+            base="check_internet_base",
+            success="check_internet_base",
+            fail="diagnose_base",
             interval=conf.check_internet_interval,
             is_ok=False,
             retry=1,
         )
-    elif queue.sub == 8:
-        queue.set_step(sub=0, base=8, success=5, fail=9, interval=10, is_ok=False, retry=0)
-
-    elif queue.sub == 10:
-        queue.set_step(sub=0, base=10, success=5, fail=11, interval=10, is_ok=False, retry=0)
+    elif queue.sub == "check_internet_after_rci":
+        queue.set_step(
+            sub="organizer",
+            base="check_internet_after_rci",
+            success="check_internet_base",
+            fail="reset_usb_interface",
+            interval=10,
+            is_ok=False,
+            retry=0,
+        )
+    elif queue.sub == "check_internet_after_rui":
+        queue.set_step(
+            sub="organizer",
+            base="check_internet_after_rui",
+            success="check_internet_base",
+            fail="reset_modem_softly",
+            interval=10,
+            is_ok=False,
+            retry=0,
+        )
 
     try:
         modem.check_internet()
@@ -177,19 +240,44 @@ def _diagnose():
     modem.monitor["cellular_connection"] = False
     modem.incident_flag = True
     diag_type = 0
+    diag = Diagnostic(modem)
 
-    if queue.sub == 6:
-        queue.set_step(sub=0, base=6, success=7, fail=7, interval=0.1, is_ok=False, retry=5)
+    if queue.sub == "diagnose_base":
+        queue.set_step(
+            sub="organizer",
+            base="diagnose_base",
+            success="reset_connection_interface",
+            fail="reset_connection_interface",
+            interval=0.1,
+            is_ok=False,
+            retry=5,
+        )
         diag_type = 0
-    elif queue.sub == 13:
-        queue.set_step(sub=0, base=13, success=7, fail=7, interval=0.1, is_ok=False, retry=5)
+    elif queue.sub == "diagnose_repeated":
+        queue.set_step(
+            sub="organizer",
+            base="diagnose_repeated",
+            success="reset_modem_softy",
+            fail="reset_modem_softly",
+            interval=0.1,
+            is_ok=False,
+            retry=5,
+        )
         diag_type = 1
-    elif queue.sub == 15:
-        queue.set_step(sub=0, base=15, success=12, fail=12, interval=0.1, is_ok=False, retry=5)
+    elif queue.sub == "diagnose_last_exit":
+        queue.set_step(
+            sub="organizer",
+            base="diagnose_last_exit",
+            success="reset_modem_hardly",
+            fail="reset_modem_hardly",
+            interval=0.1,
+            is_ok=False,
+            retry=5,
+        )
         diag_type = 1
 
     try:
-        modem.diagnose(diag_type)
+        diag.diagnose(diag_type)
     except Exception as error:
         logger.error("diagnose() -> %s", error)
         queue.is_ok = False
@@ -198,7 +286,15 @@ def _diagnose():
 
 
 def _reset_connection_interface():
-    queue.set_step(sub=0, base=7, success=8, fail=9, interval=1, is_ok=False, retry=2)
+    queue.set_step(
+        sub="organizer",
+        base="reset_connection_interface",
+        success="check_internet_after_rci",
+        fail="reset_usb_interface",
+        interval=1,
+        is_ok=False,
+        retry=2,
+    )
 
     try:
         modem.reset_connection_interface()
@@ -210,7 +306,15 @@ def _reset_connection_interface():
 
 
 def _reset_usb_interface():
-    queue.set_step(sub=0, base=9, success=10, fail=11, interval=1, is_ok=False, retry=2)
+    queue.set_step(
+        sub="organizer",
+        base="reset_usb_interface",
+        success="check_internet_after_rui",
+        fail="reset_modem_softly",
+        interval=1,
+        is_ok=False,
+        retry=2,
+    )
 
     try:
         modem.reset_usb_interface()
@@ -222,7 +326,15 @@ def _reset_usb_interface():
 
 
 def _reset_modem_softly():
-    queue.set_step(sub=0, base=11, success=16, fail=12, interval=1, is_ok=False, retry=1)
+    queue.set_step(
+        sub="organizer",
+        base="reset_modem_softly",
+        success="identify_modem",
+        fail="reset_modem_hardly",
+        interval=1,
+        is_ok=False,
+        retry=1,
+    )
 
     try:
         modem.reset_modem_softly()
@@ -234,7 +346,15 @@ def _reset_modem_softly():
 
 
 def _reset_modem_hardly():
-    queue.set_step(sub=0, base=12, success=16, fail=16, interval=1, is_ok=False, retry=1)
+    queue.set_step(
+        sub="organizer",
+        base="reset_modem_hardly",
+        success="identify_modem",
+        fail="identify_modem",
+        interval=1,
+        is_ok=False,
+        retry=1,
+    )
 
     try:
         modem.reset_modem_hardly()
@@ -246,23 +366,23 @@ def _reset_modem_hardly():
 
 
 steps = {
-    0: _organizer,
-    1: _identify_setup,
-    2: _configure_modem,
-    3: _check_network,
-    4: _initiate_ecm,
-    5: _check_internet,
-    6: _diagnose,
-    7: _reset_connection_interface,
-    8: _check_internet,
-    9: _reset_usb_interface,
-    10: _check_internet,
-    11: _reset_modem_softly,
-    12: _reset_modem_hardly,
-    13: _diagnose,
-    14: _check_sim_ready,
-    15: _diagnose,
-    16: _identify_modem,
+    "organizer": _organizer,  # 0
+    "identify_modem": _identify_modem,  # 16
+    "identify_setup": _identify_setup,  # 1
+    "configure_modem": _configure_modem,  # 2
+    "check_sim_ready": _check_sim_ready,  # 14
+    "check_network": _check_network,  # 3
+    "initiate_ecm": _initiate_ecm,  # 4
+    "check_internet_base": _check_internet,  # 5
+    "diagnose_base": _diagnose,  # 6
+    "diagnose_repeated": _diagnose,  # 13
+    "diagnose_last_exit": _diagnose,  # 15
+    "reset_connection_interface": _reset_connection_interface,  # 7
+    "check_internet_after_rci": _check_internet,  # 8
+    "reset_usb_interface": _reset_usb_interface,  # 9
+    "check_internet_after_rui": _check_internet,  # 10
+    "reset_modem_softly": _reset_modem_softly,  # 11
+    "reset_modem_hardly": _reset_modem_hardly,  # 12
 }
 
 
@@ -272,10 +392,10 @@ def execute_step(step):
 
 def manage_connection():
     # main execution of step
-    if queue.sub == 0:
+    if queue.sub == "organizer":
         execute_step(queue.sub)
         return queue.interval
-    elif queue.sub == 1:# modem identification is OK.
+    elif queue.sub == "identify_setup":  # modem identification is OK.
         execute_step(queue.sub)
         return (queue.interval, modem)
     # organiser step

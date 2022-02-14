@@ -26,10 +26,6 @@ except Exception as error:
     raise RuntimeError("Save ID's to file") from error
 
 
-def check_new_modem_is_existed():
-    pass
-
-
 def identify_modem():
     global identified_module
 
@@ -45,6 +41,8 @@ def identify_modem():
     system_id["modem_name"] = ""
     system_id["modem_vendor_id"] = ""
     system_id["modem_product_id"] = ""
+
+    logger.info("Tyring to detect modem...")
 
     output = shell_command("lsusb")
 
