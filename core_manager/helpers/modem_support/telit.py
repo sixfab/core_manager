@@ -18,6 +18,7 @@ class Telit(BaseModule):
     reboot_command = "AT#REBOOT"
     pdp_activate_command = "AT#ECM=1,0"
     pdp_status_command = "AT#ECM?"
+    desired_pdp_status = "0,1"
     ecm_mode_setter_command = "AT#USBCFG=4"
     ecm_mode_response = "4"
     ccid_command = "AT+ICCID"

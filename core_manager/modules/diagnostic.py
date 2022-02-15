@@ -122,7 +122,7 @@ class Diagnostic:
     def diag_ecm_pdp_context(self):
         logger.debug("[-] : Is ECM PDP Context is active?")
 
-        output = send_at_com(self.modem.pdp_status_command, "1,1")
+        output = send_at_com(self.modem.pdp_status_command, self.modem.desired_pdp_status)
         if output[2] == 0:
             self.diagnostic["pdp_context"] = True
         else:
