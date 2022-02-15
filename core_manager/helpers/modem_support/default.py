@@ -29,6 +29,7 @@ class BaseModule:
     reboot_command = ""
     pdp_activate_command = ""
     pdp_status_command = ""
+    desired_pdp_status = ""
     ccid_command = ""
     eps_mode_status_command = ""
     eps_mode_setter_command = ""
@@ -87,7 +88,7 @@ class BaseModule:
             else:
                 raise ModemNotReachable("APN couldn't be set successfully!")
 
-    def configure_modem(self):
+    def configure_modem(self, recheck_delay=20):
         force_reset = 0
         logger.info("Modem configuration started.")
         try:
@@ -144,7 +145,7 @@ class BaseModule:
                 except Exception as error:
                     raise error
 
-            time.sleep(10) # delay until modem being functional
+            time.sleep(recheck_delay) # delay until modem being functional
             logger.info("Re-checking the mode of modem...")
             output = send_at_com(self.mode_status_command, self.ecm_mode_response)
 
@@ -171,13 +172,11 @@ class BaseModule:
             if output[0].find("+CREG: 0,1") != -1 or output[0].find("+CREG: 0,5") != -1:
                 logger.info("Network is registered")
             else:
-                logger.error("Network not registered: %s", output)
-                raise NetworkRegFailed(output[0])
+                raise NetworkRegFailed("Network not registered: ", output)
         else:
-            logger.error(output[0])
-            raise NetworkRegFailed(output[0])
+            raise NetworkRegFailed("Error occured sending AT+CREG?: ", output)
 
-    def initiate_ecm(self):
+    def initiate_ecm(self, connection_delay=10):
         logger.info("Checking the ECM initialization...")
         output = send_at_com(self.pdp_status_command, "OK")
         if output[2] == 0:
@@ -196,7 +195,7 @@ class BaseModule:
                 if output[2] == 0:
                     if output[0].find("0,1") != -1 or output[0].find("1,1") != -1:
                         logger.info("ECM is initiated.")
-                        time.sleep(10)
+                        time.sleep(connection_delay)
                         return 0
                     else:
                         time.sleep(5)
@@ -325,6 +324,7 @@ class BaseModule:
     def reset_modem_softly(self):
         logger.info("Modem is resetting softly...")
         self.deregister_network()
+        time.sleep(5) # wait a while before rebooting to complete nvm processes
         output = send_at_com(self.reboot_command, "OK")
         if output[2] == 0:
             try:
@@ -337,6 +337,8 @@ class BaseModule:
 
     def reset_modem_hardly(self):
         logger.info("Modem is resetting via hardware...")
+        self.deregister_network()
+        time.sleep(5) # wait a while before rebooting to complete nvm processes
         sbc = supported_sbcs.get(conf.sbc)
         sbc.modem_power_disable()
         time.sleep(2)
@@ -446,17 +448,24 @@ class BaseModule:
         """
         # Overrite it on module classes
 
-    def enable_auto_network_registeration(self):
+    def enable_auto_network_registeration(self, register_delay=20):
         """
         Enable network auto-registering
         """
-        output = send_at_com("AT+COPS=0", "OK")
-
+        output = send_at_com("AT+COPS?", "OK")
         if output[2] == 0:
-            logger.info("Modem network auto-registering is enabled")
-            time.sleep(2)
+            if output[0].find("+COPS: 0") != -1:
+                logger.info("Network auto-registering is already enabled")
+            else:
+                logger.info("Network auto-registering is enabling")
+                output = send_at_com("AT+COPS=0", "OK")
+                if output[2] == 0:
+                    logger.info("Modem network auto-registering is enabled")
+                    time.sleep(register_delay)
+                else:
+                    raise RuntimeError("Network auto-registering is failed!")
         else:
-            raise RuntimeError("Network auto-registering is failed!")
+            raise RuntimeError("Network auto-registering check is failed!")
 
     def deregister_network(self):
         """
@@ -465,8 +474,7 @@ class BaseModule:
         output = send_at_com("AT+COPS=2", "OK")
 
         if output[2] == 0:
-            logger.info("Modem deregistered from network")
-            time.sleep(2)
+            logger.info("Modem is deregistered from network")
         else:
             raise RuntimeError("Network deregistering is failed!")
      

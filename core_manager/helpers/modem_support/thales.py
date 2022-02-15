@@ -17,6 +17,7 @@ class Thales(BaseModule):
     reboot_command = "AT+CFUN=1,1"
     pdp_activate_command = "AT^SWWAN=1,1"
     pdp_status_command = "AT^SWWAN?"
+    desired_pdp_status = "1,1,1"
     ecm_mode_setter_command = 'AT^SSRVSET="actSrvSet",1'
     ecm_mode_response = "^SSRVSET: 1\n"
     ccid_command = "AT+CCID"
