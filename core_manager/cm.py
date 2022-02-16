@@ -257,7 +257,7 @@ def _diagnose():
         queue.set_step(
             sub="organizer",
             base="diagnose_repeated",
-            success="reset_modem_softy",
+            success="reset_modem_softly",
             fail="reset_modem_softly",
             interval=0.1,
             is_ok=False,
