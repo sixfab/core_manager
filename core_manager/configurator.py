@@ -154,7 +154,15 @@ def configure():
         if conf.modem_config_required:
             logger.info("Modem configuration will be start soon.")
             # go to modem configuration step
-            queue.set_step(sub=0, base=2, success=14, fail=13, interval=1, is_ok=False, retry=5)
+            queue.set_step(
+                sub="organizer",
+                base="configure_modem",
+                success="check_sim_ready",
+                fail="diagnose_repeated",
+                interval=1,
+                is_ok=False,
+                retry=5
+                )
             conf.modem_config_required = False
 
         if conf.log_config_required:
