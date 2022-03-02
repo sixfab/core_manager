@@ -1,9 +1,9 @@
 class Queue:
 
-    sub = 0
-    base = 0
-    success = 0
-    fail = 0
+    sub = "organizer"
+    base = "organizer"
+    success = "organizer"
+    fail = "organizer"
     interval = 0
     is_ok = False
     retry = 0

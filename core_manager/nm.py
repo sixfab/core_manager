@@ -3,10 +3,9 @@
 from helpers.logger import logger
 from modules.network import Network
 
-network = Network()
 
-
-def manage_network():
+def manage_network(modem):
+    network = Network(modem)
     network.check_interfaces()
     network.get_interface_metrics()
     network.check_and_create_monitoring()
@@ -18,6 +17,4 @@ def manage_network():
 
     network.debug_routes()
 
-
-if __name__ == "__main__":
-    manage_network()
+    return network

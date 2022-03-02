@@ -5,10 +5,13 @@ from helpers.logger import logger
 from helpers.commander import shell_command
 from helpers.exceptions import NoInternet
 from helpers.netiface import NetInterface
-from cm import modem
-
 
 LOWEST_PRIORTY_FACTOR = 100
+
+class InterfaceTypes:
+    CELLULAR = 'C'
+    ETHERNET = 'E'
+    WIFI = 'W'
 
 
 def parse_output(string, header, end):
@@ -20,15 +23,15 @@ def parse_output(string, header, end):
     return sig_data
 
 
-class Network(object):
+class Network():
 
     # monitoring properties
     monitor = {}
     interfaces = []
     cellular_interfaces = []
 
-    def __init__(self):
-        pass
+    def __init__(self, modem):
+        self.modem = modem
 
     def find_usable_interfaces(self):
         ifs = []
@@ -52,19 +55,18 @@ class Network(object):
         interface.name = name
         self.interfaces.append(interface)
 
-    def remove_interface(self, value):
-        self.interfaces.remove(value)
+    def remove_interface(self, name):
+        for iface in self.interfaces:
+            if iface.name == name:
+                self.interfaces.remove(iface)
 
     def check_interfaces(self):
-        actual = []
-
         try:
             usables = self.find_usable_interfaces()
         except Exception as error:
             logger.error("find_usable_interfaces() --> %s", error)
 
-        for interface in self.interfaces:
-            actual.append(interface.name)
+        actual = [ interface.name for interface in self.interfaces ]
 
         for usable_if in usables:
             if usable_if not in actual:
@@ -72,9 +74,7 @@ class Network(object):
 
         for actual_if in actual:
             if actual_if not in usables:
-                for self_if in self.interfaces:
-                    if self_if.name == actual_if:
-                        self.remove_interface(self_if)
+                self.remove_interface(actual_if)
 
     def get_interface_type(self):
         output = shell_command("lshw -C Network")
@@ -87,12 +87,12 @@ class Network(object):
                     if network.find(interface.name) >= 0:
                         if network.find("Ethernet interface") >= 0:
                             if network.find("driver=cdc_ether") >= 0:
-                                interface.if_type="C"   # cellular
-                                modem.interface_name = interface.name
+                                interface.if_type=InterfaceTypes.CELLULAR
+                                self.modem.interface_name = interface.name
                             else:
-                                interface.if_type="E"   # ethernet
+                                interface.if_type=InterfaceTypes.ETHERNET
                         elif network.find("Wireless interface") >= 0:
-                            interface.if_type="W"       # wifi
+                            interface.if_type=InterfaceTypes.WIFI
         else:
             logger.warning("Error occured on --> get_interface_type")
 
@@ -158,8 +158,9 @@ class Network(object):
         self.get_interface_priority()
 
         for ifs in self.interfaces:
-            if ifs.if_type == "Cellular":
-                ifs.connection_status = modem.monitor.get("cellular_connection")
+            if ifs.if_type == InterfaceTypes.CELLULAR:
+                ifs.connection_status = self.modem.monitor.get("cellular_connection")
+
                 self.monitor[ifs.name] = [ifs.connection_status, ifs.if_type, ifs.priority]
             else:
                 try:
