@@ -139,23 +139,17 @@ class Network():
         else:
             raise RuntimeError('Error occured on "route -n" command!')
 
-    def check_and_create_monitoring(self):
-        self.monitor.clear()
-
-        for ifs in self.interfaces:
-            if ifs.if_type == InterfaceTypes.CELLULAR:
-                ifs.connection_status = self.modem.monitor.get("cellular_connection")
-
-                self.monitor[ifs.name] = [ifs.connection_status, ifs.if_type, ifs.priority]
+    def check_connection_status(self):
+        for iface in self.interfaces:
+            if iface.if_type == InterfaceTypes.CELLULAR:
+                iface.connection_status = self.modem.monitor.get("cellular_connection")
             else:
                 try:
-                    self.check_interface_health(ifs.name)
+                    self.check_interface_health(iface.name)
                 except:
-                    ifs.connection_status = False
-                    self.monitor[ifs.name] = [False, ifs.if_type, ifs.priority]
+                    iface.connection_status = False
                 else:
-                    ifs.connection_status = True
-                    self.monitor[ifs.name] = [True, ifs.if_type, ifs.priority]
+                    iface.connection_status = True
 
     def get_interface_metrics(self):
         output = shell_command("ip route list")
@@ -236,12 +230,15 @@ class Network():
                     logger.error("Error occured changing metric : %s", iface.name)
                 else:
                     logger.info("%s metric changed : %s", iface.name, iface.desired_metric)
-        #debug    
-            print(iface.priority)
-        for x in interface_types.items():
-            print(x[1].name, x[1].priority, x[1].child_int_table)
-        print(self.configured_by_name)
-        print(self.configured_by_type)
+
+    def create_monitoring_data(self):
+        self.monitor.clear()
+        for iface in self.interfaces:
+            self.monitor[iface.name] = [
+                iface.connection_status,
+                iface.if_type,
+                iface.priority
+                ]
 
     def debug_routes(self):
         if conf.debug_mode and conf.verbose_mode:
@@ -257,4 +254,3 @@ class Network():
                 print("")
             else:
                 raise RuntimeError('Error occured on "route -n" command!')
-
