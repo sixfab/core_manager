@@ -4,15 +4,9 @@ from helpers.config_parser import conf
 from helpers.logger import logger
 from helpers.commander import shell_command
 from helpers.exceptions import NoInternet
-from helpers.netiface import NetInterface
+from helpers.netiface import InterfaceTypes, NetInterface, interface_types
 
-LOWEST_PRIORTY_FACTOR = 100
-
-class InterfaceTypes:
-    CELLULAR = 'C'
-    ETHERNET = 'E'
-    WIFI = 'W'
-
+LOWEST_PRIORTY_METRIC = 10000
 
 def parse_output(string, header, end):
     header += " "
@@ -28,6 +22,8 @@ class Network():
     # monitoring properties
     monitor = {}
     interfaces = []
+    configured_by_name = []
+    configured_by_type = []
     cellular_interfaces = []
 
     def __init__(self, modem):
@@ -96,18 +92,6 @@ class Network():
         else:
             logger.warning("Error occured on --> get_interface_type")
 
-    def get_interface_priority(self):
-        try:
-            usables = self.find_usable_interfaces()
-        except Exception as error:
-            logger.error("find_usable_interfaces() --> %s", error)
-
-        for if_name in usables:
-            for interface in self.interfaces:
-                if if_name == interface.name:
-                    priority = usables.index(if_name)+1
-                    interface.priority = priority
-
     def check_interface_health(self, interface):
 
         health_check = f"ping -q -c 1 -s 8 -w {conf.other_ping_timeout} -I {interface} 8.8.8.8"
@@ -121,8 +105,8 @@ class Network():
     def find_active_interface(self):
         interfaces = {}
 
-        for ifs in self.interfaces:
-            interfaces[ifs.name] = 10000
+        for iface in self.interfaces:
+            interfaces[iface.name] = 10000
 
         output = shell_command("route -n")
 
@@ -145,6 +129,9 @@ class Network():
         return high
 
     def adjust_metric(self, interface, metric):
+        """
+        Function for adjusting interface metrics by using ifmetric tool
+        """
         output = shell_command(f"sudo ifmetric {interface} {metric}")
 
         if output[2] == 0:
@@ -154,8 +141,6 @@ class Network():
 
     def check_and_create_monitoring(self):
         self.monitor.clear()
-        self.get_interface_type()
-        self.get_interface_priority()
 
         for ifs in self.interfaces:
             if ifs.if_type == InterfaceTypes.CELLULAR:
@@ -179,26 +164,69 @@ class Network():
             raise RuntimeError('Error occured on "ip route list" command!')
 
         for line in output[0].splitlines():
-            for ifs in self.interfaces:
-                if ifs.name in line and "default" in line:
+            for iface in self.interfaces:
+                if iface.name in line and "default" in line:
                     try:
                         metric = parse_output(line, "metric", " ")
-                        ifs.actual_metric = int(metric)
+                        iface.actual_metric = int(metric)
                     except Exception as error:
                         logger.warning("Interface metrics couldn't be read! %s", error)
 
+    def get_interface_priority(self):
+        for iface in self.interfaces:
+            try:
+                self.get_interface_metrics()
+                iface.priority = int(iface.actual_metric/10)
+            except Exception as error:
+                logger.error("get_interface_priority() --> %s", error)
+
+    def update_int_type_priorities(self):
+        """
+        Function for updating priority of the interface types if they are changed
+        by configurator.
+        """
+        for if_type in interface_types.values():
+            if if_type.name in conf.network_priority:
+                if_type.priority = conf.network_priority.get(if_type.name)
+
+    def decide_metric_factors(self):
+        """
+        Function for deciding priority of the actual interfaces. This function
+        supports assigning priority both by name and by type.  
+        """
+        for iface in self.interfaces:
+            if iface.name in conf.network_priority:
+                iface.metric_factor = conf.network_priority.get(iface.name)
+                if iface not in self.configured_by_name:
+                    self.configured_by_name.append(iface)
+            else:
+                if_type = interface_types[iface.if_type]
+                if iface not in self.configured_by_type:
+                    self.configured_by_type.append(iface)
+                    iface.metric_factor = if_type.add_child_interface(iface.if_type)
+                else:
+                    iface.metric_factor = if_type.child_int_table.get(iface.if_type)
+
+        # remove child interface if it is not existed or moved
+        for iface in self.configured_by_type:
+            if iface not in self.interfaces or iface in self.configured_by_name:
+                if_type = interface_types[iface.if_type]
+                if_type.remove_child_interface(iface.if_type)
+                self.configured_by_type.remove(iface)
+
     def adjust_priorities(self):
-        default_metric_factor = 10
-
-        for ifs in self.interfaces:
-            ifs.metric_factor = conf.network_priority.get(ifs.name, default_metric_factor)
-
+        """
+        Function for adjusting priority of interfaces according to internet
+        connection status and metric factor.
+        """
+        self.update_int_type_priorities()
+        self.decide_metric_factors()
         for iface in self.interfaces:
             # action when connection status changes
             if not iface.connection_status:
-                iface.desired_metric = LOWEST_PRIORTY_FACTOR * 100
+                iface.desired_metric = LOWEST_PRIORTY_METRIC
             else:
-                iface.desired_metric = iface.metric_factor * 100
+                iface.desired_metric = iface.metric_factor * 10
 
             # do changes
             if iface.actual_metric != iface.desired_metric:
@@ -208,6 +236,12 @@ class Network():
                     logger.error("Error occured changing metric : %s", iface.name)
                 else:
                     logger.info("%s metric changed : %s", iface.name, iface.desired_metric)
+        #debug    
+            print(iface.priority)
+        for x in interface_types.items():
+            print(x[1].name, x[1].priority, x[1].child_int_table)
+        print(self.configured_by_name)
+        print(self.configured_by_type)
 
     def debug_routes(self):
         if conf.debug_mode and conf.verbose_mode:
@@ -223,3 +257,4 @@ class Network():
                 print("")
             else:
                 raise RuntimeError('Error occured on "route -n" command!')
+

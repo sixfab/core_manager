@@ -2,6 +2,7 @@
 
 import os.path
 from helpers.yamlio import read_yaml_all, ENV_PATH
+from helpers.netiface import InterfaceTypes, interface_types
 
 env = {}
 core_env = {}
@@ -32,7 +33,15 @@ default_config = {
     "send_monitoring_data_interval": 25,
     "ping_timeout": 9,
     "other_ping_timeout": 3,
-    "network_priority": {"eth0": 1, "wlan0": 2, "wwan0": 3, "usb0": 4},
+    "network_priority": {
+        "eth0": 1,
+        "wlan0": 2,
+        "wwan0": 3,
+        "usb0": 4,
+        InterfaceTypes.ETHERNET: 10,
+        InterfaceTypes.WIFI: 20,
+        InterfaceTypes.CELLULAR: 30
+    },
     "cellular_interfaces": ["wwan0", "usb0"],
     "acceptable_apns": ["super", "de1.super", "sg1.super"],
     "logger_level": "info",
