@@ -24,7 +24,6 @@ class Network():
     interfaces = []
     configured_by_name = []
     configured_by_type = []
-    cellular_interfaces = []
 
     def __init__(self, modem):
         self.modem = modem
@@ -181,31 +180,49 @@ class Network():
         """
         for if_type in interface_types.values():
             if if_type.name in conf.network_priority:
-                if_type.priority = conf.network_priority.get(if_type.name)
+                if if_type.priority != conf.network_priority.get(if_type.name):
+                    new_priority = conf.network_priority.get(if_type.name)
+                    if_type.update_priority(new_priority)
+
+                    # Remove configured priorities according to old config
+                    for iface in self.configured_by_type:
+                        if iface.if_type == if_type.name:
+                            self.configured_by_type.remove(iface)
 
     def decide_metric_factors(self):
         """
         Function for deciding priority of the actual interfaces. This function
-        supports assigning priority both by name and by type.  
+        supports assigning priority both by name and by type.
         """
+        self.update_int_type_priorities()
+
         for iface in self.interfaces:
             if iface.name in conf.network_priority:
                 iface.metric_factor = conf.network_priority.get(iface.name)
                 if iface not in self.configured_by_name:
                     self.configured_by_name.append(iface)
             else:
+                # remove interface from configured_by_name if it no longer have 
+                # configuration by name in global conf dictionary
+                if iface in self.configured_by_name:
+                    self.configured_by_name.remove(iface)
+
                 if_type = interface_types[iface.if_type]
                 if iface not in self.configured_by_type:
-                    self.configured_by_type.append(iface)
-                    iface.metric_factor = if_type.add_child_interface(iface.if_type)
+                    try:
+                        iface.metric_factor = if_type.add_child_interface(iface.name)
+                    except Exception as error:
+                        logger.error("decide_metric_factors() --> %s", error)
+                    else:
+                        self.configured_by_type.append(iface)
                 else:
-                    iface.metric_factor = if_type.child_int_table.get(iface.if_type)
+                    iface.metric_factor = if_type.child_int_table.get(iface.name)
 
         # remove child interface if it is not existed or moved
         for iface in self.configured_by_type:
             if iface not in self.interfaces or iface in self.configured_by_name:
                 if_type = interface_types[iface.if_type]
-                if_type.remove_child_interface(iface.if_type)
+                if_type.remove_child_interface(iface.name)
                 self.configured_by_type.remove(iface)
 
     def adjust_priorities(self):
@@ -213,7 +230,6 @@ class Network():
         Function for adjusting priority of interfaces according to internet
         connection status and metric factor.
         """
-        self.update_int_type_priorities()
         self.decide_metric_factors()
         for iface in self.interfaces:
             # action when connection status changes

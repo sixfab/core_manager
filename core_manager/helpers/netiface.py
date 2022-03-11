@@ -21,18 +21,28 @@ class InterfaceType:
         self.name = name
         self.priority = priority
         self.child_int_table = {}
+        self.free_priorities = list(range(self.priority, self.priority+10))
 
     def update_priority(self, priority):
         self.priority = priority
+        self.child_int_table = {}
+        self.free_priorities = list(range(self.priority, self.priority+10))
 
     def add_child_interface(self, name):
-        dict_len = len(self.child_int_table)
-        dict_len %= 10
-        self.child_int_table[name] = self.priority + dict_len
-        return int(self.child_int_table[name])
+        try:
+            self.child_int_table[name] = self.free_priorities.pop(0)
+        except Exception as error:
+            raise ValueError("No free priority number exist in free_priorities list!") from error
+        else:
+            return int(self.child_int_table[name])
 
     def remove_child_interface(self, name):
-        self.child_int_table.pop(name)
+        value = self.child_int_table.get(name, None)
+        if value:
+            self.free_priorities.append(value)
+            self.free_priorities.sort()
+            self.child_int_table.pop(name)
+
 
 ethernet = InterfaceType(InterfaceTypes.ETHERNET, 10)
 wifi = InterfaceType(InterfaceTypes.WIFI, 30)
