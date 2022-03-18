@@ -2,7 +2,7 @@
 
 from helpers.logger import logger
 from modules.network import Network
-from helpers.modem_support.telit import Telit
+
 
 def manage_network(modem):
     network = Network(modem)
