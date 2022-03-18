@@ -3,7 +3,7 @@ import time
 from helpers.config_parser import conf
 from helpers.logger import logger
 from helpers.commander import send_at_com, shell_command
-from helpers.yamlio import write_yaml_all, DIAG_FOLDER_PATH
+from helpers.yamlio import write_yaml_all, DIAG_FILE_PATH
 
 class Diagnostic:
     diagnostic = {}
@@ -44,21 +44,12 @@ class Diagnostic:
         timestamp = int(time.time())
         self.diagnostic["timestamp"] = timestamp
 
-        diag = {
-            "last_update": timestamp,
-            "value": self.diagnostic_zip
-        }
-
-        if diag_type == 0:
-            diag_file_name = "diagnostic.yaml"
-            diag_file_path = DIAG_FOLDER_PATH + diag_file_name
-            logger.info("Creating diagnostic report on --> %s", diag_file_path)
-            write_yaml_all(diag_file_path, diag)
-        else:
-            diag_file_name = "diagnostic-repeated.yaml"
-            diag_file_path = DIAG_FOLDER_PATH + diag_file_name
-            logger.info("Creating diagnostic report on --> %s", diag_file_path)
-            write_yaml_all(diag_file_path, diag)
+        diag = {}
+        diag["diagnostic"] = self.diagnostic_zip
+        diag["incident_id"] = self.modem.get_fixed_incident_count()+1
+        diag["last_update"] = timestamp
+        logger.info("Creating diagnostic report on --> %s", DIAG_FILE_PATH)
+        write_yaml_all(DIAG_FILE_PATH, diag)
 
         if conf.debug_mode and conf.verbose_mode:
             print("")
