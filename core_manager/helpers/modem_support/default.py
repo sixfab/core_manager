@@ -337,8 +337,6 @@ class BaseModule:
 
     def reset_modem_hardly(self):
         logger.info("Modem is resetting via hardware...")
-        self.deregister_network()
-        time.sleep(5) # wait a while before rebooting to complete nvm processes
         sbc = supported_sbcs.get(conf.sbc)
         sbc.modem_power_disable()
         time.sleep(2)
