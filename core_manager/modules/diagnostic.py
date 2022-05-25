@@ -1,9 +1,10 @@
+import os
 import time
 
 from helpers.config_parser import conf
 from helpers.logger import logger
 from helpers.commander import send_at_com, shell_command
-from helpers.yamlio import write_yaml_all, DIAG_FILE_PATH
+from helpers.yamlio import write_yaml_all, read_yaml_all, DIAG_FILE_PATH
 
 class Diagnostic:
     diagnostic = {}
@@ -41,13 +42,34 @@ class Diagnostic:
             elif value is False:
                 self.diagnostic_zip &= ~(1 << self.diagnostic_map[key])
 
+        last_diagnostics = None
+        if os.path.isfile(DIAG_FILE_PATH):
+            try:
+                last_diagnostics = read_yaml_all(DIAG_FILE_PATH)
+            except:
+                logger.debug("Last diagnostics data is not found")
+
         timestamp = int(time.time())
+        incident_id = self.modem.get_fixed_incident_count()+1
         self.diagnostic["timestamp"] = timestamp
 
         diag = {}
         diag["diagnostic"] = self.diagnostic_zip
-        diag["incident_id"] = self.modem.get_fixed_incident_count()+1
+        diag["incident_id"] = incident_id
         diag["last_update"] = timestamp
+
+
+        if last_diagnostics and \
+           last_diagnostics["diagnostic"] == self.diagnostic_zip and \
+           last_diagnostics["incident_id"] == incident_id:
+            # if diagnostic data or incident_id is not changed
+            # keep last timestamp, but update last_update
+            diag["timestamp"] = last_diagnostics.get("timestamp", timestamp)
+
+        else:
+            # if data is changed, update the timestamp
+            diag["timestamp"] = timestamp
+
         logger.info("Creating diagnostic report on --> %s", DIAG_FILE_PATH)
         write_yaml_all(DIAG_FILE_PATH, diag)
 
