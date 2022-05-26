@@ -30,6 +30,10 @@ def update_geolocation(modem, immediately=False):
 
     if immediately or periodically:
         logger.info("Checking geolocation data...")
+
+        # clear buffer dictionary
+        modem.geolocation.clear()
+
         try:
             modem.read_geoloc_data()
         except:
