@@ -474,5 +474,5 @@ class BaseModule:
         if output[2] == 0:
             logger.info("Modem is deregistered from network")
         else:
-            raise RuntimeError("Network deregistering is failed!")
+            logger.error("Network deregistering is failed!")
      
