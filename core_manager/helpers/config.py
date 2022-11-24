@@ -25,7 +25,7 @@ configs_showed_at_frontend = [
 
 default_config = {
     "apn": core_env.get("apn", "super"),
-    "sbc": core_env.get("sbc", "rpi4"),
+    "sbc": core_env.get("board", "rpi4"),
     "debug_mode": False,
     "verbose_mode": False,
     "check_internet_interval": 60,
