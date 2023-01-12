@@ -152,7 +152,7 @@ def _check_network():
         fail="diagnose_repeated",
         interval=5,
         is_ok=False,
-        retry=120,
+        retry=180, # 15 minutes
     )
 
     try:
