@@ -341,13 +341,22 @@ def _reset_modem_softly():
         queue.set_step(
             sub="organizer",
             base="reset_modem_softly",
-            success="reset_modem_hardly",
+            success="identify_modem",
             fail="reset_modem_hardly",
             interval=1,
             is_ok=False,
             retry=1,
         )
         logger.info("Jump to reset_modem_hardly for 2nd trial of rebooting modem!")
+
+        try:
+            modem.reset_modem_hardly()
+        except Exception as error:
+            logger.error("reset_modem_hardly() -> %s", error)
+            queue.is_ok = False
+        else:
+            queue.is_ok = True
+
     else:
         queue.set_step(
             sub="organizer",
