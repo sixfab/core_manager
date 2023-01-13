@@ -50,6 +50,7 @@ def get_configs():
     conf.set_network_priority_config(config.get("network_priority"))
     conf.set_cellular_interfaces_config(config.get("cellular_interfaces"))
     conf.set_logger_level_config(config.get("logger_level"))
+    conf.set_sbc_config()
 
     conf.config_changed = True
     old_config.update(config)
