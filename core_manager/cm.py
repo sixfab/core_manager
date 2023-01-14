@@ -17,7 +17,6 @@ NO_WAIT_INTERVAL = 0.1
 SECOND_CHECK_INTERVAL = 10
 
 first_connection_flag = False
-soft_reboot_count = 0
 
 logger.info("Core Manager started.")
 
@@ -152,7 +151,7 @@ def _check_network():
         fail="diagnose_repeated",
         interval=5,
         is_ok=False,
-        retry=180, # 15 minutes
+        retry=120,
     )
 
     try:
@@ -186,7 +185,6 @@ def _initiate_ecm():
 
 def _check_internet():
     global first_connection_flag
-    global soft_reboot_count
 
     if queue.sub == "check_internet_base":
         queue.set_step(
@@ -225,9 +223,6 @@ def _check_internet():
         logger.error("check_internet() -> %s", error)
         queue.is_ok = False
     else:
-
-        # reset soft_reboot_count
-        soft_reboot_count = 0
 
         if not first_connection_flag:
             logger.info("Internet connection is established")
@@ -331,50 +326,23 @@ def _reset_usb_interface():
 
 
 def _reset_modem_softly():
-    global soft_reboot_count
-    soft_reboot_count += 1
+    queue.set_step(
+        sub="organizer",
+        base="reset_modem_softly",
+        success="identify_modem",
+        fail="reset_modem_hardly",
+        interval=1,
+        is_ok=False,
+        retry=1,
+    )
 
-    # If soft_reboot_count is 2, that means the modem has been rebooted twice.
-    # Manager try to reboot the modem hardly to solve the problem that couldn't
-    # be solved by soft reboot.
-    if soft_reboot_count == 2:
-        queue.set_step(
-            sub="organizer",
-            base="reset_modem_softly",
-            success="identify_modem",
-            fail="reset_modem_hardly",
-            interval=1,
-            is_ok=False,
-            retry=1,
-        )
-        logger.info("Jump to reset_modem_hardly for 2nd trial of rebooting modem!")
-
-        try:
-            modem.reset_modem_hardly()
-        except Exception as error:
-            logger.error("reset_modem_hardly() -> %s", error)
-            queue.is_ok = False
-        else:
-            queue.is_ok = True
-
+    try:
+        modem.reset_modem_softly()
+    except Exception as error:
+        logger.error("reset_modem_softly() -> %s", error)
+        queue.is_ok = False
     else:
-        queue.set_step(
-            sub="organizer",
-            base="reset_modem_softly",
-            success="identify_modem",
-            fail="reset_modem_hardly",
-            interval=1,
-            is_ok=False,
-            retry=1,
-        )
-
-        try:
-            modem.reset_modem_softly()
-        except Exception as error:
-            logger.error("reset_modem_softly() -> %s", error)
-            queue.is_ok = False
-        else:
-            queue.is_ok = True
+        queue.is_ok = True
 
 
 def _reset_modem_hardly():

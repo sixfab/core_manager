@@ -2,7 +2,6 @@
 
 import os.path
 from helpers.yamlio import read_yaml_all, ENV_PATH
-from helpers.netiface import InterfaceTypes, interface_types
 
 env = {}
 core_env = {}
@@ -26,19 +25,15 @@ configs_showed_at_frontend = [
 
 default_config = {
     "apn": core_env.get("apn", "super"),
-    "sbc": core_env.get("board", "RaspberryPi4"),
+    "sbc": core_env.get("board", "rpi4"),
     "debug_mode": False,
     "verbose_mode": False,
     "check_internet_interval": 60,
     "send_monitoring_data_interval": 25,
     "ping_timeout": 9,
     "other_ping_timeout": 3,
-    "network_priority": {
-        InterfaceTypes.ETHERNET: 10,
-        InterfaceTypes.WIFI: 30,
-        InterfaceTypes.CELLULAR: 50,
-        InterfaceTypes.UNKNOWN: 70
-    },
+    "network_priority": {"eth0": 1, "wlan0": 2, "wwan0": 3, "usb0": 4},
+    "cellular_interfaces": ["wwan0", "usb0"],
     "acceptable_apns": ["super", "de1.super", "sg1.super"],
     "logger_level": "info",
 }
@@ -64,6 +59,7 @@ class Config(object):
         self.ping_timeout = None
         self.other_ping_timeout = None
         self.network_priority = None
+        self.cellular_interfaces = None
         self.acceptable_apns = None
         self.logger_level = None
 
@@ -79,6 +75,7 @@ class Config(object):
         self.ping_timeout = new_config.ping_timeout
         self.other_ping_timeout = new_config.other_ping_timeout
         self.network_priority = new_config.network_priority
+        self.cellular_interfaces = new_config.cellular_interfaces
         self.acceptable_apns = new_config.acceptable_apns
         self.logger_level = new_config.logger_level
 
@@ -92,6 +89,7 @@ class Config(object):
         self.ping_timeout = default_config.get("ping_timeout")
         self.other_ping_timeout = default_config.get("other_ping_timeout")
         self.network_priority = default_config.get("network_priority")
+        self.cellular_interfaces = default_config.get("cellular_interfaces")
         self.acceptable_apns = default_config.get("acceptable_apns")
         self.logger_level = default_config.get("logger_level")
 
@@ -188,6 +186,15 @@ class Config(object):
         else:
             self.network_priority = default_config.get("network_priority")
 
+    def get_cellular_interfaces_config(self):
+        return self.cellular_interfaces
+
+    def set_cellular_interfaces_config(self, value):
+        if isinstance(value, list):
+            self.cellular_interfaces = value
+        else:
+            self.cellular_interfaces = default_config.get("cellular_interfaces")
+
     def get_acceptable_apns_config(self):
         return self.acceptable_apns
 
@@ -208,9 +215,3 @@ class Config(object):
                 self.logger_level = default_config.get("logger_level")
         else:
             self.logger_level = default_config.get("logger_level")
-
-    def get_sbc_config(self):
-        return self.sbc
-    
-    def set_sbc_config(self):
-        self.sbc = default_config.get("sbc")

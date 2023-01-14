@@ -38,10 +38,10 @@ def monitor(modem, network):
         incident_count = monitor_data.get("fixed_incident", 0)
         old_incident_count = old_monitor.get("fixed_incident", 0)
 
-        if incident_count < old_incident_count:
-            modem.monitor["fixed_incident"] = old_incident_count
-
-        monitor_data["fixed_incident"] = modem.get_fixed_incident_count()
+        if incident_count >= old_incident_count:
+            monitor_data["fixed_incident"] = modem.get_fixed_incident_count()
+        else:
+            monitor_data["fixed_incident"] = old_incident_count
 
     except Exception as error:
         logger.error("monitor() @modem -> %s", error)
