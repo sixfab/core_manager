@@ -26,7 +26,7 @@ configs_showed_at_frontend = [
 
 default_config = {
     "apn": core_env.get("apn", "super"),
-    "sbc": core_env.get("sbc", "rpi4"),
+    "sbc": core_env.get("board", "RaspberryPi4"),
     "debug_mode": False,
     "verbose_mode": False,
     "check_internet_interval": 60,
@@ -208,3 +208,9 @@ class Config(object):
                 self.logger_level = default_config.get("logger_level")
         else:
             self.logger_level = default_config.get("logger_level")
+
+    def get_sbc_config(self):
+        return self.sbc
+    
+    def set_sbc_config(self):
+        self.sbc = default_config.get("sbc")

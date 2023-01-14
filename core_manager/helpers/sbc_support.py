@@ -66,4 +66,4 @@ class SBC:
 rpi4_raspbian = SBC("Raspberry Pi 4", "Raspberry Pi OS (Raspbian)", 26)  # Use BCM on Raspberry Pi
 jetson_nano_ubuntu = SBC("Nvidia Jetson Nano", "Ubuntu", 194)  # Use SYSFS on Jetson
 
-supported_sbcs = {"rpi4": rpi4_raspbian, "jetson_nano_ubuntu": jetson_nano_ubuntu}
+supported_sbcs = {"rpi4": rpi4_raspbian, "RaspberryPi4": rpi4_raspbian, "Jetson": jetson_nano_ubuntu}
