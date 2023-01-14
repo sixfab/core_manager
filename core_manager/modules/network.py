@@ -255,10 +255,11 @@ class Network():
                 iface.if_type,
                 iface.priority
                 ]
-        for iface_types in interface_types.values():
-            self.monitor[iface_types.name] = [
-                iface_types.priority
-            ]
+        # # Don't add interface types to monitor data
+        # for iface_types in interface_types.values():
+        #     self.monitor[iface_types.name] = [
+        #         iface_types.priority
+        #     ]
 
     def debug_routes(self):
         if conf.debug_mode and conf.verbose_mode:
