@@ -51,6 +51,7 @@ def get_configs():
     conf.set_cellular_interfaces_config(config.get("cellular_interfaces"))
     conf.set_logger_level_config(config.get("logger_level"))
     conf.set_sbc_config()
+    conf.set_network_interface_exceptions_config(config.get("network_interface_exceptions"))
 
     conf.config_changed = True
     old_config.update(config)

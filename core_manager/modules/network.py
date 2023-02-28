@@ -69,7 +69,10 @@ class Network():
         actual = [ interface.name for interface in self.interfaces ]
 
         for usable_if in usables:
-            if usable_if not in actual:
+            if (
+                usable_if not in actual and 
+                usable_if not in conf.network_interface_exceptions
+                ):
                 self.create_interface(usable_if)
 
         for actual_if in actual:
