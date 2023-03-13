@@ -43,7 +43,10 @@ class Network():
         for line in output[0].splitlines():
             try:
                 dev = parse_output(line, "dev", " ")
-                if dev not in ifs:
+                if (
+                    dev not in ifs and
+                    dev not in conf.network_interface_exceptions
+                    ):
                     ifs.append(dev)
             except Exception as error:
                 raise RuntimeError("Interface dev couldn't be read!") from error
@@ -69,10 +72,7 @@ class Network():
         actual = [ interface.name for interface in self.interfaces ]
 
         for usable_if in usables:
-            if (
-                usable_if not in actual and 
-                usable_if not in conf.network_interface_exceptions
-                ):
+            if usable_if not in actual:
                 self.create_interface(usable_if)
 
         for actual_if in actual:
