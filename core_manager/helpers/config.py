@@ -41,6 +41,7 @@ default_config = {
     },
     "acceptable_apns": ["super", "de1.super", "sg1.super"],
     "logger_level": "info",
+    "network_interface_exceptions": [],
 }
 
 keys_required_modem_config = ["apn"]
@@ -66,6 +67,7 @@ class Config(object):
         self.network_priority = None
         self.acceptable_apns = None
         self.logger_level = None
+        self.network_interface_exceptions = None
 
         self.restore_defaults()
 
@@ -81,6 +83,7 @@ class Config(object):
         self.network_priority = new_config.network_priority
         self.acceptable_apns = new_config.acceptable_apns
         self.logger_level = new_config.logger_level
+        self.network_interface_exceptions = new_config.network_interface_exceptions
 
     def restore_defaults(self):
         self.apn = default_config.get("apn")
@@ -94,6 +97,7 @@ class Config(object):
         self.network_priority = default_config.get("network_priority")
         self.acceptable_apns = default_config.get("acceptable_apns")
         self.logger_level = default_config.get("logger_level")
+        self.network_interface_exceptions = default_config.get("network_interface_exceptions")
 
     def is_reload_required(self):
         return self.reload_required
@@ -214,3 +218,12 @@ class Config(object):
     
     def set_sbc_config(self):
         self.sbc = default_config.get("sbc")
+
+    def get_network_interface_exceptions_config(self):
+        return self.network_interface_exceptions
+
+    def set_network_interface_exceptions_config(self, value):
+        if isinstance(value, list):
+            self.network_interface_exceptions = value
+        else:
+            self.network_interface_exceptions = default_config.get("network_interface_exceptions")

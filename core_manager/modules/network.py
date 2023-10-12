@@ -38,7 +38,10 @@ class Network():
         for line in output[0].splitlines():
             try:
                 dev = parse_output(line, "dev", " ")
-                if dev not in ifs:
+                if (
+                    dev not in ifs and
+                    dev not in conf.network_interface_exceptions
+                    ):
                     ifs.append(dev)
             except Exception as error:
                 raise RuntimeError("Interface dev couldn't be read!") from error
