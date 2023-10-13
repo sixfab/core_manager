@@ -1,0 +1,13 @@
+[Unit]
+Description=Sixfab Core Manager
+
+[Service]
+User=sixfab
+Restart=always
+Group=sudo
+RestartSec=3
+WorkingDirectory=MANAGER_SOURCE_PATH
+ExecStart=/bin/bash MANAGER_SOURCE_PATH/run.sh
+
+[Install]
+WantedBy=multi-user.target"
