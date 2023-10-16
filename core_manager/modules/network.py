@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import os 
 
 from helpers.config_parser import conf
 from helpers.logger import logger
@@ -74,25 +75,42 @@ class Network():
             if actual_if not in usables:
                 self.remove_interface(actual_if)
 
+    def _get_interface_type(interface):
+            eth_drivers = "bcmgenet, e1000e, r8169, igb"
+            wifi_drivers =  "brcmfmac, ath9k, ath10k, iwlwifi, rtl8192ce"
+            cellular_drivers = "cdc_ether, cdc_ncm, qmi_wwan"
+
+            info_file = f'/sys/class/net/{interface}/device/uevent'
+            info_data = {}
+
+            # Get interface info from uevent file
+            if os.path.exists(info_file):
+                with open(info_file, 'r') as file:
+                    for line in file:
+                        line = line.strip()
+                        if line:
+                            parts = line.split('=')
+                            if len(parts) == 2:
+                                info_data[parts[0]] = parts[1]
+
+            driver = info_data.get('DRIVER')
+    
+            # Decide interface type according to DRIVER info
+            if driver in wifi_drivers:
+                return InterfaceTypes.WIFI
+            elif driver in cellular_drivers:
+                return InterfaceTypes.CELLULAR
+            elif driver in eth_drivers:
+                return InterfaceTypes.ETHERNET
+            else:
+                return InterfaceTypes.UNKNOWN
+            
     def get_interface_type(self):
-        output = shell_command("lshw -C Network")
-
-        if output[2] == 0:
-            networks = output[0].split("*-network")
-
-            for network in networks:
-                for interface in self.interfaces:
-                    if network.find(interface.name) >= 0:
-                        if network.find("Ethernet interface") >= 0:
-                            if network.find("driver=cdc_ether") >= 0:
-                                interface.if_type=InterfaceTypes.CELLULAR
-                                self.modem.interface_name = interface.name
-                            else:
-                                interface.if_type=InterfaceTypes.ETHERNET
-                        elif network.find("Wireless interface") >= 0:
-                            interface.if_type=InterfaceTypes.WIFI
-        else:
-            logger.warning("Error occured on --> get_interface_type")
+        for interface in self.interfaces:
+            try:
+                interface.if_type = Network._get_interface_type(interface.name)
+            except Exception as error:
+                logger.error("get_interface_type() --> %s", error)
 
     def check_interface_health(self, interface):
 
