@@ -76,7 +76,7 @@ class Network():
                 self.remove_interface(actual_if)
 
     def _get_interface_type(interface):
-            eth_drivers = "bcmgenet, e1000e, r8169, igb"
+            eth_drivers = "macb bcmgenet, e1000e, r8169, igb"
             wifi_drivers =  "brcmfmac, ath9k, ath10k, iwlwifi, rtl8192ce"
             cellular_drivers = "cdc_ether, cdc_ncm, qmi_wwan"
 
