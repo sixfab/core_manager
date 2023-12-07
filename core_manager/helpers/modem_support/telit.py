@@ -1,8 +1,11 @@
+import time
+
 from helpers.modem_support.default import BaseModule
 from helpers.config_parser import conf
 from helpers.logger import logger
 from helpers.commander import send_at_com, parse_output, shell_command
 from helpers.exceptions import NoInternet
+from helpers.ifmetric import set_metric
 
 
 # Telit Vendor Default Module Class
@@ -83,22 +86,28 @@ class Telit(BaseModule):
         else:
             self.monitor["cellular_connection"] = True
 
-            # check ip route list and add if not exist
-            output = shell_command("ip route list")
+            if self.interface_name.startswith("wwan"):
+                # check ip route list and add if not exist
+                output = shell_command("ip route list")
 
-            if output[2] == 0:
-                if output[0].find("sudo ip route add default via 192.168.225.1 dev wwan0") == -1:
-                    output2 = shell_command("sudo ip route add default via 192.168.225.1 dev wwan0 metric 700")
-                    output3 = shell_command(
-                        "sudo ip route add 192.168.225.0/24 dev wwan0 proto kernel scope link src 192.168.225.20 metric 700"
-                        )
-                    
-                    if output2[2] == 0 and output3[2] == 0:
-                        logger.info("ip route list --> default route added")
-                    else:
-                        raise RuntimeError("check_internet --> error occured adding default route")
-            else:
-                raise RuntimeError("check_internet --> error occured checking ip route list")
+                if output[2] == 0:
+                    if output[0].find(f"dev {self.interface_name}") == -1:
+
+                        output_dhcp = shell_command(f"sudo dhclient -v {self.interface_name}")
+                        if output_dhcp[2] == 0:
+                            logger.info("dhclient -v wwan* --> success")
+                        else:
+                            raise RuntimeError("check_internet --> error occured running dhclient -v wwan*")
+                        
+                        time.sleep(1)
+                        
+                        try:
+                            set_metric(self.interface_name, 700)
+                        except:
+                            raise RuntimeError("check_internet --> error occured setting metric")
+                        
+                else:
+                    raise RuntimeError("check_internet --> error occured checking ip route list")
 
     def read_geoloc_data(self):
         """
