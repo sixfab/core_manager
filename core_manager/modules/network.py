@@ -295,7 +295,6 @@ class Network():
                 else:
                     RuntimeError('Error occured updating resolv.conf')
 
-
     def create_monitoring_data(self):
         self.monitor.clear()
         for iface in self.interfaces:

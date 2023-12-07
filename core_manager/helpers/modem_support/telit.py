@@ -1,6 +1,8 @@
 from helpers.modem_support.default import BaseModule
 from helpers.logger import logger
-from helpers.commander import send_at_com, parse_output
+from helpers.commander import send_at_com, parse_output, shell_command
+from helpers.exceptions import NoInternet
+from config import conf
 
 
 # Telit Vendor Default Module Class
@@ -70,6 +72,33 @@ class Telit(BaseModule):
         "gsm": {},
     }
 
+    def check_internet(self):
+        logger.info("Telit check_internet method called")
+
+        try:
+            self.check_interface_health(self.interface_name, conf.ping_timeout)
+        except Exception as error:
+            self.monitor["cellular_connection"] = False
+            raise NoInternet("No internet!") from error
+        else:
+            self.monitor["cellular_connection"] = True
+
+            # check ip route list and add if not exist
+            output = shell_command("ip route list")
+
+            if output[2] == 0:
+                if output[0].find("sudo ip route add default via 192.168.225.1 dev wwan0") == -1:
+                    output2 = shell_command("sudo ip route add default via 192.168.225.1 dev wwan0 metric 700")
+                    output3 = shell_command(
+                        "sudo ip route add 192.168.225.0/24 dev wwan0 proto kernel scope link src 192.168.225.20 metric 700"
+                        )
+                    
+                    if output2[2] == 0 and output3[2] == 0:
+                        logger.info("ip route list --> default route added")
+                    else:
+                        raise RuntimeError("check_internet --> error occured adding default route")
+            else:
+                raise RuntimeError("check_internet --> error occured checking ip route list")
 
     def read_geoloc_data(self):
         """
