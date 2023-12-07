@@ -102,7 +102,7 @@ class Telit(BaseModule):
                         if output[2] == 0:
                             if output[0].find(f"dev {self.interface_name}") == -1:
 
-                                output_dhcp = shell_command(f"sudo dhclient -v {self.interface_name}")
+                                output_dhcp = shell_command(f"sudo dhclient {self.interface_name}")
                                 if output_dhcp[2] == 0:
                                     logger.info("dhclient -v wwan* --> success")
                                 else:
@@ -110,13 +110,38 @@ class Telit(BaseModule):
                                 
                                 time.sleep(1)
                                 
+                                # assign metric
                                 try:
-                                    set_metric(self.interface_name, 700)
+                                    output = shell_command("ip route list")
+
+                                    if output[2] == 0:
+                                        lines = output[0].splitlines()
+                                        
+                                        default_route = ""
+                                        private_route = ""
+                                        
+                                        for line in lines:
+                                            if line.find("default") != -1 and line.find(f"dev {self.interface_name}") != -1:
+                                                default_route = line
+                                            elif line.find(f"192.168.225.0/24 dev {self.interface_name}") != -1:
+                                                private_route = line
+                                        
+                                        if default_route != "" and private_route != "":
+                                            output = shell_command(
+                                            f"sudo ip route del {private_route} &&" 
+                                            f"sudo ip route del {default_route} &&"
+                                            f"sudo ip route add {private_route} metric 700 &&"
+                                            f"sudo ip route add {default_route} metric 700"
+                                            )
+
+                                            if output[2] == 0:
+                                                logger.info("assign metric --> success")
+                                            else:
+                                                raise RuntimeError("Error occured assigning metric")
+                                        else:
+                                            raise RuntimeError("Error occured checking ip route list")
                                 except:
-                                    raise RuntimeError("check_internet --> error occured setting metric")
-                        else:
-                            raise RuntimeError("check_internet --> error occured checking ip route list")
-                            
+                                    raise RuntimeError("Error occured ip route list")
                         return 0
                     else:
                         time.sleep(5)
