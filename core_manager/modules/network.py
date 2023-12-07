@@ -275,7 +275,7 @@ class Network():
         """
         Function for checking DNS servers.
         """
-        dns_servers = ["8.8.8.8", "8.8.4.4"]
+        dns_server = "8.8.8.8"
         dns_lines = ["nameserver 8.8.8.8", "nameserver 8.8.4.4"]
         dns_file = "/etc/resolv.conf"
 
@@ -283,18 +283,17 @@ class Network():
             with open(dns_file, 'r') as file:
                 org_resolv_conf = file.read()
 
-            for dns_server in dns_servers:
-                if dns_server not in org_resolv_conf:
-                    logger.info("DNS servers not in the list! Adding...")
-                    with open("/tmp/resolv.conf", 'w') as file:
-                        file.write(dns_lines[0] + "\n" + dns_lines[1] + "\n" + org_resolv_conf)
-            
-                    output = shell_command("sudo mv /tmp/resolv.conf /etc/resolv.conf")
+            if dns_server not in org_resolv_conf:
+                logger.info("DNS servers not in the list! Adding...")
+                with open("/tmp/resolv.conf", 'w') as file:
+                    file.write(dns_lines[0] + "\n" + dns_lines[1] + "\n" + org_resolv_conf)
+        
+                output = shell_command("sudo mv /tmp/resolv.conf /etc/resolv.conf")
 
-                    if output[2] == 0:
-                        logger.info("DNS servers are OK!")
-                    else:
-                        RuntimeError('Error occured updating resolv.conf')
+                if output[2] == 0:
+                    logger.info("DNS servers are OK!")
+                else:
+                    RuntimeError('Error occured updating resolv.conf')
 
 
     def create_monitoring_data(self):
