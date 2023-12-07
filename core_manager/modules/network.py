@@ -277,7 +277,7 @@ class Network():
         """
         dns_servers = ["8.8.8.8", "8.8.4.4"]
         dns_lines = ["nameserver 8.8.8.8", "nameserver 8.8.4.4"]
-        dns_file = "/temp/resolv.conf"
+        dns_file = "/tmp/resolv.conf"
 
         if os.path.exists(dns_file):
             with open(dns_file, 'r') as file:
@@ -288,7 +288,7 @@ class Network():
                     with open(dns_file, 'w') as file:
                         file.write(dns_lines[0] + "\n" + dns_lines[1] + "\n" + org_resolv_conf)
             
-                    output = shell_command("sudo mv /temp/resolv.conf /etc/resolv.conf")
+                    output = shell_command("sudo mv /tmp/resolv.conf /etc/resolv.conf")
 
                     if output[2] == 0:
                         logger.info("DNS servers are OK!")
