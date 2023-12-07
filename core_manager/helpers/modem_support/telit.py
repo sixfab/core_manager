@@ -4,7 +4,7 @@ from helpers.modem_support.default import BaseModule
 from helpers.config_parser import conf
 from helpers.logger import logger
 from helpers.commander import send_at_com, parse_output, shell_command
-from helpers.exceptions import NoInternet
+from helpers.exceptions import PDPContextFailed
 from helpers.ifmetric import set_metric
 
 
@@ -75,39 +75,57 @@ class Telit(BaseModule):
         "gsm": {},
     }
 
-    def check_internet(self):
-        logger.info("Telit check_internet method called")
+    def initiate_ecm(self, connection_delay=10):
+        logger.info("Checking the ECM initialization...")
+        output = send_at_com(self.pdp_status_command, "OK")
+        if output[2] == 0:
+            if output[0].find("0,1") != -1 or output[0].find("1,1") != -1:
+                logger.info("ECM is already initiated.")
+                time.sleep(10)
+                return 0
 
-        try:
-            self.check_interface_health(self.interface_name, conf.ping_timeout)
-        except Exception as error:
-            self.monitor["cellular_connection"] = False
-            raise NoInternet("No internet!") from error
-        else:
-            self.monitor["cellular_connection"] = True
+        logger.info("ECM Connection is initiating...")
+        output = send_at_com(self.pdp_activate_command, "OK")
 
-            if self.interface_name.startswith("wwan"):
-                # check ip route list and add if not exist
-                output = shell_command("ip route list")
+        if output[2] == 0:
+            for _ in range(2):
+                output = send_at_com(self.pdp_status_command, "OK")
 
                 if output[2] == 0:
-                    if output[0].find(f"dev {self.interface_name}") == -1:
+                    if output[0].find("0,1") != -1 or output[0].find("1,1") != -1:
+                        logger.info("ECM is initiated.")
+                        time.sleep(connection_delay)
+                        
+                        # check ip route list and add if not exist
+                        output = shell_command("ip route list")
 
-                        output_dhcp = shell_command(f"sudo dhclient -v {self.interface_name}")
-                        if output_dhcp[2] == 0:
-                            logger.info("dhclient -v wwan* --> success")
+                        if output[2] == 0:
+                            if output[0].find(f"dev {self.interface_name}") == -1:
+
+                                output_dhcp = shell_command(f"sudo dhclient -v {self.interface_name}")
+                                if output_dhcp[2] == 0:
+                                    logger.info("dhclient -v wwan* --> success")
+                                else:
+                                    raise RuntimeError("check_internet --> error occured running dhclient -v wwan*")
+                                
+                                time.sleep(1)
+                                
+                                try:
+                                    set_metric(self.interface_name, 700)
+                                except:
+                                    raise RuntimeError("check_internet --> error occured setting metric")
                         else:
-                            raise RuntimeError("check_internet --> error occured running dhclient -v wwan*")
-                        
-                        time.sleep(1)
-                        
-                        try:
-                            set_metric(self.interface_name, 700)
-                        except:
-                            raise RuntimeError("check_internet --> error occured setting metric")
-                        
+                            raise RuntimeError("check_internet --> error occured checking ip route list")
+                            
+                        return 0
+                    else:
+                        time.sleep(5)
                 else:
-                    raise RuntimeError("check_internet --> error occured checking ip route list")
+                    time.sleep(2)
+
+            raise PDPContextFailed("ECM initiation timeout!")
+        else:
+            raise PDPContextFailed("ECM initiation failed!")
 
     def read_geoloc_data(self):
         """
