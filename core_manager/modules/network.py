@@ -271,6 +271,23 @@ class Network():
                 else:
                     logger.info("%s metric changed : %s", iface.name, iface.desired_metric)
 
+    def check_dns(self):
+        """
+        Function for checking DNS servers.
+        """
+        dns_servers = ["8.8.8.8", "8.8.4.4"]
+        dns_lines = ["nameserver 8.8.8.8", "nameserver 8.8.4.4"]
+        dns_file = "/etc/resolv.conf"
+
+        if os.path.exists(dns_file):
+            with open(dns_file, 'r') as file:
+                org_resolv_conf = file.read()
+
+            for dns_server in dns_servers:
+                if dns_server not in org_resolv_conf:
+                    with open(dns_file, 'w') as file:
+                        file.write(dns_lines[0] + "\n" + dns_lines[1] + "\n" + org_resolv_conf)
+
     def create_monitoring_data(self):
         self.monitor.clear()
         for iface in self.interfaces:
