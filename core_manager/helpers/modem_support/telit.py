@@ -111,37 +111,36 @@ class Telit(BaseModule):
                                 time.sleep(1)
                                 
                                 # assign metric
-                                try:
-                                    output = shell_command("ip route list")
+                                output = shell_command("ip route list")
 
-                                    if output[2] == 0:
-                                        lines = output[0].splitlines()
+                                if output[2] == 0:
+                                    lines = output[0].splitlines()
+                                    
+                                    default_route = ""
+                                    private_route = ""
+                                    
+                                    for line in lines:
+                                        if line.find("default") != -1 and line.find(f"dev {self.interface_name}") != -1:
+                                            default_route = line
+                                        elif line.find(f"192.168.225.0/24 dev {self.interface_name}") != -1:
+                                            private_route = line
+                                    
+                                    if default_route != "" and private_route != "":
                                         
-                                        default_route = ""
-                                        private_route = ""
-                                        
-                                        for line in lines:
-                                            if line.find("default") != -1 and line.find(f"dev {self.interface_name}") != -1:
-                                                default_route = line
-                                            elif line.find(f"192.168.225.0/24 dev {self.interface_name}") != -1:
-                                                private_route = line
-                                        
-                                        if default_route != "" and private_route != "":
-                                            output = shell_command(
-                                            f"sudo ip route del {private_route} &&" 
-                                            f"sudo ip route del {default_route} &&"
-                                            f"sudo ip route add {private_route} metric 700 &&"
-                                            f"sudo ip route add {default_route} metric 700"
-                                            )
+                                        output_1 = shell_command(f"sudo ip route del {private_route}") 
+                                        output_2 = shell_command(f"sudo ip route add {private_route} metric 700")
+                                        output_3 = shell_command(f"sudo ip route del {default_route}")
+                                        output_4 = shell_command(f"sudo ip route add {default_route} metric 700")
 
-                                            if output[2] == 0:
-                                                logger.info("assign metric --> success")
-                                            else:
-                                                raise RuntimeError("Error occured assigning metric")
+                                        if output_1[2] == 0 and output_2[2] == 0 and output_3[2] == 0 and output_4[2] == 0:
+                                            logger.info("assign metric --> success")
                                         else:
-                                            raise RuntimeError("Error occured checking ip route list")
-                                except:
-                                    raise RuntimeError("Error occured ip route list")
+                                            raise RuntimeError("Error occured assigning metric")
+                                else:
+                                    raise RuntimeError("Error occured checking ip route list")
+                        else:
+                            raise RuntimeError("Error occured checking ip route list")
+                        
                         return 0
                     else:
                         time.sleep(5)
