@@ -2,7 +2,7 @@ from helpers.modem_support.default import BaseModule
 from helpers.logger import logger
 from helpers.commander import send_at_com, parse_output, shell_command
 from helpers.exceptions import NoInternet
-from config import conf
+from helpers.config import conf
 
 
 # Telit Vendor Default Module Class
