@@ -275,7 +275,7 @@ class Network():
         """
         Function for adding dns server rooting for telit wwan0 interface.
         """
-        if self.modem.interface.name == "wwan0":
+        if self.modem.interface_name == "wwan0":
             output = shell_command("ip route list")
 
             if output[2] != 0:
@@ -293,8 +293,21 @@ class Network():
                 raise RuntimeError('Error occured on adding dns server rooting for wwan0 interface!')
             
             logger.info("Dns server rooting for wwan0 interface added!")
-                                   
 
+            # Add dns record to /etc/resolv.conf
+            if os.path.exists("/etc/resolv.conf"):
+                with open("/etc/resolv.conf", "r") as file:
+                    data = file.read()
+                    if "nameserver 192.168.225.1" in data:
+                        return
+                    
+                output = shell_command("sudo echo 'nameserver 192.168.225.1' >> /etc/resolv.conf")
+
+                if output[2] != 0:
+                    raise RuntimeError('Error occured on adding dns record to /etc/resolv.conf!')
+
+                logger.info("Dns record added to /etc/resolv.conf!")
+                                   
     def create_monitoring_data(self):
         self.monitor.clear()
         for iface in self.interfaces:

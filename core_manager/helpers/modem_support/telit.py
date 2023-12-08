@@ -75,6 +75,10 @@ class Telit(BaseModule):
         "gsm": {},
     }
 
+    def reset_connection_interface():
+        logger.info("Pass reset_connection_interface for Telit")
+        pass
+
     def read_geoloc_data(self):
         """
         Reads required data from modem in order to use at geolocation API
