@@ -1,6 +1,10 @@
 from helpers.commander import shell_command
 
 def change_metric_in_line(line, metric):
+    if line.find("metric") == -1:
+        line += f" metric {metric}"
+        return line
+    
     list_of_data = line.split(" ")
 
     for value in list_of_data:
@@ -46,15 +50,21 @@ def set_metric(interface, metric):
     default_line = ""
     dev_line = ""
 
-    for line in default_route_lines:
-        if "metric" in line:
-            default_line = line
-            break
-    
-    for line in dev_lines:
-        if "metric" in line:
-            dev_line = line
-            break
+    if len(default_route_lines) == 1:
+        default_line = default_route_lines[0]
+    else:
+        for line in default_route_lines:
+            if "metric" in line:
+                default_line = line
+                break
+
+    if len(dev_lines) == 1:
+        dev_line = dev_lines[0]
+    else:
+        for line in dev_lines:
+            if "metric" in line:
+                dev_line = line
+                break
 
     # delete route first
     for line in dev_lines:
