@@ -273,27 +273,27 @@ class Network():
 
     def check_dns(self):
         """
-        Function for checking DNS servers.
+        Function for adding dns server rooting for telit wwan0 interface.
         """
-        dns_server = "8.8.8.8"
-        dns_lines = ["nameserver 8.8.8.8", "nameserver 8.8.4.4"]
-        dns_file = "/etc/resolv.conf"
+        if self.modem.interface.name == "wwan0":
+            output = shell_command("ip route list")
 
-        if os.path.exists(dns_file):
-            with open(dns_file, 'r') as file:
-                org_resolv_conf = file.read()
+            if output[2] != 0:
+                raise RuntimeError('Error occured on "ip route list" command!')
 
-            if dns_server not in org_resolv_conf:
-                logger.info("DNS servers not in the list! Adding...")
-                with open("/tmp/resolv.conf", 'w') as file:
-                    file.write(dns_lines[0] + "\n" + dns_lines[1] + "\n" + org_resolv_conf)
-        
-                output = shell_command("sudo mv /tmp/resolv.conf /etc/resolv.conf")
+            # check dns server rooting for wwan0 interface
+            for line in output[0].splitlines():
+                if "8.8.8.8" in line and "wwan0" in line:
+                    return
 
-                if output[2] == 0:
-                    logger.info("DNS servers are OK!")
-                else:
-                    RuntimeError('Error occured updating resolv.conf')
+            # add dns server rooting for wwan0 interface
+            output = shell_command("sudo ip route add 8.8.8.8 via 192.168.225.1 dev wwan0")
+
+            if output[2] != 0:
+                raise RuntimeError('Error occured on adding dns server rooting for wwan0 interface!')
+            
+            logger.info("Dns server rooting for wwan0 interface added!")
+                                   
 
     def create_monitoring_data(self):
         self.monitor.clear()
