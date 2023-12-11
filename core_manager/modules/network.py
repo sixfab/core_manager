@@ -6,6 +6,7 @@ from helpers.logger import logger
 from helpers.commander import shell_command
 from helpers.exceptions import NoInternet
 from helpers.netiface import InterfaceTypes, NetInterface, interface_types
+from helpers.ifmetric import set_metric
 
 LOWEST_PRIORTY_METRIC = 10000
 
@@ -35,15 +36,16 @@ class Network():
 
         if output[2] != 0:
             raise RuntimeError('Error occured on "ip route list" command!')
-
+                
         for line in output[0].splitlines():
             try:
-                dev = parse_output(line, "dev", " ")
-                if (
-                    dev not in ifs and
-                    dev not in conf.network_interface_exceptions
-                    ):
-                    ifs.append(dev)
+                if line.startswith("default"):
+                    dev = parse_output(line, "dev", " ")
+                    if (
+                        dev not in ifs and
+                        dev not in conf.network_interface_exceptions
+                        ):
+                        ifs.append(dev)
             except Exception as error:
                 raise RuntimeError("Interface dev couldn't be read!") from error
 
@@ -150,14 +152,15 @@ class Network():
 
     def adjust_metric(self, interface, metric):
         """
-        Function for adjusting interface metrics by using ifmetric tool
+        Function for adjusting interface metrics.
         """
-        output = shell_command(f"sudo ifmetric {interface} {metric}")
-
-        if output[2] == 0:
-            return 0
+        try :
+            set_metric(interface, metric)
+        except Exception as error:
+            raise RuntimeError('Error occured on "route -n" command!', error)
         else:
-            raise RuntimeError('Error occured on "route -n" command!')
+            return 0
+
 
     def check_connection_status(self):
         for iface in self.interfaces:

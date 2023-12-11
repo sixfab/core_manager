@@ -337,6 +337,13 @@ class BaseModule:
 
     def reset_modem_hardly(self):
         logger.info("Modem is resetting via hardware...")
+
+        # Add workaround for rpi5
+        output = shell_command("cat /sys/firmware/devicetree/base/model")
+        if output[2] == 0:
+            if output[0].find("Raspberry Pi 5") != -1:
+                conf.sbc = "rpi5"
+
         sbc = supported_sbcs.get(conf.sbc)
         sbc.modem_power_disable()
         time.sleep(2)
