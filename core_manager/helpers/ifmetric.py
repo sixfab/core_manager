@@ -1,3 +1,4 @@
+import time
 from helpers.commander import shell_command
 
 def change_metric_in_line(line, metric):
@@ -73,13 +74,25 @@ def set_metric(interface, metric):
     dev_line = change_metric_in_line(dev_line, metric)
 
     # Add the routes back
-    output = shell_command(f"sudo ip route add {dev_line}")
-    if output[2] != 0:
-        raise RuntimeError(f'Error occured on "ip route add {dev_line}" command!')
-
-
-    output = shell_command(f"sudo ip route add {default_line}")
-    if output[2] != 0:
-        raise RuntimeError(f'Error occured on "ip route add {default_line}" command!')
-
-
+    dev_is_ok = False
+    for _ in range(3):
+        if not dev_is_ok:
+            output = shell_command(f"sudo ip route add {dev_line}")
+            if output[2] != 0:
+                dev_is_ok = False
+                time.sleep(1)
+            else:
+                dev_is_ok = True
+    
+    default_is_ok = False
+    for _ in range(3):
+        if not default_is_ok:
+            output = shell_command(f"sudo ip route add {default_line}")
+            if output[2] != 0:
+                default_is_ok = False
+                time.sleep(1)
+            else:
+                default_is_ok = True
+        
+    if not dev_is_ok or not default_is_ok:
+        raise RuntimeError(f'Error occured on "ip route add" command!')
