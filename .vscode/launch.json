@@ -8,8 +8,8 @@
             "name": "Python: Debug",
             "type": "python",
             "request": "launch",
-            "program": "/home/selengalp/sixfab/core_manager/core_manager/run.py",
-            "python": "/home/selengalp/sixfab/core_manager/venv/bin/python3",
+            "program": "${workspaceFolder}/core_manager/run.py",
+            "python": "${workspaceFolder}/venv/bin/python3",
             "console": "integratedTerminal",
             "justMyCode": true
         }
