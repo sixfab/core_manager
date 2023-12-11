@@ -271,7 +271,7 @@ class Network():
                 else:
                     logger.info("%s metric changed : %s", iface.name, iface.desired_metric)
 
-    def check_dns():
+    def check_dns(self):
         """
         Function for checking DNS configuration of the system.
         """
