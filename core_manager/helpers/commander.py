@@ -4,11 +4,13 @@ import subprocess
 from helpers.logger import logger
 
 
-def shell_command(command):
+def shell_command(command, shell=True):
     try:
-        com = command.split(" ")
         cp = subprocess.run(
-            com, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
+            command, universal_newlines=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            shell=shell
         )
     except Exception as error:
         logger.error("Message: %s", error)
