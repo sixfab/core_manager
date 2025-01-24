@@ -1,75 +1,56 @@
-import time
-
 from subprocess import check_output, getstatusoutput
 from helpers.logger import logger
 
 
 class SBC:
-
     name = ""
     os = ""
 
-    def __init__(self, name, os, disable_pin):
+    def __init__(self, name, os, disable_pin, chip_name="gpiochip0"):
         self.name = name
         self.os = os
         self.disable_pin = disable_pin
+        self.chip_name = chip_name
 
-    def gpio_init(self, pin):
-        pin_name = f"gpio{pin}"
+    def gpio_check(self, pin):
+        # gpiod CLI does not need initialization, so we just check if the GPIO is accessible.
+        pin_name = f"{self.chip_name} {pin}"
 
-        status = getstatusoutput(f"ls /sys/class/gpio/{pin_name}")[0]
-
-        if status != 0:
-            comm = f"echo {pin} > /sys/class/gpio/export"
-
-            try:
-                check_output(comm, shell=True)
-            except:
-                logger.warning("gpio_init --> export gpio")
-
-            time.sleep(0.2)
-
-        comm = f"echo out > /sys/class/gpio/gpio{pin}/direction"
         try:
-            check_output(comm, shell=True)
-        except:
-            logger.exception("gpio_init -->")
-
-        time.sleep(0.1)
-
-    def gpio_del(self):
-        comm = f"echo {self.disable_pin} > /sys/class/gpio/unexport"
-        try:
-            check_output(comm, shell=True)
-        except:
-            logger.warning("gpio_del --> unexport gpio")
+            status, output = getstatusoutput(f"gpioinfo {self.chip_name}")
+            if status != 0 or f"line   {pin}" not in output:
+                logger.warning(f"GPIO {pin_name} not accessible or not available.")
+        except Exception as e:
+            logger.exception(f"gpio_check --> {e}")
 
     def modem_power_enable(self):
-        self.gpio_init(self.disable_pin)
+        self.gpio_check(self.disable_pin)
 
-        comm = f"echo 0 > /sys/class/gpio/gpio{self.disable_pin}/value"
+        comm = f"gpioset {self.chip_name} {self.disable_pin}=0"
         try:
             check_output(comm, shell=True)
-        except:
-            logger.exception("modem_power_enable -->")
+        except Exception as e:
+            logger.exception(f"modem_power_enable --> {e}")
 
     def modem_power_disable(self):
-        self.gpio_init(self.disable_pin)
+        self.gpio_check(self.disable_pin)
 
-        comm = f"echo 1 > /sys/class/gpio/gpio{self.disable_pin}/value"
+        comm = f"gpioset {self.chip_name} {self.disable_pin}=1"
         try:
             check_output(comm, shell=True)
-        except:
-            logger.exception("modem_power_disable -->")
+        except Exception as e:
+            logger.exception(f"modem_power_disable --> {e}")
 
 
-rpi4_raspbian = SBC("Raspberry Pi 4", "Raspberry Pi OS (Raspbian)", 26)  # Use BCM on Raspberry Pi
-jetson_nano_ubuntu = SBC("Nvidia Jetson Nano", "Ubuntu", 194)  # Use SYSFS on Jetson
-rpi5_raspbian = SBC("Raspberry Pi 5", "Raspberry Pi OS (Raspbian)", 425)  # Use BCM on Raspberry Pi
+# SBC configurations for different boards
+rpi4_raspbian = SBC("Raspberry Pi 4", "Raspberry Pi OS (Raspbian)", 26)  # Use BCM pin number on Raspberry Pi
+jetson_nano_ubuntu = SBC("Nvidia Jetson Nano", "Ubuntu", 194)  # GPIO pin on Jetson Nano
+rpi5_raspbian = SBC("Raspberry Pi 5", "Raspberry Pi OS (Raspbian)", 26)  # Use BCM pin number on Raspberry Pi
 
+# Supported SBCs mapping
 supported_sbcs = {
     "rpi4": rpi4_raspbian,
     "RaspberryPi4": rpi4_raspbian,
     "Jetson": jetson_nano_ubuntu,
-    "rpi5": rpi5_raspbian
-    }
+    "rpi5": rpi5_raspbian,
+}
