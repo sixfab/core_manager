@@ -1,5 +1,7 @@
 import time
 import usb.core
+import subprocess
+import os
 
 from helpers.config_parser import conf
 from helpers.logger import logger
@@ -62,7 +64,37 @@ class BaseModule:
     def __init__(self, module_name="default", pid="ffff"):
         self.module_name = module_name
         self.pid = pid
+        if_name = self.get_network_interface_name()
+        if if_name:
+            self.interface_name = if_name
 
+    def get_network_interface_name():
+        cellular_drivers = ["cdc_ether", "cdc_ncm", "qmi_wwan", "rndis_host", "cdc_mbim"]
+        try:
+            network_interfaces = os.listdir("/sys/class/net/")
+        except Exception as e:
+            print(f"Error while listing network interfaces: {e}")
+            return None
+        for interface in network_interfaces:
+            try:
+                cmd = f"ethtool -i {interface}"
+                result = subprocess.run(cmd, shell=True, text=True, capture_output=True)
+                if result.returncode != 0:
+                    continue
+                lines = result.stdout.splitlines()
+                driver = None
+                for line in lines:
+                    if "driver:" in line:
+                        driver = line.split(":", 1)[1].strip()
+                        break
+                if driver and driver in cellular_drivers:
+                    print(f"Network interface name found: {interface}")
+                    return interface
+            except Exception as e:
+                print(f"Error while checking interface {interface}: {e}")
+                continue
+        print("Network interface name for cellular modem not found")
+        return None
 
     def detect_modem(self):
         output = shell_command("lsusb")
