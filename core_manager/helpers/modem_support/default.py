@@ -68,7 +68,7 @@ class BaseModule:
         if if_name:
             self.interface_name = if_name
 
-    def get_network_interface_name():
+    def get_network_interface_name(self):
         cellular_drivers = ["cdc_ether", "cdc_ncm", "qmi_wwan", "rndis_host", "cdc_mbim"]
         try:
             network_interfaces = os.listdir("/sys/class/net/")
