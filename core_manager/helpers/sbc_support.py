@@ -1,4 +1,4 @@
-from subprocess import check_output, getstatusoutput
+from subprocess import run, check_output, getstatusoutput, CalledProcessError
 from helpers.logger import logger
 import time
 
@@ -49,12 +49,18 @@ class SBC:
         except Exception as e:
             logger.exception(f"modem_power_disable --> {e}")
 
-    def kill_gpioset(self):
+    def kill_gpioset():
         comm = 'pkill -9 -f "gpioset --mode=wait"'
         try:
-            check_output(comm, shell=True)
-        except Exception as e:
+            result = run(comm, shell=True, check=False)
+            if result.returncode == 0:
+                logger.info("Successfully killed gpioset process.")
+            else:
+                logger.warning("No running gpioset process found to kill.")
+        except CalledProcessError as e:
             logger.exception(f"kill_gpioset --> {e}")
+        except Exception as e:
+            logger.exception(f"Unexpected error in kill_gpioset --> {e}")
             
 # SBC configurations for different boards
 rpi4_raspbian = SBC("Raspberry Pi 4", "Raspberry Pi OS (Raspbian)", 26)  # Use BCM pin number on Raspberry Pi
