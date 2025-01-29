@@ -19,7 +19,7 @@ class SBC:
 
         try:
             status, output = getstatusoutput(f"gpioinfo {self.chip_name}")
-            if status != 0 or f"line   {pin}" not in output:
+            if status != 0 or f"{pin}" not in output:
                 logger.warning(f"GPIO {pin_name} not accessible or not available.")
         except Exception as e:
             logger.exception(f"gpio_check --> {e}")
@@ -33,11 +33,13 @@ class SBC:
         self.kill_gpioset()
         self.modem_power_enable()
         self.kill_gpioset()
+        logger.info("Modem hard reset completed.")
         
     def modem_power_enable(self):
         comm = f"gpioset --mode=wait {self.chip_name} {self.disable_pin}=0 &"
         try:
             check_output(comm, shell=True)
+            logger.info("Modem power enabled.")
         except Exception as e:
             logger.exception(f"modem_power_enable --> {e}")
 
@@ -46,10 +48,11 @@ class SBC:
         comm = f"gpioset --mode=wait {self.chip_name} {self.disable_pin}=1 &"
         try:
             check_output(comm, shell=True)
+            logger.info("Modem power disabled.")
         except Exception as e:
             logger.exception(f"modem_power_disable --> {e}")
 
-    def kill_gpioset():
+    def kill_gpioset(self):
         comm = 'pkill -9 -f "gpioset --mode=wait"'
         try:
             result = run(comm, shell=True, check=False)
