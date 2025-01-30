@@ -79,7 +79,8 @@ class BaseModule:
         for interface in network_interfaces:
             try:
                 cmd = f"ethtool -i {interface}"
-                result = subprocess.run(cmd, shell=True, universal_newlines=True, capture_output=True)
+                result = subprocess.run(cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
                 if result.returncode != 0:
                     continue
                 lines = result.stdout.splitlines()
