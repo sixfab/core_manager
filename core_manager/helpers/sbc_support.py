@@ -14,21 +14,20 @@ class SBC:
         self.os = os
         self.disable_pin = disable_pin
         self.chip_name = chip_name
-        self.process = None  # Store the subprocess for later termination
+        self.process = None
 
-    def gpio_check(self, pin):
-        """ Check if the GPIO is accessible using gpiod CLI. """
-        pin_name = f"{self.chip_name} {pin}"
+    def gpio_check(self):
+        # Check if the GPIO is accessible using gpiod CLI.
+        pin_name = f"{self.chip_name} {self.disable_pin}"
         try:
             status, output = subprocess.getstatusoutput(f"gpioinfo {self.chip_name}")
-            if status != 0 or f"{pin}" not in output:
+            if status != 0 or f"{self.disable_pin}" not in output:
                 logger.warning(f"GPIO {pin_name} not accessible or not available.")
         except Exception as e:
             logger.exception(f"gpio_check --> {e}")
 
     def modem_power_enable(self):
-        """ Set GPIO LOW (Enable modem) and wait 2 seconds before killing gpioset. """
-        # self.gpio_check(self.disable_pin)
+        # Set GPIO LOW (Enable modem) and wait 2 seconds before killing gpioset.
         comm = f"gpioset --mode=signal {self.chip_name} {self.disable_pin}=0"
         try:
             self.process = subprocess.Popen(comm, shell=True, preexec_fn=os.setsid)  # Run gpioset in the background
@@ -39,8 +38,7 @@ class SBC:
             logger.exception(f"modem_power_enable --> {e}")
 
     def modem_power_disable(self):
-        """ Set GPIO HIGH (Disable modem) and wait 2 seconds before killing gpioset. """
-        # self.gpio_check(self.disable_pin)
+        # Set GPIO HIGH (Disable modem) and wait 2 seconds before killing gpioset.
         comm = f"gpioset --mode=signal {self.chip_name} {self.disable_pin}=1"
         try:
             self.process = subprocess.Popen(comm, shell=True, preexec_fn=os.setsid)  # Run gpioset in the background
@@ -51,10 +49,10 @@ class SBC:
             logger.exception(f"modem_power_disable --> {e}")
 
     def kill_gpioset(self):
-        """ Kill the running gpioset process. """
+        # Kill the running gpioset process.
         if self.process:
             try:
-                os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)  # Kill process group
+                os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)
                 logger.info("Successfully killed gpioset process.")
             except ProcessLookupError:
                 logger.info("No running gpioset process found to kill.")
