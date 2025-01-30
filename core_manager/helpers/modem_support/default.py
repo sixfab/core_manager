@@ -64,10 +64,11 @@ class BaseModule:
     def __init__(self, module_name="default", pid="ffff"):
         self.module_name = module_name
         self.pid = pid
+        
         if_name = self.get_network_interface_name()
         if if_name:
             self.interface_name = if_name
-
+        
     def get_network_interface_name(self):
         cellular_drivers = ["cdc_ether", "cdc_ncm", "qmi_wwan", "rndis_host", "cdc_mbim"]
         try:
@@ -78,7 +79,7 @@ class BaseModule:
         for interface in network_interfaces:
             try:
                 cmd = f"ethtool -i {interface}"
-                result = subprocess.run(cmd, shell=True, text=True, capture_output=True)
+                result = subprocess.run(cmd, shell=True, universal_newlines=True, capture_output=True)
                 if result.returncode != 0:
                     continue
                 lines = result.stdout.splitlines()
