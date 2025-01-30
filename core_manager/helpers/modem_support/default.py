@@ -377,7 +377,9 @@ class BaseModule:
                 conf.sbc = "rpi5"
 
         sbc = supported_sbcs.get(conf.sbc)
-        sbc.modem_hard_reset()
+        sbc.modem_power_disable()
+        sbc.modem_power_enable()
+        logger.info("Modem is resetted via hardware.")
 
     def get_significant_data(self, output, header):
         header += " "
