@@ -1,6 +1,8 @@
-from subprocess import Popen, run, getstatusoutput, CalledProcessError
-from helpers.logger import logger
+import subprocess
 import time
+import os
+import signal
+from helpers.logger import logger
 
 
 class SBC:
@@ -12,12 +14,13 @@ class SBC:
         self.os = os
         self.disable_pin = disable_pin
         self.chip_name = chip_name
+        self.process = None  # Store the subprocess for later termination
 
     def gpio_check(self, pin):
         """ Check if the GPIO is accessible using gpiod CLI. """
         pin_name = f"{self.chip_name} {pin}"
         try:
-            status, output = getstatusoutput(f"gpioinfo {self.chip_name}")
+            status, output = subprocess.getstatusoutput(f"gpioinfo {self.chip_name}")
             if status != 0 or f"{pin}" not in output:
                 logger.warning(f"GPIO {pin_name} not accessible or not available.")
         except Exception as e:
@@ -25,21 +28,22 @@ class SBC:
 
     def modem_power_enable(self):
         """ Set GPIO LOW (Enable modem) and wait 2 seconds before killing gpioset. """
-        self.gpio_check(self.disable_pin)
-        comm = f"gpioset --mode=wait {self.chip_name} {self.disable_pin}=0"
+        # self.gpio_check(self.disable_pin)
+        comm = f"gpioset --mode=signal {self.chip_name} {self.disable_pin}=0"
         try:
-            process = Popen(comm, shell=True)  # Run gpioset in the background
+            self.process = subprocess.Popen(comm, shell=True, preexec_fn=os.setsid)  # Run gpioset in the background
             logger.info("Modem power enabled (GPIO LOW).")
+            time.sleep(2)
             self.kill_gpioset()
         except Exception as e:
             logger.exception(f"modem_power_enable --> {e}")
 
     def modem_power_disable(self):
         """ Set GPIO HIGH (Disable modem) and wait 2 seconds before killing gpioset. """
-        self.gpio_check(self.disable_pin)
-        comm = f"gpioset --mode=wait {self.chip_name} {self.disable_pin}=1"
+        # self.gpio_check(self.disable_pin)
+        comm = f"gpioset --mode=signal {self.chip_name} {self.disable_pin}=1"
         try:
-            process = Popen(comm, shell=True)  # Run gpioset in the background
+            self.process = subprocess.Popen(comm, shell=True, preexec_fn=os.setsid)  # Run gpioset in the background
             logger.info("Modem power disabled (GPIO HIGH).")
             time.sleep(2)
             self.kill_gpioset()
@@ -47,18 +51,17 @@ class SBC:
             logger.exception(f"modem_power_disable --> {e}")
 
     def kill_gpioset(self):
-        """ Kill any running gpioset processes. """
-        comm = 'pkill -9 -f "gpioset --mode=wait"'
-        try:
-            result = run(comm, shell=True, check=False)
-            if result.returncode == 0:
+        """ Kill the running gpioset process. """
+        if self.process:
+            try:
+                os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)  # Kill process group
                 logger.info("Successfully killed gpioset process.")
-            else:
+            except ProcessLookupError:
                 logger.info("No running gpioset process found to kill.")
-        except CalledProcessError as e:
-            logger.exception(f"kill_gpioset --> {e}")
-        except Exception as e:
-            logger.exception(f"Unexpected error in kill_gpioset --> {e}")
+            except Exception as e:
+                logger.exception(f"kill_gpioset --> {e}")
+        else:
+            logger.info("No process stored to terminate.")
 
 # SBC configurations for different boards
 rpi4_raspbian = SBC("Raspberry Pi 4", "Raspberry Pi OS (Raspbian)", 26)  # Use BCM pin number on Raspberry Pi
