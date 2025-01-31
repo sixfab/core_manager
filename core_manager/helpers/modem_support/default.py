@@ -1,5 +1,7 @@
 import time
 import usb.core
+import subprocess
+import os
 
 from helpers.config_parser import conf
 from helpers.logger import logger
@@ -62,7 +64,39 @@ class BaseModule:
     def __init__(self, module_name="default", pid="ffff"):
         self.module_name = module_name
         self.pid = pid
+        
+        if_name = self.get_network_interface_name()
+        if if_name:
+            self.interface_name = if_name
+        
+    def get_network_interface_name(self):
+        cellular_drivers = ["cdc_ether", "cdc_ncm", "qmi_wwan", "rndis_host", "cdc_mbim"]
+        try:
+            network_interfaces = os.listdir("/sys/class/net/")
+        except Exception as e:
+            print(f"Error while listing network interfaces: {e}")
+            return None
+        for interface in network_interfaces:
+            try:
+                cmd = f"ethtool -i {interface}"
+                result = subprocess.run(cmd, shell=True, universal_newlines=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
+                if result.returncode != 0:
+                    continue
+                lines = result.stdout.splitlines()
+                driver = None
+                for line in lines:
+                    if "driver:" in line:
+                        driver = line.split(":", 1)[1].strip()
+                        break
+                if driver and driver in cellular_drivers:
+                    print(f"Network interface name found: {interface}")
+                    return interface
+            except Exception as e:
+                print(f"Error while checking interface {interface}: {e}")
+                continue
+        print("Network interface name for cellular modem not found")
+        return None
 
     def detect_modem(self):
         output = shell_command("lsusb")
@@ -337,7 +371,6 @@ class BaseModule:
 
     def reset_modem_hardly(self):
         logger.info("Modem is resetting via hardware...")
-
         # Add workaround for rpi5
         output = shell_command("cat /sys/firmware/devicetree/base/model")
         if output[2] == 0:
@@ -345,8 +378,8 @@ class BaseModule:
                 conf.sbc = "rpi5"
 
         sbc = supported_sbcs.get(conf.sbc)
+        sbc.gpio_check()
         sbc.modem_power_disable()
-        time.sleep(2)
         sbc.modem_power_enable()
 
     def get_significant_data(self, output, header):
